@@ -15,20 +15,23 @@ const FACTORY_ADDRESS = "0xa96d115aa928544016e21795457A866B12D60447"
 const BEACON_ADDRESS = "0x790E5ABBDECcaFd353cA31df1D90F10b404a7Dd0"
 const SALT = encodedString
 
-
 async function main() {
   const [owner] = await hre.ethers.getSigners();
   const beaconContract = new hre.ethers.Contract(BEACON_ADDRESS, BEACONABI, owner);
   console.log("Connected to the beacon contract at:", BEACON_ADDRESS);
 
-  console.log(await beaconContract.owner())
+  console.log(`Beacon contract owner is: ${await beaconContract.owner()}`)
 
   const iface = new hre.ethers.utils.Interface(ERC1155SingletonABI);
   const callData = iface.encodeFunctionData("init", [owner.address, manager]);
 
-  await beaconContract.deployProxyContract(
+  const deployBeaconProxyTx = await beaconContract.deployProxyContract(
     callData
   );
+
+  const receipt = await deployBeaconProxyTx.wait();
+
+  console.log(receipt)
 }
 
 main().catch((error) => {
