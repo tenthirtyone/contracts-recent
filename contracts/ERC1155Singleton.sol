@@ -50,14 +50,13 @@ contract ERC1155Singleton is
     /// @param manager The address that will be set as the manager of the contract.
     function init(address vault, address manager) public {
         require(!didInit, "Contract has already been initialized");
+        didInit = true;
 
         _grantRole(DEFAULT_ADMIN_ROLE, vault);
         _grantRole(MANAGER_ROLE, vault);
         _grantRole(MANAGER_ROLE, manager);
 
         _setApprovalForAll(vault, manager, true);
-
-        didInit = true;
     }
 
     /// @notice Mints new tokens.

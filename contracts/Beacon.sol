@@ -6,12 +6,7 @@ import "./ERC1155Singleton.sol";
 import "./ERC1155BeaconProxy.sol";
 
 contract Beacon is UpgradeableBeacon {
-    event ProxyDeployed(
-        address proxy,
-        address implementation,
-        address vault,
-        address manager
-    );
+    event ProxyDeployed(address proxy);
 
     constructor(
         address implementation,
@@ -25,6 +20,8 @@ contract Beacon is UpgradeableBeacon {
     /// @return The address of the new proxy contract.
     function deployProxyContract(bytes memory data) public returns (address) {
         ERC1155BeaconProxy proxy = new ERC1155BeaconProxy(address(this), data);
+
+        emit ProxyDeployed(address(proxy));
 
         return address(proxy);
     }
