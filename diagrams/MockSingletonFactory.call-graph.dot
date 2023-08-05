@@ -1,0 +1,25 @@
+strict digraph {
+subgraph cluster_5421_MockSingletonFactory {
+label = "MockSingletonFactory"
+"5421_constructor" [label="constructor"]
+"5421__computeAddress" [label="_computeAddress"]
+"5421_computeAddress" [label="computeAddress"]
+"5421_computeAddress" -> "5421__computeAddress"
+}subgraph cluster_4959_SingletonFactory {
+label = "SingletonFactory"
+"4959_constructor" [label="constructor"]
+"4959_deploy" [label="deploy"]
+}subgraph cluster_solidity {
+label = "[Solidity]"
+"abi.encodePacked()" 
+"revert(uint256,uint256)" 
+"mload(uint256)" 
+"keccak256(bytes)" 
+"create2(uint256,uint256,uint256,uint256)" 
+"5421__computeAddress" -> "keccak256(bytes)"
+"5421__computeAddress" -> "abi.encodePacked()"
+"4959_deploy" -> "mload(uint256)"
+"4959_deploy" -> "revert(uint256,uint256)"
+"4959_deploy" -> "create2(uint256,uint256,uint256,uint256)"
+}
+}

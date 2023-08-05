@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "./interfaces/IERC1155Singleton.sol";
 
 /// @title ERC1155Singleton
-/// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions. Not intended for upgradeability.
+/// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
 contract ERC1155Singleton is
     ERC165,
     IERC1155Singleton,

@@ -6,7 +6,7 @@ This repository contains the code for a set of smart contracts adhering to the E
 
 ## Proxy Pattern
 
-![Proxy Diagram](images/Proxy.png)
+![Proxy Diagram](diagrams/Proxy.png)
 
 - `delegatecall()` - Function in contract A which allows an external contract B (delegating) to modify A’s storage (see diagram below, Solidity docs)
 - Proxy Contract - The contract A which stores data, but uses the logic of external contract B by way of `delegatecall()`.

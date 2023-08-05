@@ -1,277 +1,493 @@
 strict digraph {
-subgraph cluster_2118_ERC165 {
-label = "ERC165"
-"2118_supportsInterface" [label="supportsInterface"]
-}subgraph cluster_1865_Context {
-label = "Context"
-"1865__msgData" [label="_msgData"]
-"1865__msgSender" [label="_msgSender"]
-}subgraph cluster_1513_IERC1155MetadataURI {
-label = "IERC1155MetadataURI"
-"1513_uri" [label="uri"]
-}subgraph cluster_3435_ERC1155Singleton {
-label = "ERC1155Singleton"
-"3435_init" [label="init"]
-"3435_mintBatch" [label="mintBatch"]
-"3435_burnBatch" [label="burnBatch"]
-"3435_adminSafeTransferFrom" [label="adminSafeTransferFrom"]
-"3435_mint" [label="mint"]
-"3435_constructor" [label="constructor"]
-"3435_burn" [label="burn"]
-"3435_adminSafeBatchTransferFrom" [label="adminSafeBatchTransferFrom"]
-"3435_mintBatch" -> "3435_onlyOwner"
-"3435_mintBatch" -> "3435__mintBatch"
-"3435_burn" -> "3435__burn"
-"3435_burnBatch" -> "3435_onlyOwner"
-"3435_burn" -> "3435_onlyOwner"
-"3435_adminSafeTransferFrom" -> "3435__safeTransferFrom"
-"3435_burnBatch" -> "3435__burnBatch"
-"3435_mint" -> "3435_onlyOwner"
-"3435_constructor" -> "3435_constructor"
-"3435_constructor" -> "3435__transferOwnership"
-"3435_adminSafeTransferFrom" -> "3435_onlyOwner"
-"3435_mint" -> "3435__mint"
-"3435_adminSafeBatchTransferFrom" -> "3435_onlyOwner"
-"3435_init" -> "3435__transferOwnership"
-"3435_adminSafeBatchTransferFrom" -> "3435__safeBatchTransferFrom"
-}subgraph cluster_2094_Strings {
-label = "Strings"
-"2094_toHexString" [label="toHexString"]
-"2094_toString" [label="toString"]
-"2094_equal" [label="equal"]
-"2094_toString" -> "2094_toString"
-"2094_toHexString" -> "2094_toHexString"
-}subgraph cluster_112_Ownable {
-label = "Ownable"
-"112__transferOwnership" [label="_transferOwnership"]
-"112_renounceOwnership" [label="renounceOwnership"]
-"112__checkOwner" [label="_checkOwner"]
-"112_constructor" [label="constructor"]
-"112_owner" [label="owner"]
-"112_transferOwnership" [label="transferOwnership"]
-"112__checkOwner" -> "112_owner"
-"112_renounceOwnership" -> "112_onlyOwner"
-"112_transferOwnership" -> "112__transferOwnership"
-"112_constructor" -> "112__transferOwnership"
-"112_constructor" -> "112__msgSender"
-"112_transferOwnership" -> "112_onlyOwner"
-"112__checkOwner" -> "112__msgSender"
-"112_renounceOwnership" -> "112__transferOwnership"
-}subgraph cluster_1457_IERC1155 {
-label = "IERC1155"
-"1457_balanceOfBatch" [label="balanceOfBatch"]
-"1457_safeBatchTransferFrom" [label="safeBatchTransferFrom"]
-"1457_balanceOf" [label="balanceOf"]
-"1457_safeTransferFrom" [label="safeTransferFrom"]
-"1457_isApprovedForAll" [label="isApprovedForAll"]
-"1457_setApprovalForAll" [label="setApprovalForAll"]
-}subgraph cluster_2130_IERC165 {
-label = "IERC165"
-"2130_supportsInterface" [label="supportsInterface"]
-}subgraph cluster_1843_Address {
-label = "Address"
-"1843_functionDelegateCall" [label="functionDelegateCall"]
-"1843__revert" [label="_revert"]
-"1843_functionCall" [label="functionCall"]
-"1843_sendValue" [label="sendValue"]
-"1843_verifyCallResultFromTarget" [label="verifyCallResultFromTarget"]
-"1843_verifyCallResult" [label="verifyCallResult"]
-"1843_functionStaticCall" [label="functionStaticCall"]
-"1843_functionCallWithValue" [label="functionCallWithValue"]
-"1843_isContract" [label="isContract"]
-"1843_functionStaticCall" -> "1843_functionStaticCall"
-"1843_functionStaticCall" -> "1843_verifyCallResultFromTarget"
-"1843_functionDelegateCall" -> "1843_verifyCallResultFromTarget"
-"1843_verifyCallResultFromTarget" -> "1843_isContract"
-"1843_functionCallWithValue" -> "1843_verifyCallResultFromTarget"
-"1843_functionCallWithValue" -> "1843_functionCallWithValue"
-"1843_verifyCallResult" -> "1843__revert"
-"1843_verifyCallResultFromTarget" -> "1843__revert"
-"1843_functionCall" -> "1843_functionCallWithValue"
-"1843_functionDelegateCall" -> "1843_functionDelegateCall"
-}subgraph cluster_2996_Math {
-label = "Math"
-"2996_sqrt" [label="sqrt"]
-"2996_max" [label="max"]
-"2996_log2" [label="log2"]
-"2996_mulDiv" [label="mulDiv"]
-"2996_min" [label="min"]
-"2996_ceilDiv" [label="ceilDiv"]
-"2996_average" [label="average"]
-"2996_log10" [label="log10"]
-"2996_log256" [label="log256"]
-"2996_sqrt" -> "2996_log2"
-"2996_log10" -> "2996_log10"
-"2996_mulDiv" -> "2996_mulDiv"
-"2996_log2" -> "2996_log2"
-"2996_sqrt" -> "2996_sqrt"
-"2996_log256" -> "2996_log256"
-"2996_sqrt" -> "2996_min"
-}subgraph cluster_3478_ERC1155Proxy {
-label = "ERC1155Proxy"
-"3478_fallback" [label="fallback"]
-"3478_constructor" [label="constructor"]
-}subgraph cluster_1335_ERC1155 {
-label = "ERC1155"
-"1335__mintBatch" [label="_mintBatch"]
-"1335_safeBatchTransferFrom" [label="safeBatchTransferFrom"]
-"1335__safeBatchTransferFrom" [label="_safeBatchTransferFrom"]
-"1335__setURI" [label="_setURI"]
-"1335__doSafeBatchTransferAcceptanceCheck" [label="_doSafeBatchTransferAcceptanceCheck"]
-"1335_constructor" [label="constructor"]
-"1335_supportsInterface" [label="supportsInterface"]
-"1335__burnBatch" [label="_burnBatch"]
-"1335_balanceOf" [label="balanceOf"]
-"1335_safeTransferFrom" [label="safeTransferFrom"]
-"1335__mint" [label="_mint"]
-"1335__doSafeTransferAcceptanceCheck" [label="_doSafeTransferAcceptanceCheck"]
-"1335_uri" [label="uri"]
-"1335__setApprovalForAll" [label="_setApprovalForAll"]
-"1335__burn" [label="_burn"]
-"1335_setApprovalForAll" [label="setApprovalForAll"]
-"1335__asSingletonArray" [label="_asSingletonArray"]
-"1335__safeTransferFrom" [label="_safeTransferFrom"]
-"1335_balanceOfBatch" [label="balanceOfBatch"]
-"1335__afterTokenTransfer" [label="_afterTokenTransfer"]
-"1335__beforeTokenTransfer" [label="_beforeTokenTransfer"]
-"1335_isApprovedForAll" [label="isApprovedForAll"]
-"1335_setApprovalForAll" -> "1335__setApprovalForAll"
-"1335__mint" -> "1335__afterTokenTransfer"
-"1335_safeTransferFrom" -> "1335__safeTransferFrom"
-"1335__mint" -> "1335__beforeTokenTransfer"
-"1335_balanceOfBatch" -> "1335_balanceOf"
-"1335_safeBatchTransferFrom" -> "1335__msgSender"
-"1335_safeBatchTransferFrom" -> "1335__safeBatchTransferFrom"
-"1335__burnBatch" -> "1335__afterTokenTransfer"
-"1335__burn" -> "1335__afterTokenTransfer"
-"1335__safeTransferFrom" -> "1335__msgSender"
-"1335__safeBatchTransferFrom" -> "1335__msgSender"
-"1335__burnBatch" -> "1335__msgSender"
-"1335__safeTransferFrom" -> "1335__doSafeTransferAcceptanceCheck"
-"1335_setApprovalForAll" -> "1335__msgSender"
-"1335__mint" -> "1335__msgSender"
-"1335__mint" -> "1335__asSingletonArray"
-"1335__safeTransferFrom" -> "1335__asSingletonArray"
-"1335_constructor" -> "1335__setURI"
-"1335__burn" -> "1335__msgSender"
-"1335__burn" -> "1335__asSingletonArray"
-"1335__safeBatchTransferFrom" -> "1335__beforeTokenTransfer"
-"1335__safeTransferFrom" -> "1335__afterTokenTransfer"
-"1335__safeBatchTransferFrom" -> "1335__doSafeBatchTransferAcceptanceCheck"
-"1335__safeBatchTransferFrom" -> "1335__afterTokenTransfer"
-"1335_safeBatchTransferFrom" -> "1335_isApprovedForAll"
-"1335__burnBatch" -> "1335__beforeTokenTransfer"
-"1335_safeTransferFrom" -> "1335__msgSender"
-"1335_supportsInterface" -> "1335_supportsInterface"
-"1335__mintBatch" -> "1335__msgSender"
-"1335__mintBatch" -> "1335__afterTokenTransfer"
-"1335__mintBatch" -> "1335__doSafeBatchTransferAcceptanceCheck"
-"1335_safeTransferFrom" -> "1335_isApprovedForAll"
-"1335__mint" -> "1335__doSafeTransferAcceptanceCheck"
-"1335__burn" -> "1335__beforeTokenTransfer"
-"1335__safeTransferFrom" -> "1335__beforeTokenTransfer"
-"1335__mintBatch" -> "1335__beforeTokenTransfer"
-}subgraph cluster_3256_DcentralFactory {
-label = "DcentralFactory"
-"3256_deployLogicContract" [label="deployLogicContract"]
-"3256_deployProxyContract" [label="deployProxyContract"]
-"3256__computeAddress" [label="_computeAddress"]
-"3256__deployLogicContract" [label="_deployLogicContract"]
-"3256_getLogicContractAddress" [label="getLogicContractAddress"]
-"3256_deployLogicContract" -> "3256__deployLogicContract"
-"3256_getLogicContractAddress" -> "3256__computeAddress"
-}subgraph cluster_1498_IERC1155Receiver {
-label = "IERC1155Receiver"
-"1498_onERC1155Received" [label="onERC1155Received"]
-"1498_onERC1155BatchReceived" [label="onERC1155BatchReceived"]
-}subgraph cluster_3101_SignedMath {
+subgraph cluster_4355_SignedMath {
 label = "SignedMath"
-"3101_average" [label="average"]
-"3101_min" [label="min"]
-"3101_abs" [label="abs"]
-"3101_max" [label="max"]
+"4355_min" [label="min"]
+"4355_average" [label="average"]
+"4355_abs" [label="abs"]
+"4355_max" [label="max"]
+}subgraph cluster_388_IAccessControl {
+label = "IAccessControl"
+"388_grantRole" [label="grantRole"]
+"388_revokeRole" [label="revokeRole"]
+"388_getRoleAdmin" [label="getRoleAdmin"]
+"388_hasRole" [label="hasRole"]
+"388_renounceRole" [label="renounceRole"]
+}subgraph cluster_907_Proxy {
+label = "Proxy"
+"907_receive" [label="receive"]
+"907__implementation" [label="_implementation"]
+"907__fallback" [label="_fallback"]
+"907_fallback" [label="fallback"]
+"907__delegate" [label="_delegate"]
+"907__beforeFallback" [label="_beforeFallback"]
+"907__fallback" -> "907__delegate"
+"907__fallback" -> "907__implementation"
+"907_fallback" -> "907__fallback"
+"907_receive" -> "907__fallback"
+"907__fallback" -> "907__beforeFallback"
+}subgraph cluster_2444_IERC1155Receiver {
+label = "IERC1155Receiver"
+"2444_onERC1155Received" [label="onERC1155Received"]
+"2444_onERC1155BatchReceived" [label="onERC1155BatchReceived"]
+}subgraph cluster_3348_Strings {
+label = "Strings"
+"3348_toString" [label="toString"]
+"3348_toHexString" [label="toHexString"]
+"3348_equal" [label="equal"]
+"3348_toHexString" -> "3348_toHexString"
+"3348_toString" -> "3348_toString"
+}subgraph cluster_4250_Math {
+label = "Math"
+"4250_ceilDiv" [label="ceilDiv"]
+"4250_min" [label="min"]
+"4250_log2" [label="log2"]
+"4250_max" [label="max"]
+"4250_log10" [label="log10"]
+"4250_average" [label="average"]
+"4250_mulDiv" [label="mulDiv"]
+"4250_sqrt" [label="sqrt"]
+"4250_log256" [label="log256"]
+"4250_log2" -> "4250_log2"
+"4250_log10" -> "4250_log10"
+"4250_mulDiv" -> "4250_mulDiv"
+"4250_sqrt" -> "4250_log2"
+"4250_sqrt" -> "4250_sqrt"
+"4250_sqrt" -> "4250_min"
+"4250_log256" -> "4250_log256"
+}subgraph cluster_2459_IERC1155MetadataURI {
+label = "IERC1155MetadataURI"
+"2459_uri" [label="uri"]
+}subgraph cluster_541_IERC2981 {
+label = "IERC2981"
+"541_royaltyInfo" [label="royaltyInfo"]
+}subgraph cluster_1058_UpgradeableBeacon {
+label = "UpgradeableBeacon"
+"1058_upgradeTo" [label="upgradeTo"]
+"1058_constructor" [label="constructor"]
+"1058_implementation" [label="implementation"]
+"1058__setImplementation" [label="_setImplementation"]
+"1058_constructor" -> "1058__setImplementation"
+"1058_upgradeTo" -> "1058_onlyOwner"
+"1058_upgradeTo" -> "1058__setImplementation"
+}subgraph cluster_551_IERC1822Proxiable {
+label = "IERC1822Proxiable"
+"551_proxiableUUID" [label="proxiableUUID"]
+}subgraph cluster_2987_Address {
+label = "Address"
+"2987_sendValue" [label="sendValue"]
+"2987__revert" [label="_revert"]
+"2987_functionCall" [label="functionCall"]
+"2987_verifyCallResult" [label="verifyCallResult"]
+"2987_functionCallWithValue" [label="functionCallWithValue"]
+"2987_verifyCallResultFromTarget" [label="verifyCallResultFromTarget"]
+"2987_functionStaticCall" [label="functionStaticCall"]
+"2987_functionDelegateCall" [label="functionDelegateCall"]
+"2987_isContract" [label="isContract"]
+"2987_verifyCallResult" -> "2987__revert"
+"2987_functionStaticCall" -> "2987_verifyCallResultFromTarget"
+"2987_verifyCallResultFromTarget" -> "2987__revert"
+"2987_functionCallWithValue" -> "2987_verifyCallResultFromTarget"
+"2987_functionDelegateCall" -> "2987_functionDelegateCall"
+"2987_verifyCallResultFromTarget" -> "2987_isContract"
+"2987_functionCall" -> "2987_functionCallWithValue"
+"2987_functionStaticCall" -> "2987_functionStaticCall"
+"2987_functionDelegateCall" -> "2987_verifyCallResultFromTarget"
+"2987_functionCallWithValue" -> "2987_functionCallWithValue"
+}subgraph cluster_3372_ERC165 {
+label = "ERC165"
+"3372_supportsInterface" [label="supportsInterface"]
+}subgraph cluster_5421_MockSingletonFactory {
+label = "MockSingletonFactory"
+"5421_constructor" [label="constructor"]
+"5421__computeAddress" [label="_computeAddress"]
+"5421_computeAddress" [label="computeAddress"]
+"5421_computeAddress" -> "5421__computeAddress"
+}subgraph cluster_3119_StorageSlot {
+label = "StorageSlot"
+"3119_getBytes32Slot" [label="getBytes32Slot"]
+"3119_getUint256Slot" [label="getUint256Slot"]
+"3119_getStringSlot" [label="getStringSlot"]
+"3119_getBytesSlot" [label="getBytesSlot"]
+"3119_getAddressSlot" [label="getAddressSlot"]
+"3119_getBooleanSlot" [label="getBooleanSlot"]
+}subgraph cluster_3384_IERC165 {
+label = "IERC165"
+"3384_supportsInterface" [label="supportsInterface"]
+}subgraph cluster_315_AccessControl {
+label = "AccessControl"
+"315__checkRole" [label="_checkRole"]
+"315_grantRole" [label="grantRole"]
+"315_revokeRole" [label="revokeRole"]
+"315_hasRole" [label="hasRole"]
+"315_getRoleAdmin" [label="getRoleAdmin"]
+"315_supportsInterface" [label="supportsInterface"]
+"315__revokeRole" [label="_revokeRole"]
+"315__setupRole" [label="_setupRole"]
+"315_renounceRole" [label="renounceRole"]
+"315__setRoleAdmin" [label="_setRoleAdmin"]
+"315__grantRole" [label="_grantRole"]
+"315_renounceRole" -> "315__msgSender"
+"315_renounceRole" -> "315__revokeRole"
+"315__grantRole" -> "315_hasRole"
+"315__checkRole" -> "315_hasRole"
+"315_grantRole" -> "315_onlyRole"
+"315_revokeRole" -> "315_onlyRole"
+"315__setRoleAdmin" -> "315_getRoleAdmin"
+"315_supportsInterface" -> "315_supportsInterface"
+"315_revokeRole" -> "315__revokeRole"
+"315__checkRole" -> "315__checkRole"
+"315__revokeRole" -> "315__msgSender"
+"315__revokeRole" -> "315_hasRole"
+"315__grantRole" -> "315__msgSender"
+"315_grantRole" -> "315__grantRole"
+"315_revokeRole" -> "315_getRoleAdmin"
+"315__setupRole" -> "315__grantRole"
+"315_grantRole" -> "315_getRoleAdmin"
+"315__checkRole" -> "315__msgSender"
+}subgraph cluster_4924_Lock {
+label = "Lock"
+"4924_withdraw" [label="withdraw"]
+"4924_constructor" [label="constructor"]
+}subgraph cluster_4414_Beacon {
+label = "Beacon"
+"4414_constructor" [label="constructor"]
+"4414_deployProxyContract" [label="deployProxyContract"]
+"4414_constructor" -> "4414__transferOwnership"
+"4414_constructor" -> "4414_constructor"
+}subgraph cluster_3009_Context {
+label = "Context"
+"3009__msgSender" [label="_msgSender"]
+"3009__msgData" [label="_msgData"]
+}subgraph cluster_973_BeaconProxy {
+label = "BeaconProxy"
+"973__setBeacon" [label="_setBeacon"]
+"973__beacon" [label="_beacon"]
+"973_constructor" [label="constructor"]
+"973__implementation" [label="_implementation"]
+"973__implementation" -> "973__getBeacon"
+"973_constructor" -> "973__upgradeBeaconToAndCall"
+"973__setBeacon" -> "973__upgradeBeaconToAndCall"
+"973__beacon" -> "973__getBeacon"
+}subgraph cluster_983_IBeacon {
+label = "IBeacon"
+"983_implementation" [label="implementation"]
+}subgraph cluster_855_ERC1967Upgrade {
+label = "ERC1967Upgrade"
+"855__getAdmin" [label="_getAdmin"]
+"855__getBeacon" [label="_getBeacon"]
+"855__upgradeToAndCall" [label="_upgradeToAndCall"]
+"855__upgradeTo" [label="_upgradeTo"]
+"855__setBeacon" [label="_setBeacon"]
+"855__upgradeBeaconToAndCall" [label="_upgradeBeaconToAndCall"]
+"855__setAdmin" [label="_setAdmin"]
+"855__changeAdmin" [label="_changeAdmin"]
+"855__getImplementation" [label="_getImplementation"]
+"855__upgradeToAndCallUUPS" [label="_upgradeToAndCallUUPS"]
+"855__setImplementation" [label="_setImplementation"]
+"855__changeAdmin" -> "855__getAdmin"
+"855__changeAdmin" -> "855__setAdmin"
+"855__upgradeTo" -> "855__setImplementation"
+"855__upgradeBeaconToAndCall" -> "855__setBeacon"
+"855__upgradeToAndCallUUPS" -> "855__upgradeToAndCall"
+"855__upgradeToAndCallUUPS" -> "855__setImplementation"
+"855__upgradeToAndCall" -> "855__upgradeTo"
+}subgraph cluster_4445_ERC1155BeaconProxy {
+label = "ERC1155BeaconProxy"
+"4445_constructor" [label="constructor"]
+"4445_constructor" -> "4445_constructor"
+}subgraph cluster_4959_SingletonFactory {
+label = "SingletonFactory"
+"4959_constructor" [label="constructor"]
+"4959_deploy" [label="deploy"]
+}subgraph cluster_5089_IERC1155Singleton {
+label = "IERC1155Singleton"
+"5089_resetTokenRoyalty" [label="resetTokenRoyalty"]
+"5089_mintBatch" [label="mintBatch"]
+"5089_setDefaultRoyalty" [label="setDefaultRoyalty"]
+"5089_feeDenominator" [label="feeDenominator"]
+"5089_grantRole" [label="grantRole"]
+"5089_supportsInterface" [label="supportsInterface"]
+"5089_init" [label="init"]
+"5089_managerSafeBatchTransferFrom" [label="managerSafeBatchTransferFrom"]
+"5089_burn" [label="burn"]
+"5089_deleteDefaultRoyalty" [label="deleteDefaultRoyalty"]
+"5089_setTokenRoyalty" [label="setTokenRoyalty"]
+"5089_managerSafeTransferFrom" [label="managerSafeTransferFrom"]
+"5089_burnBatch" [label="burnBatch"]
+"5089_version" [label="version"]
+"5089_mint" [label="mint"]
+}subgraph cluster_2657_ERC2981 {
+label = "ERC2981"
+"2657__deleteDefaultRoyalty" [label="_deleteDefaultRoyalty"]
+"2657__feeDenominator" [label="_feeDenominator"]
+"2657_supportsInterface" [label="supportsInterface"]
+"2657_royaltyInfo" [label="royaltyInfo"]
+"2657__setDefaultRoyalty" [label="_setDefaultRoyalty"]
+"2657__resetTokenRoyalty" [label="_resetTokenRoyalty"]
+"2657__setTokenRoyalty" [label="_setTokenRoyalty"]
+"2657_supportsInterface" -> "2657_supportsInterface"
+"2657_royaltyInfo" -> "2657__feeDenominator"
+"2657__setTokenRoyalty" -> "2657__feeDenominator"
+"2657__setDefaultRoyalty" -> "2657__feeDenominator"
+}subgraph cluster_2403_IERC1155 {
+label = "IERC1155"
+"2403_safeTransferFrom" [label="safeTransferFrom"]
+"2403_setApprovalForAll" [label="setApprovalForAll"]
+"2403_balanceOf" [label="balanceOf"]
+"2403_isApprovedForAll" [label="isApprovedForAll"]
+"2403_safeBatchTransferFrom" [label="safeBatchTransferFrom"]
+"2403_balanceOfBatch" [label="balanceOfBatch"]
+}subgraph cluster_5348_MockMarketplace {
+label = "MockMarketplace"
+"5348_buyListing" [label="buyListing"]
+"5348_createListing" [label="createListing"]
+"5348_onERC1155Received" [label="onERC1155Received"]
+"5348_onERC1155BatchReceived" [label="onERC1155BatchReceived"]
+"5348_createListingForAllowedUsers" [label="createListingForAllowedUsers"]
+"5348_supportsInterface" [label="supportsInterface"]
+"5348_supportsInterface" -> "5348_supportsInterface"
+}subgraph cluster_2281_ERC1155 {
+label = "ERC1155"
+"2281__safeBatchTransferFrom" [label="_safeBatchTransferFrom"]
+"2281_safeBatchTransferFrom" [label="safeBatchTransferFrom"]
+"2281_balanceOfBatch" [label="balanceOfBatch"]
+"2281_supportsInterface" [label="supportsInterface"]
+"2281__asSingletonArray" [label="_asSingletonArray"]
+"2281_setApprovalForAll" [label="setApprovalForAll"]
+"2281__mint" [label="_mint"]
+"2281__mintBatch" [label="_mintBatch"]
+"2281__safeTransferFrom" [label="_safeTransferFrom"]
+"2281_constructor" [label="constructor"]
+"2281_uri" [label="uri"]
+"2281__doSafeTransferAcceptanceCheck" [label="_doSafeTransferAcceptanceCheck"]
+"2281__burn" [label="_burn"]
+"2281_safeTransferFrom" [label="safeTransferFrom"]
+"2281_isApprovedForAll" [label="isApprovedForAll"]
+"2281__afterTokenTransfer" [label="_afterTokenTransfer"]
+"2281__beforeTokenTransfer" [label="_beforeTokenTransfer"]
+"2281__doSafeBatchTransferAcceptanceCheck" [label="_doSafeBatchTransferAcceptanceCheck"]
+"2281__setURI" [label="_setURI"]
+"2281_balanceOf" [label="balanceOf"]
+"2281__setApprovalForAll" [label="_setApprovalForAll"]
+"2281__burnBatch" [label="_burnBatch"]
+"2281__mintBatch" -> "2281__msgSender"
+"2281__burn" -> "2281__beforeTokenTransfer"
+"2281_supportsInterface" -> "2281_supportsInterface"
+"2281_safeTransferFrom" -> "2281__msgSender"
+"2281__safeTransferFrom" -> "2281__afterTokenTransfer"
+"2281_balanceOfBatch" -> "2281_balanceOf"
+"2281_safeBatchTransferFrom" -> "2281__safeBatchTransferFrom"
+"2281__safeBatchTransferFrom" -> "2281__msgSender"
+"2281__mint" -> "2281__doSafeTransferAcceptanceCheck"
+"2281__mint" -> "2281__afterTokenTransfer"
+"2281_constructor" -> "2281__setURI"
+"2281_safeBatchTransferFrom" -> "2281_isApprovedForAll"
+"2281__safeBatchTransferFrom" -> "2281__afterTokenTransfer"
+"2281_safeTransferFrom" -> "2281__safeTransferFrom"
+"2281__safeTransferFrom" -> "2281__beforeTokenTransfer"
+"2281__burn" -> "2281__asSingletonArray"
+"2281_safeTransferFrom" -> "2281_isApprovedForAll"
+"2281__mintBatch" -> "2281__afterTokenTransfer"
+"2281__burnBatch" -> "2281__msgSender"
+"2281__safeBatchTransferFrom" -> "2281__beforeTokenTransfer"
+"2281__safeTransferFrom" -> "2281__asSingletonArray"
+"2281__burnBatch" -> "2281__beforeTokenTransfer"
+"2281__burn" -> "2281__afterTokenTransfer"
+"2281_setApprovalForAll" -> "2281__setApprovalForAll"
+"2281_safeBatchTransferFrom" -> "2281__msgSender"
+"2281__mint" -> "2281__msgSender"
+"2281__mint" -> "2281__beforeTokenTransfer"
+"2281__safeTransferFrom" -> "2281__doSafeTransferAcceptanceCheck"
+"2281__mintBatch" -> "2281__doSafeBatchTransferAcceptanceCheck"
+"2281__safeTransferFrom" -> "2281__msgSender"
+"2281__burn" -> "2281__msgSender"
+"2281__mint" -> "2281__asSingletonArray"
+"2281_setApprovalForAll" -> "2281__msgSender"
+"2281__safeBatchTransferFrom" -> "2281__doSafeBatchTransferAcceptanceCheck"
+"2281__mintBatch" -> "2281__beforeTokenTransfer"
+"2281__burnBatch" -> "2281__afterTokenTransfer"
+}subgraph cluster_4845_ERC1155Singleton {
+label = "ERC1155Singleton"
+"4845__registerInterface" [label="_registerInterface"]
+"4845_deleteDefaultRoyalty" [label="deleteDefaultRoyalty"]
+"4845_resetTokenRoyalty" [label="resetTokenRoyalty"]
+"4845_init" [label="init"]
+"4845_supportsInterface" [label="supportsInterface"]
+"4845_managerSafeTransferFrom" [label="managerSafeTransferFrom"]
+"4845_setTokenRoyalty" [label="setTokenRoyalty"]
+"4845_managerSafeBatchTransferFrom" [label="managerSafeBatchTransferFrom"]
+"4845_grantRole" [label="grantRole"]
+"4845_feeDenominator" [label="feeDenominator"]
+"4845_constructor" [label="constructor"]
+"4845_version" [label="version"]
+"4845_mintBatch" [label="mintBatch"]
+"4845_burn" [label="burn"]
+"4845_burnBatch" [label="burnBatch"]
+"4845_mint" [label="mint"]
+"4845_setDefaultRoyalty" [label="setDefaultRoyalty"]
+"4845_burn" -> "4845__burn"
+"4845_burnBatch" -> "4845_onlyRole"
+"4845_setDefaultRoyalty" -> "4845_onlyRole"
+"4845_managerSafeBatchTransferFrom" -> "4845__safeBatchTransferFrom"
+"4845_init" -> "4845__grantRole"
+"4845_grantRole" -> "4845_onlyRole"
+"4845_deleteDefaultRoyalty" -> "4845__deleteDefaultRoyalty"
+"4845_mintBatch" -> "4845_onlyRole"
+"4845_resetTokenRoyalty" -> "4845__resetTokenRoyalty"
+"4845_grantRole" -> "4845__grantRole"
+"4845_managerSafeTransferFrom" -> "4845_onlyRole"
+"4845_init" -> "4845__setApprovalForAll"
+"4845_mint" -> "4845__mint"
+"4845_setDefaultRoyalty" -> "4845__setDefaultRoyalty"
+"4845_setTokenRoyalty" -> "4845_onlyRole"
+"4845_mintBatch" -> "4845__mintBatch"
+"4845_supportsInterface" -> "4845_supportsInterface"
+"4845_managerSafeBatchTransferFrom" -> "4845_onlyRole"
+"4845_mint" -> "4845_onlyRole"
+"4845_grantRole" -> "4845_getRoleAdmin"
+"4845_feeDenominator" -> "4845__feeDenominator"
+"4845_constructor" -> "4845_constructor"
+"4845_deleteDefaultRoyalty" -> "4845_onlyRole"
+"4845_resetTokenRoyalty" -> "4845_onlyRole"
+"4845_burnBatch" -> "4845__burnBatch"
+"4845_constructor" -> "4845__grantRole"
+"4845_setTokenRoyalty" -> "4845__setTokenRoyalty"
+"4845_managerSafeTransferFrom" -> "4845__safeTransferFrom"
+"4845_burn" -> "4845_onlyRole"
+}subgraph cluster_501_Ownable {
+label = "Ownable"
+"501_transferOwnership" [label="transferOwnership"]
+"501__checkOwner" [label="_checkOwner"]
+"501_renounceOwnership" [label="renounceOwnership"]
+"501_constructor" [label="constructor"]
+"501__transferOwnership" [label="_transferOwnership"]
+"501_owner" [label="owner"]
+"501__checkOwner" -> "501_owner"
+"501_transferOwnership" -> "501__transferOwnership"
+"501_renounceOwnership" -> "501__transferOwnership"
+"501__checkOwner" -> "501__msgSender"
+"501_constructor" -> "501__msgSender"
+"501_renounceOwnership" -> "501_onlyOwner"
+"501_constructor" -> "501__transferOwnership"
+"501_transferOwnership" -> "501_onlyOwner"
+}subgraph cluster_5110_MockERC1155SingletonV2 {
+label = "MockERC1155SingletonV2"
+"5110_version" [label="version"]
+"5110_constructor" [label="constructor"]
 }subgraph cluster_solidity {
 label = "[Solidity]"
 "balance(address)" 
-"mload(uint256)" 
 "delegatecall(uint256,uint256,uint256,uint256,uint256,uint256)" 
-"revert(string)" 
-"require(bool,string)" 
-"revert(uint256,uint256)" 
+"mload(uint256)" 
+"code(address)" 
+"return(uint256,uint256)" 
+"type()" 
 "create2(uint256,uint256,uint256,uint256)" 
 "mstore8(uint256,uint256)" 
-"calldatasize()" 
-"abi.encodePacked()" 
-"type()" 
-"returndatacopy(uint256,uint256,uint256)" 
-"byte(uint256,uint256)" 
-"keccak256(bytes)" 
-"gas()" 
-"code(address)" 
 "calldatacopy(uint256,uint256,uint256)" 
-"mulmod(uint256,uint256,uint256)" 
-"return(uint256,uint256)" 
-"require(bool)" 
+"keccak256(bytes)" 
 "returndatasize()" 
-"3478_fallback" -> "delegatecall(uint256,uint256,uint256,uint256,uint256,uint256)"
-"1843_isContract" -> "code(address)"
-"3478_fallback" -> "mload(uint256)"
-"1335_safeBatchTransferFrom" -> "require(bool,string)"
-"112_transferOwnership" -> "require(bool,string)"
-"1843_functionCallWithValue" -> "balance(address)"
-"1335__doSafeTransferAcceptanceCheck" -> "revert(string)"
-"3478_fallback" -> "returndatacopy(uint256,uint256,uint256)"
-"3478_fallback" -> "returndatasize()"
-"3478_fallback" -> "calldatacopy(uint256,uint256,uint256)"
-"1335__mint" -> "require(bool,string)"
-"1843_sendValue" -> "require(bool,string)"
-"1843_verifyCallResultFromTarget" -> "require(bool,string)"
-"1335__mintBatch" -> "require(bool,string)"
-"2094_toString" -> "abi.encodePacked()"
-"1335__setApprovalForAll" -> "require(bool,string)"
-"2094_toString" -> "byte(uint256,uint256)"
-"3478_fallback" -> "gas()"
-"3478_fallback" -> "return(uint256,uint256)"
-"1843__revert" -> "revert(string)"
-"1335__burnBatch" -> "require(bool,string)"
-"3478_fallback" -> "calldatasize()"
-"3478_fallback" -> "require(bool)"
-"3256__deployLogicContract" -> "mload(uint256)"
-"3256_deployLogicContract" -> "require(bool,string)"
-"3256__computeAddress" -> "keccak256(bytes)"
-"1335__doSafeBatchTransferAcceptanceCheck" -> "revert(string)"
-"2094_equal" -> "keccak256(bytes)"
-"3256__deployLogicContract" -> "create2(uint256,uint256,uint256,uint256)"
-"1335__burn" -> "require(bool,string)"
-"2996_mulDiv" -> "require(bool,string)"
-"2996_mulDiv" -> "mulmod(uint256,uint256,uint256)"
-"3435_init" -> "require(bool)"
-"1335__safeTransferFrom" -> "require(bool,string)"
-"2094_toHexString" -> "require(bool,string)"
-"1843_functionCallWithValue" -> "require(bool,string)"
-"3256_deployLogicContract" -> "type()"
-"3478_constructor" -> "require(bool,string)"
-"1843__revert" -> "revert(uint256,uint256)"
-"1335_safeTransferFrom" -> "require(bool,string)"
-"1843_sendValue" -> "balance(address)"
-"112__checkOwner" -> "require(bool,string)"
-"2094_toString" -> "mstore8(uint256,uint256)"
-"1843__revert" -> "mload(uint256)"
-"3256__deployLogicContract" -> "revert(uint256,uint256)"
-"3256_getLogicContractAddress" -> "type()"
-"3256_deployProxyContract" -> "require(bool,string)"
-"3256__computeAddress" -> "abi.encodePacked()"
-"2118_supportsInterface" -> "type()"
-"1335_supportsInterface" -> "type()"
-"1335_balanceOf" -> "require(bool,string)"
-"1335__safeBatchTransferFrom" -> "require(bool,string)"
-"3478_fallback" -> "revert(uint256,uint256)"
-"1335_balanceOfBatch" -> "require(bool,string)"
-}"1335__doSafeTransferAcceptanceCheck" -> "1498_onERC1155Received"
-"1335__doSafeTransferAcceptanceCheck" -> "1843_isContract"
-"1335__doSafeBatchTransferAcceptanceCheck" -> "1843_isContract"
-"2094_toString" -> "3101_abs"
-"2094_toHexString" -> "2996_log256"
-"2094_toString" -> "2996_log10"
-"1335__doSafeBatchTransferAcceptanceCheck" -> "1498_onERC1155BatchReceived"
+"abi.encodePacked()" 
+"calldatasize()" 
+"returndatacopy(uint256,uint256,uint256)" 
+"mulmod(uint256,uint256,uint256)" 
+"revert(string)" 
+"byte(uint256,uint256)" 
+"revert(uint256,uint256)" 
+"gas()" 
+"require(bool,string)" 
+"907__delegate" -> "gas()"
+"2281__mintBatch" -> "require(bool,string)"
+"3348_equal" -> "keccak256(bytes)"
+"2281__safeBatchTransferFrom" -> "require(bool,string)"
+"5421__computeAddress" -> "keccak256(bytes)"
+"315__checkRole" -> "revert(string)"
+"2657_supportsInterface" -> "type()"
+"4959_deploy" -> "mload(uint256)"
+"2281__burn" -> "require(bool,string)"
+"501_transferOwnership" -> "require(bool,string)"
+"3348_toString" -> "mstore8(uint256,uint256)"
+"2987_sendValue" -> "require(bool,string)"
+"2987_functionCallWithValue" -> "balance(address)"
+"4959_deploy" -> "revert(uint256,uint256)"
+"2987_verifyCallResultFromTarget" -> "require(bool,string)"
+"2281_safeTransferFrom" -> "require(bool,string)"
+"907__delegate" -> "returndatasize()"
+"2281__mint" -> "require(bool,string)"
+"315_supportsInterface" -> "type()"
+"2281__doSafeTransferAcceptanceCheck" -> "revert(string)"
+"907__delegate" -> "calldatasize()"
+"2281_safeBatchTransferFrom" -> "require(bool,string)"
+"4924_constructor" -> "require(bool,string)"
+"2281__safeTransferFrom" -> "require(bool,string)"
+"907__delegate" -> "revert(uint256,uint256)"
+"2281__setApprovalForAll" -> "require(bool,string)"
+"2281_balanceOf" -> "require(bool,string)"
+"2987_sendValue" -> "balance(address)"
+"2987__revert" -> "revert(uint256,uint256)"
+"4250_mulDiv" -> "mulmod(uint256,uint256,uint256)"
+"2281_supportsInterface" -> "type()"
+"3348_toString" -> "abi.encodePacked()"
+"5348_buyListing" -> "require(bool,string)"
+"315_renounceRole" -> "require(bool,string)"
+"2657__setTokenRoyalty" -> "require(bool,string)"
+"315__checkRole" -> "abi.encodePacked()"
+"2987_functionCallWithValue" -> "require(bool,string)"
+"2281__burnBatch" -> "require(bool,string)"
+"3348_toHexString" -> "require(bool,string)"
+"5421__computeAddress" -> "abi.encodePacked()"
+"907__delegate" -> "returndatacopy(uint256,uint256,uint256)"
+"4445_constructor" -> "require(bool,string)"
+"855__setBeacon" -> "require(bool,string)"
+"4845_init" -> "require(bool,string)"
+"4959_deploy" -> "create2(uint256,uint256,uint256,uint256)"
+"4845_grantRole" -> "require(bool,string)"
+"4250_mulDiv" -> "require(bool,string)"
+"3372_supportsInterface" -> "type()"
+"4924_withdraw" -> "balance(address)"
+"2987__revert" -> "mload(uint256)"
+"855__setAdmin" -> "require(bool,string)"
+"2987_isContract" -> "code(address)"
+"2987__revert" -> "revert(string)"
+"2281__doSafeBatchTransferAcceptanceCheck" -> "revert(string)"
+"855__setImplementation" -> "require(bool,string)"
+"855__upgradeToAndCallUUPS" -> "revert(string)"
+"2657__setDefaultRoyalty" -> "require(bool,string)"
+"3348_toString" -> "byte(uint256,uint256)"
+"907__delegate" -> "return(uint256,uint256)"
+"501__checkOwner" -> "require(bool,string)"
+"1058__setImplementation" -> "require(bool,string)"
+"5348_supportsInterface" -> "type()"
+"907__delegate" -> "calldatacopy(uint256,uint256,uint256)"
+"855__upgradeToAndCallUUPS" -> "require(bool,string)"
+"4924_withdraw" -> "require(bool,string)"
+"907__delegate" -> "delegatecall(uint256,uint256,uint256,uint256,uint256,uint256)"
+"2281_balanceOfBatch" -> "require(bool,string)"
+}"855__getImplementation" -> "3119_getAddressSlot"
+"973__implementation" -> "983_implementation"
+"5348_createListingForAllowedUsers" -> "2403_safeTransferFrom"
+"855__upgradeToAndCallUUPS" -> "551_proxiableUUID"
+"855__upgradeBeaconToAndCall" -> "983_implementation"
+"855__upgradeBeaconToAndCall" -> "2987_functionDelegateCall"
+"855__getBeacon" -> "3119_getAddressSlot"
+"855__upgradeToAndCall" -> "2987_functionDelegateCall"
+"855__setImplementation" -> "3119_getAddressSlot"
+"855__getAdmin" -> "3119_getAddressSlot"
+"855__setBeacon" -> "2987_isContract"
+"855__setBeacon" -> "983_implementation"
+"3348_toString" -> "4250_log10"
+"3348_toHexString" -> "4250_log256"
+"2281__doSafeBatchTransferAcceptanceCheck" -> "2444_onERC1155BatchReceived"
+"2281__doSafeBatchTransferAcceptanceCheck" -> "2987_isContract"
+"855__upgradeToAndCallUUPS" -> "3119_getBooleanSlot"
+"315__checkRole" -> "3348_toHexString"
+"5348_createListing" -> "2403_safeTransferFrom"
+"5348_buyListing" -> "2403_safeTransferFrom"
+"855__setImplementation" -> "2987_isContract"
+"2281__doSafeTransferAcceptanceCheck" -> "2444_onERC1155Received"
+"855__setBeacon" -> "3119_getAddressSlot"
+"3348_toString" -> "4355_abs"
+"2281__doSafeTransferAcceptanceCheck" -> "2987_isContract"
+"1058__setImplementation" -> "2987_isContract"
+"855__setAdmin" -> "3119_getAddressSlot"
 }

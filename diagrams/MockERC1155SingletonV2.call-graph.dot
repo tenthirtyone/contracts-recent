@@ -1,0 +1,240 @@
+strict digraph {
+subgraph cluster_3009_Context {
+label = "Context"
+"3009__msgSender" [label="_msgSender"]
+"3009__msgData" [label="_msgData"]
+}subgraph cluster_2657_ERC2981 {
+label = "ERC2981"
+"2657__deleteDefaultRoyalty" [label="_deleteDefaultRoyalty"]
+"2657__feeDenominator" [label="_feeDenominator"]
+"2657_supportsInterface" [label="supportsInterface"]
+"2657_royaltyInfo" [label="royaltyInfo"]
+"2657__setDefaultRoyalty" [label="_setDefaultRoyalty"]
+"2657__resetTokenRoyalty" [label="_resetTokenRoyalty"]
+"2657__setTokenRoyalty" [label="_setTokenRoyalty"]
+"2657_supportsInterface" -> "2657_supportsInterface"
+"2657_royaltyInfo" -> "2657__feeDenominator"
+"2657__setTokenRoyalty" -> "2657__feeDenominator"
+"2657__setDefaultRoyalty" -> "2657__feeDenominator"
+}subgraph cluster_2403_IERC1155 {
+label = "IERC1155"
+"2403_safeTransferFrom" [label="safeTransferFrom"]
+"2403_setApprovalForAll" [label="setApprovalForAll"]
+"2403_balanceOf" [label="balanceOf"]
+"2403_isApprovedForAll" [label="isApprovedForAll"]
+"2403_safeBatchTransferFrom" [label="safeBatchTransferFrom"]
+"2403_balanceOfBatch" [label="balanceOfBatch"]
+}subgraph cluster_388_IAccessControl {
+label = "IAccessControl"
+"388_grantRole" [label="grantRole"]
+"388_revokeRole" [label="revokeRole"]
+"388_getRoleAdmin" [label="getRoleAdmin"]
+"388_hasRole" [label="hasRole"]
+"388_renounceRole" [label="renounceRole"]
+}subgraph cluster_5089_IERC1155Singleton {
+label = "IERC1155Singleton"
+"5089_resetTokenRoyalty" [label="resetTokenRoyalty"]
+"5089_mintBatch" [label="mintBatch"]
+"5089_setDefaultRoyalty" [label="setDefaultRoyalty"]
+"5089_feeDenominator" [label="feeDenominator"]
+"5089_grantRole" [label="grantRole"]
+"5089_supportsInterface" [label="supportsInterface"]
+"5089_init" [label="init"]
+"5089_managerSafeBatchTransferFrom" [label="managerSafeBatchTransferFrom"]
+"5089_burn" [label="burn"]
+"5089_deleteDefaultRoyalty" [label="deleteDefaultRoyalty"]
+"5089_setTokenRoyalty" [label="setTokenRoyalty"]
+"5089_managerSafeTransferFrom" [label="managerSafeTransferFrom"]
+"5089_burnBatch" [label="burnBatch"]
+"5089_version" [label="version"]
+"5089_mint" [label="mint"]
+}subgraph cluster_2281_ERC1155 {
+label = "ERC1155"
+"2281__safeBatchTransferFrom" [label="_safeBatchTransferFrom"]
+"2281_safeBatchTransferFrom" [label="safeBatchTransferFrom"]
+"2281_balanceOfBatch" [label="balanceOfBatch"]
+"2281_supportsInterface" [label="supportsInterface"]
+"2281_setApprovalForAll" [label="setApprovalForAll"]
+"2281__asSingletonArray" [label="_asSingletonArray"]
+"2281__mint" [label="_mint"]
+"2281__mintBatch" [label="_mintBatch"]
+"2281__safeTransferFrom" [label="_safeTransferFrom"]
+"2281_constructor" [label="constructor"]
+"2281_uri" [label="uri"]
+"2281__doSafeTransferAcceptanceCheck" [label="_doSafeTransferAcceptanceCheck"]
+"2281__burn" [label="_burn"]
+"2281_safeTransferFrom" [label="safeTransferFrom"]
+"2281_isApprovedForAll" [label="isApprovedForAll"]
+"2281__afterTokenTransfer" [label="_afterTokenTransfer"]
+"2281__beforeTokenTransfer" [label="_beforeTokenTransfer"]
+"2281__doSafeBatchTransferAcceptanceCheck" [label="_doSafeBatchTransferAcceptanceCheck"]
+"2281__setURI" [label="_setURI"]
+"2281_balanceOf" [label="balanceOf"]
+"2281__setApprovalForAll" [label="_setApprovalForAll"]
+"2281__burnBatch" [label="_burnBatch"]
+"2281__mintBatch" -> "2281__msgSender"
+"2281__burn" -> "2281__beforeTokenTransfer"
+"2281_supportsInterface" -> "2281_supportsInterface"
+"2281_safeTransferFrom" -> "2281__msgSender"
+"2281__safeTransferFrom" -> "2281__afterTokenTransfer"
+"2281_balanceOfBatch" -> "2281_balanceOf"
+"2281_safeBatchTransferFrom" -> "2281__safeBatchTransferFrom"
+"2281__safeBatchTransferFrom" -> "2281__msgSender"
+"2281__mint" -> "2281__doSafeTransferAcceptanceCheck"
+"2281__mint" -> "2281__afterTokenTransfer"
+"2281_constructor" -> "2281__setURI"
+"2281_safeBatchTransferFrom" -> "2281_isApprovedForAll"
+"2281__safeBatchTransferFrom" -> "2281__afterTokenTransfer"
+"2281_safeTransferFrom" -> "2281__safeTransferFrom"
+"2281__safeTransferFrom" -> "2281__beforeTokenTransfer"
+"2281__burn" -> "2281__asSingletonArray"
+"2281_safeTransferFrom" -> "2281_isApprovedForAll"
+"2281__mintBatch" -> "2281__afterTokenTransfer"
+"2281__burnBatch" -> "2281__msgSender"
+"2281__safeBatchTransferFrom" -> "2281__beforeTokenTransfer"
+"2281__safeTransferFrom" -> "2281__asSingletonArray"
+"2281__burnBatch" -> "2281__beforeTokenTransfer"
+"2281_setApprovalForAll" -> "2281__setApprovalForAll"
+"2281__burn" -> "2281__afterTokenTransfer"
+"2281_safeBatchTransferFrom" -> "2281__msgSender"
+"2281__mint" -> "2281__msgSender"
+"2281__mint" -> "2281__beforeTokenTransfer"
+"2281__safeTransferFrom" -> "2281__doSafeTransferAcceptanceCheck"
+"2281__mintBatch" -> "2281__doSafeBatchTransferAcceptanceCheck"
+"2281__safeTransferFrom" -> "2281__msgSender"
+"2281_setApprovalForAll" -> "2281__msgSender"
+"2281__mint" -> "2281__asSingletonArray"
+"2281__burn" -> "2281__msgSender"
+"2281__safeBatchTransferFrom" -> "2281__doSafeBatchTransferAcceptanceCheck"
+"2281__mintBatch" -> "2281__beforeTokenTransfer"
+"2281__burnBatch" -> "2281__afterTokenTransfer"
+}subgraph cluster_3372_ERC165 {
+label = "ERC165"
+"3372_supportsInterface" [label="supportsInterface"]
+}subgraph cluster_4845_ERC1155Singleton {
+label = "ERC1155Singleton"
+"4845__registerInterface" [label="_registerInterface"]
+"4845_deleteDefaultRoyalty" [label="deleteDefaultRoyalty"]
+"4845_resetTokenRoyalty" [label="resetTokenRoyalty"]
+"4845_init" [label="init"]
+"4845_managerSafeTransferFrom" [label="managerSafeTransferFrom"]
+"4845_supportsInterface" [label="supportsInterface"]
+"4845_setTokenRoyalty" [label="setTokenRoyalty"]
+"4845_managerSafeBatchTransferFrom" [label="managerSafeBatchTransferFrom"]
+"4845_grantRole" [label="grantRole"]
+"4845_feeDenominator" [label="feeDenominator"]
+"4845_constructor" [label="constructor"]
+"4845_mintBatch" [label="mintBatch"]
+"4845_burnBatch" [label="burnBatch"]
+"4845_burn" [label="burn"]
+"4845_version" [label="version"]
+"4845_mint" [label="mint"]
+"4845_setDefaultRoyalty" [label="setDefaultRoyalty"]
+"4845_burn" -> "4845__burn"
+"4845_burnBatch" -> "4845_onlyRole"
+"4845_managerSafeBatchTransferFrom" -> "4845__safeBatchTransferFrom"
+"4845_setDefaultRoyalty" -> "4845_onlyRole"
+"4845_init" -> "4845__grantRole"
+"4845_grantRole" -> "4845_onlyRole"
+"4845_deleteDefaultRoyalty" -> "4845__deleteDefaultRoyalty"
+"4845_mintBatch" -> "4845_onlyRole"
+"4845_resetTokenRoyalty" -> "4845__resetTokenRoyalty"
+"4845_grantRole" -> "4845__grantRole"
+"4845_managerSafeTransferFrom" -> "4845_onlyRole"
+"4845_init" -> "4845__setApprovalForAll"
+"4845_mint" -> "4845__mint"
+"4845_setDefaultRoyalty" -> "4845__setDefaultRoyalty"
+"4845_setTokenRoyalty" -> "4845_onlyRole"
+"4845_mintBatch" -> "4845__mintBatch"
+"4845_supportsInterface" -> "4845_supportsInterface"
+"4845_managerSafeBatchTransferFrom" -> "4845_onlyRole"
+"4845_mint" -> "4845_onlyRole"
+"4845_feeDenominator" -> "4845__feeDenominator"
+"4845_grantRole" -> "4845_getRoleAdmin"
+"4845_constructor" -> "4845_constructor"
+"4845_deleteDefaultRoyalty" -> "4845_onlyRole"
+"4845_resetTokenRoyalty" -> "4845_onlyRole"
+"4845_burnBatch" -> "4845__burnBatch"
+"4845_constructor" -> "4845__grantRole"
+"4845_setTokenRoyalty" -> "4845__setTokenRoyalty"
+"4845_managerSafeTransferFrom" -> "4845__safeTransferFrom"
+"4845_burn" -> "4845_onlyRole"
+}subgraph cluster_2459_IERC1155MetadataURI {
+label = "IERC1155MetadataURI"
+"2459_uri" [label="uri"]
+}subgraph cluster_5110_MockERC1155SingletonV2 {
+label = "MockERC1155SingletonV2"
+"5110_version" [label="version"]
+"5110_constructor" [label="constructor"]
+"5110_slitherConstructorConstantVariables" [label="slitherConstructorConstantVariables"]
+}subgraph cluster_3384_IERC165 {
+label = "IERC165"
+"3384_supportsInterface" [label="supportsInterface"]
+}subgraph cluster_315_AccessControl {
+label = "AccessControl"
+"315__checkRole" [label="_checkRole"]
+"315_grantRole" [label="grantRole"]
+"315_revokeRole" [label="revokeRole"]
+"315_supportsInterface" [label="supportsInterface"]
+"315_hasRole" [label="hasRole"]
+"315_getRoleAdmin" [label="getRoleAdmin"]
+"315__revokeRole" [label="_revokeRole"]
+"315__setupRole" [label="_setupRole"]
+"315_renounceRole" [label="renounceRole"]
+"315__setRoleAdmin" [label="_setRoleAdmin"]
+"315__grantRole" [label="_grantRole"]
+"315_renounceRole" -> "315__msgSender"
+"315_renounceRole" -> "315__revokeRole"
+"315__grantRole" -> "315_hasRole"
+"315__checkRole" -> "315_hasRole"
+"315_grantRole" -> "315_onlyRole"
+"315_revokeRole" -> "315_onlyRole"
+"315__setRoleAdmin" -> "315_getRoleAdmin"
+"315_supportsInterface" -> "315_supportsInterface"
+"315_revokeRole" -> "315__revokeRole"
+"315__checkRole" -> "315__checkRole"
+"315__revokeRole" -> "315__msgSender"
+"315__grantRole" -> "315__msgSender"
+"315__revokeRole" -> "315_hasRole"
+"315_grantRole" -> "315__grantRole"
+"315_revokeRole" -> "315_getRoleAdmin"
+"315__setupRole" -> "315__grantRole"
+"315_grantRole" -> "315_getRoleAdmin"
+"315__checkRole" -> "315__msgSender"
+}subgraph cluster_541_IERC2981 {
+label = "IERC2981"
+"541_royaltyInfo" [label="royaltyInfo"]
+}subgraph cluster_solidity {
+label = "[Solidity]"
+"abi.encodePacked()" 
+"keccak256(bytes)" 
+"type()" 
+"require(bool,string)" 
+"revert(string)" 
+"2281__mintBatch" -> "require(bool,string)"
+"2281__safeBatchTransferFrom" -> "require(bool,string)"
+"315__checkRole" -> "revert(string)"
+"2657_supportsInterface" -> "type()"
+"2281__burn" -> "require(bool,string)"
+"2281_safeTransferFrom" -> "require(bool,string)"
+"2281__mint" -> "require(bool,string)"
+"315_supportsInterface" -> "type()"
+"2281__doSafeTransferAcceptanceCheck" -> "revert(string)"
+"2281_safeBatchTransferFrom" -> "require(bool,string)"
+"2281__safeTransferFrom" -> "require(bool,string)"
+"2281__setApprovalForAll" -> "require(bool,string)"
+"2281_balanceOf" -> "require(bool,string)"
+"5110_slitherConstructorConstantVariables" -> "keccak256(bytes)"
+"2281_supportsInterface" -> "type()"
+"315_renounceRole" -> "require(bool,string)"
+"2657__setTokenRoyalty" -> "require(bool,string)"
+"315__checkRole" -> "abi.encodePacked()"
+"2281__burnBatch" -> "require(bool,string)"
+"4845_init" -> "require(bool,string)"
+"4845_grantRole" -> "require(bool,string)"
+"3372_supportsInterface" -> "type()"
+"2281__doSafeBatchTransferAcceptanceCheck" -> "revert(string)"
+"2657__setDefaultRoyalty" -> "require(bool,string)"
+"2281_balanceOfBatch" -> "require(bool,string)"
+}
+}

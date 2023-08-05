@@ -1,0 +1,77 @@
+strict digraph {
+subgraph cluster_907_Proxy {
+label = "Proxy"
+"907__implementation" [label="_implementation"]
+"907_receive" [label="receive"]
+"907__fallback" [label="_fallback"]
+"907_fallback" [label="fallback"]
+"907__delegate" [label="_delegate"]
+"907__beforeFallback" [label="_beforeFallback"]
+"907__fallback" -> "907__delegate"
+"907__fallback" -> "907__implementation"
+"907_fallback" -> "907__fallback"
+"907_receive" -> "907__fallback"
+"907__fallback" -> "907__beforeFallback"
+}subgraph cluster_4445_ERC1155BeaconProxy {
+label = "ERC1155BeaconProxy"
+"4445_slitherConstructorConstantVariables" [label="slitherConstructorConstantVariables"]
+"4445_constructor" [label="constructor"]
+"4445_constructor" -> "4445_constructor"
+}subgraph cluster_973_BeaconProxy {
+label = "BeaconProxy"
+"973__setBeacon" [label="_setBeacon"]
+"973__beacon" [label="_beacon"]
+"973_constructor" [label="constructor"]
+"973__implementation" [label="_implementation"]
+"973__implementation" -> "973__getBeacon"
+"973__setBeacon" -> "973__upgradeBeaconToAndCall"
+"973_constructor" -> "973__upgradeBeaconToAndCall"
+"973__beacon" -> "973__getBeacon"
+}subgraph cluster_855_ERC1967Upgrade {
+label = "ERC1967Upgrade"
+"855__getAdmin" [label="_getAdmin"]
+"855__getBeacon" [label="_getBeacon"]
+"855__upgradeToAndCall" [label="_upgradeToAndCall"]
+"855__upgradeTo" [label="_upgradeTo"]
+"855__setBeacon" [label="_setBeacon"]
+"855__setAdmin" [label="_setAdmin"]
+"855__upgradeBeaconToAndCall" [label="_upgradeBeaconToAndCall"]
+"855__changeAdmin" [label="_changeAdmin"]
+"855__getImplementation" [label="_getImplementation"]
+"855__upgradeToAndCallUUPS" [label="_upgradeToAndCallUUPS"]
+"855__setImplementation" [label="_setImplementation"]
+"855__changeAdmin" -> "855__getAdmin"
+"855__changeAdmin" -> "855__setAdmin"
+"855__upgradeTo" -> "855__setImplementation"
+"855__upgradeBeaconToAndCall" -> "855__setBeacon"
+"855__upgradeToAndCallUUPS" -> "855__upgradeToAndCall"
+"855__upgradeToAndCallUUPS" -> "855__setImplementation"
+"855__upgradeToAndCall" -> "855__upgradeTo"
+}subgraph cluster_solidity {
+label = "[Solidity]"
+"calldatasize()" 
+"returndatacopy(uint256,uint256,uint256)" 
+"revert(uint256,uint256)" 
+"delegatecall(uint256,uint256,uint256,uint256,uint256,uint256)" 
+"gas()" 
+"calldatacopy(uint256,uint256,uint256)" 
+"return(uint256,uint256)" 
+"returndatasize()" 
+"require(bool,string)" 
+"revert(string)" 
+"907__delegate" -> "calldatasize()"
+"907__delegate" -> "gas()"
+"907__delegate" -> "calldatacopy(uint256,uint256,uint256)"
+"907__delegate" -> "revert(uint256,uint256)"
+"855__setAdmin" -> "require(bool,string)"
+"4445_constructor" -> "require(bool,string)"
+"855__setBeacon" -> "require(bool,string)"
+"855__setImplementation" -> "require(bool,string)"
+"855__upgradeToAndCallUUPS" -> "revert(string)"
+"907__delegate" -> "return(uint256,uint256)"
+"907__delegate" -> "returndatasize()"
+"907__delegate" -> "returndatacopy(uint256,uint256,uint256)"
+"855__upgradeToAndCallUUPS" -> "require(bool,string)"
+"907__delegate" -> "delegatecall(uint256,uint256,uint256,uint256,uint256,uint256)"
+}
+}

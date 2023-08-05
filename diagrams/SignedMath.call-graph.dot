@@ -1,10 +1,10 @@
 strict digraph {
-subgraph cluster_3101_SignedMath {
+subgraph cluster_4355_SignedMath {
 label = "SignedMath"
-"3101_average" [label="average"]
-"3101_min" [label="min"]
-"3101_abs" [label="abs"]
-"3101_max" [label="max"]
+"4355_min" [label="min"]
+"4355_average" [label="average"]
+"4355_abs" [label="abs"]
+"4355_max" [label="max"]
 }subgraph cluster_solidity {
 label = "[Solidity]"
 }

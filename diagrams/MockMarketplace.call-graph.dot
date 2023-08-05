@@ -1,0 +1,30 @@
+strict digraph {
+subgraph cluster_3384_IERC165 {
+label = "IERC165"
+"3384_supportsInterface" [label="supportsInterface"]
+}subgraph cluster_2444_IERC1155Receiver {
+label = "IERC1155Receiver"
+"2444_onERC1155Received" [label="onERC1155Received"]
+"2444_onERC1155BatchReceived" [label="onERC1155BatchReceived"]
+}subgraph cluster_5348_MockMarketplace {
+label = "MockMarketplace"
+"5348_buyListing" [label="buyListing"]
+"5348_createListing" [label="createListing"]
+"5348_onERC1155Received" [label="onERC1155Received"]
+"5348_onERC1155BatchReceived" [label="onERC1155BatchReceived"]
+"5348_slitherConstructorVariables" [label="slitherConstructorVariables"]
+"5348_createListingForAllowedUsers" [label="createListingForAllowedUsers"]
+"5348_supportsInterface" [label="supportsInterface"]
+"5348_supportsInterface" -> "5348_supportsInterface"
+}subgraph cluster_3372_ERC165 {
+label = "ERC165"
+"3372_supportsInterface" [label="supportsInterface"]
+}subgraph cluster_solidity {
+label = "[Solidity]"
+"type()" 
+"require(bool,string)" 
+"5348_buyListing" -> "require(bool,string)"
+"5348_supportsInterface" -> "type()"
+"3372_supportsInterface" -> "type()"
+}
+}
