@@ -11,7 +11,8 @@
   "include": [
     "test/*.spec.ts",
     "test/*.e2e.ts",
-    "./scripts"
+    "./scripts",
+    "hardhat-chai.d.ts"
   ],
   "files": [
     "./hardhat.config.ts"

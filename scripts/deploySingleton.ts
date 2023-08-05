@@ -24,7 +24,7 @@ async function main() {
     `Deployed to https://explorer.public.zkevm-test.net/address/${factory.address}`
   );
 
-  const tx = await factory.deploy(SALT, ERC1155Bytecode);
+  const tx = await factory.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
   console.log(tx);
   const receipt = await tx.wait();
 

@@ -19,7 +19,7 @@ async function main() {
   const [owner, manager] = await hre.ethers.getSigners();
   const Factory = await hre.ethers.getContractFactory("SingletonFactory");
   console.log(owner.address)
-  const factory = await Factory.deploy();
+  const factory = await Factory.deploy({ gasLimit: 30000000 });
   await factory.deployed();
 
   console.log(
@@ -28,11 +28,11 @@ async function main() {
 
   console.log()
 
-  const erc1155Address = await factory.callStatic.deploy(SALT, ERC1155Bytecode);
+  const erc1155Address = await factory.callStatic.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
 
   console.log(`Attempting to deploy 1155SingletonFactory to ${erc1155Address}`)
 
-  const factoryTx = await factory.deploy(SALT, ERC1155Bytecode);
+  const factoryTx = await factory.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
   console.log(`SingletonFactory deployed at ${erc1155Address}`)
 
 
@@ -41,6 +41,7 @@ async function main() {
   const beaconInitCode = BeaconBytecode + encodedParameters.slice(2);
 
   // This gasLimit must be manually set. This is approximately twice the amount necessary
+  // TODO set all the other gasLimits. 
   const beaconTx = await factory.deploy(SALT, beaconInitCode, { gasLimit: 3185580 });
 
   const beaconReceipt = await beaconTx.wait();
