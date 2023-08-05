@@ -1,0 +1,41 @@
+strict digraph {
+subgraph cluster_1843_Address {
+label = "Address"
+"1843_functionDelegateCall" [label="functionDelegateCall"]
+"1843__revert" [label="_revert"]
+"1843_functionCall" [label="functionCall"]
+"1843_sendValue" [label="sendValue"]
+"1843_verifyCallResultFromTarget" [label="verifyCallResultFromTarget"]
+"1843_verifyCallResult" [label="verifyCallResult"]
+"1843_functionStaticCall" [label="functionStaticCall"]
+"1843_functionCallWithValue" [label="functionCallWithValue"]
+"1843_isContract" [label="isContract"]
+"1843_functionStaticCall" -> "1843_functionStaticCall"
+"1843_functionStaticCall" -> "1843_verifyCallResultFromTarget"
+"1843_functionDelegateCall" -> "1843_verifyCallResultFromTarget"
+"1843_functionCallWithValue" -> "1843_verifyCallResultFromTarget"
+"1843_verifyCallResultFromTarget" -> "1843_isContract"
+"1843_functionCallWithValue" -> "1843_functionCallWithValue"
+"1843_verifyCallResult" -> "1843__revert"
+"1843_verifyCallResultFromTarget" -> "1843__revert"
+"1843_functionCall" -> "1843_functionCallWithValue"
+"1843_functionDelegateCall" -> "1843_functionDelegateCall"
+}subgraph cluster_solidity {
+label = "[Solidity]"
+"balance(address)" 
+"mload(uint256)" 
+"code(address)" 
+"revert(string)" 
+"require(bool,string)" 
+"revert(uint256,uint256)" 
+"1843_sendValue" -> "balance(address)"
+"1843_isContract" -> "code(address)"
+"1843__revert" -> "mload(uint256)"
+"1843_verifyCallResultFromTarget" -> "require(bool,string)"
+"1843_sendValue" -> "require(bool,string)"
+"1843_functionCallWithValue" -> "balance(address)"
+"1843__revert" -> "revert(string)"
+"1843_functionCallWithValue" -> "require(bool,string)"
+"1843__revert" -> "revert(uint256,uint256)"
+}
+}

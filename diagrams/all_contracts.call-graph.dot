@@ -1,0 +1,277 @@
+strict digraph {
+subgraph cluster_2118_ERC165 {
+label = "ERC165"
+"2118_supportsInterface" [label="supportsInterface"]
+}subgraph cluster_1865_Context {
+label = "Context"
+"1865__msgData" [label="_msgData"]
+"1865__msgSender" [label="_msgSender"]
+}subgraph cluster_1513_IERC1155MetadataURI {
+label = "IERC1155MetadataURI"
+"1513_uri" [label="uri"]
+}subgraph cluster_3435_ERC1155Singleton {
+label = "ERC1155Singleton"
+"3435_init" [label="init"]
+"3435_mintBatch" [label="mintBatch"]
+"3435_burnBatch" [label="burnBatch"]
+"3435_adminSafeTransferFrom" [label="adminSafeTransferFrom"]
+"3435_mint" [label="mint"]
+"3435_constructor" [label="constructor"]
+"3435_burn" [label="burn"]
+"3435_adminSafeBatchTransferFrom" [label="adminSafeBatchTransferFrom"]
+"3435_mintBatch" -> "3435_onlyOwner"
+"3435_mintBatch" -> "3435__mintBatch"
+"3435_burn" -> "3435__burn"
+"3435_burnBatch" -> "3435_onlyOwner"
+"3435_burn" -> "3435_onlyOwner"
+"3435_adminSafeTransferFrom" -> "3435__safeTransferFrom"
+"3435_burnBatch" -> "3435__burnBatch"
+"3435_mint" -> "3435_onlyOwner"
+"3435_constructor" -> "3435_constructor"
+"3435_constructor" -> "3435__transferOwnership"
+"3435_adminSafeTransferFrom" -> "3435_onlyOwner"
+"3435_mint" -> "3435__mint"
+"3435_adminSafeBatchTransferFrom" -> "3435_onlyOwner"
+"3435_init" -> "3435__transferOwnership"
+"3435_adminSafeBatchTransferFrom" -> "3435__safeBatchTransferFrom"
+}subgraph cluster_2094_Strings {
+label = "Strings"
+"2094_toHexString" [label="toHexString"]
+"2094_toString" [label="toString"]
+"2094_equal" [label="equal"]
+"2094_toString" -> "2094_toString"
+"2094_toHexString" -> "2094_toHexString"
+}subgraph cluster_112_Ownable {
+label = "Ownable"
+"112__transferOwnership" [label="_transferOwnership"]
+"112_renounceOwnership" [label="renounceOwnership"]
+"112__checkOwner" [label="_checkOwner"]
+"112_constructor" [label="constructor"]
+"112_owner" [label="owner"]
+"112_transferOwnership" [label="transferOwnership"]
+"112__checkOwner" -> "112_owner"
+"112_renounceOwnership" -> "112_onlyOwner"
+"112_transferOwnership" -> "112__transferOwnership"
+"112_constructor" -> "112__transferOwnership"
+"112_constructor" -> "112__msgSender"
+"112_transferOwnership" -> "112_onlyOwner"
+"112__checkOwner" -> "112__msgSender"
+"112_renounceOwnership" -> "112__transferOwnership"
+}subgraph cluster_1457_IERC1155 {
+label = "IERC1155"
+"1457_balanceOfBatch" [label="balanceOfBatch"]
+"1457_safeBatchTransferFrom" [label="safeBatchTransferFrom"]
+"1457_balanceOf" [label="balanceOf"]
+"1457_safeTransferFrom" [label="safeTransferFrom"]
+"1457_isApprovedForAll" [label="isApprovedForAll"]
+"1457_setApprovalForAll" [label="setApprovalForAll"]
+}subgraph cluster_2130_IERC165 {
+label = "IERC165"
+"2130_supportsInterface" [label="supportsInterface"]
+}subgraph cluster_1843_Address {
+label = "Address"
+"1843_functionDelegateCall" [label="functionDelegateCall"]
+"1843__revert" [label="_revert"]
+"1843_functionCall" [label="functionCall"]
+"1843_sendValue" [label="sendValue"]
+"1843_verifyCallResultFromTarget" [label="verifyCallResultFromTarget"]
+"1843_verifyCallResult" [label="verifyCallResult"]
+"1843_functionStaticCall" [label="functionStaticCall"]
+"1843_functionCallWithValue" [label="functionCallWithValue"]
+"1843_isContract" [label="isContract"]
+"1843_functionStaticCall" -> "1843_functionStaticCall"
+"1843_functionStaticCall" -> "1843_verifyCallResultFromTarget"
+"1843_functionDelegateCall" -> "1843_verifyCallResultFromTarget"
+"1843_verifyCallResultFromTarget" -> "1843_isContract"
+"1843_functionCallWithValue" -> "1843_verifyCallResultFromTarget"
+"1843_functionCallWithValue" -> "1843_functionCallWithValue"
+"1843_verifyCallResult" -> "1843__revert"
+"1843_verifyCallResultFromTarget" -> "1843__revert"
+"1843_functionCall" -> "1843_functionCallWithValue"
+"1843_functionDelegateCall" -> "1843_functionDelegateCall"
+}subgraph cluster_2996_Math {
+label = "Math"
+"2996_sqrt" [label="sqrt"]
+"2996_max" [label="max"]
+"2996_log2" [label="log2"]
+"2996_mulDiv" [label="mulDiv"]
+"2996_min" [label="min"]
+"2996_ceilDiv" [label="ceilDiv"]
+"2996_average" [label="average"]
+"2996_log10" [label="log10"]
+"2996_log256" [label="log256"]
+"2996_sqrt" -> "2996_log2"
+"2996_log10" -> "2996_log10"
+"2996_mulDiv" -> "2996_mulDiv"
+"2996_log2" -> "2996_log2"
+"2996_sqrt" -> "2996_sqrt"
+"2996_log256" -> "2996_log256"
+"2996_sqrt" -> "2996_min"
+}subgraph cluster_3478_ERC1155Proxy {
+label = "ERC1155Proxy"
+"3478_fallback" [label="fallback"]
+"3478_constructor" [label="constructor"]
+}subgraph cluster_1335_ERC1155 {
+label = "ERC1155"
+"1335__mintBatch" [label="_mintBatch"]
+"1335_safeBatchTransferFrom" [label="safeBatchTransferFrom"]
+"1335__safeBatchTransferFrom" [label="_safeBatchTransferFrom"]
+"1335__setURI" [label="_setURI"]
+"1335__doSafeBatchTransferAcceptanceCheck" [label="_doSafeBatchTransferAcceptanceCheck"]
+"1335_constructor" [label="constructor"]
+"1335_supportsInterface" [label="supportsInterface"]
+"1335__burnBatch" [label="_burnBatch"]
+"1335_balanceOf" [label="balanceOf"]
+"1335_safeTransferFrom" [label="safeTransferFrom"]
+"1335__mint" [label="_mint"]
+"1335__doSafeTransferAcceptanceCheck" [label="_doSafeTransferAcceptanceCheck"]
+"1335_uri" [label="uri"]
+"1335__setApprovalForAll" [label="_setApprovalForAll"]
+"1335__burn" [label="_burn"]
+"1335_setApprovalForAll" [label="setApprovalForAll"]
+"1335__asSingletonArray" [label="_asSingletonArray"]
+"1335__safeTransferFrom" [label="_safeTransferFrom"]
+"1335_balanceOfBatch" [label="balanceOfBatch"]
+"1335__afterTokenTransfer" [label="_afterTokenTransfer"]
+"1335__beforeTokenTransfer" [label="_beforeTokenTransfer"]
+"1335_isApprovedForAll" [label="isApprovedForAll"]
+"1335_setApprovalForAll" -> "1335__setApprovalForAll"
+"1335__mint" -> "1335__afterTokenTransfer"
+"1335_safeTransferFrom" -> "1335__safeTransferFrom"
+"1335__mint" -> "1335__beforeTokenTransfer"
+"1335_balanceOfBatch" -> "1335_balanceOf"
+"1335_safeBatchTransferFrom" -> "1335__msgSender"
+"1335_safeBatchTransferFrom" -> "1335__safeBatchTransferFrom"
+"1335__burnBatch" -> "1335__afterTokenTransfer"
+"1335__burn" -> "1335__afterTokenTransfer"
+"1335__safeTransferFrom" -> "1335__msgSender"
+"1335__safeBatchTransferFrom" -> "1335__msgSender"
+"1335__burnBatch" -> "1335__msgSender"
+"1335__safeTransferFrom" -> "1335__doSafeTransferAcceptanceCheck"
+"1335_setApprovalForAll" -> "1335__msgSender"
+"1335__mint" -> "1335__msgSender"
+"1335__mint" -> "1335__asSingletonArray"
+"1335__safeTransferFrom" -> "1335__asSingletonArray"
+"1335_constructor" -> "1335__setURI"
+"1335__burn" -> "1335__msgSender"
+"1335__burn" -> "1335__asSingletonArray"
+"1335__safeBatchTransferFrom" -> "1335__beforeTokenTransfer"
+"1335__safeTransferFrom" -> "1335__afterTokenTransfer"
+"1335__safeBatchTransferFrom" -> "1335__doSafeBatchTransferAcceptanceCheck"
+"1335__safeBatchTransferFrom" -> "1335__afterTokenTransfer"
+"1335_safeBatchTransferFrom" -> "1335_isApprovedForAll"
+"1335__burnBatch" -> "1335__beforeTokenTransfer"
+"1335_safeTransferFrom" -> "1335__msgSender"
+"1335_supportsInterface" -> "1335_supportsInterface"
+"1335__mintBatch" -> "1335__msgSender"
+"1335__mintBatch" -> "1335__afterTokenTransfer"
+"1335__mintBatch" -> "1335__doSafeBatchTransferAcceptanceCheck"
+"1335_safeTransferFrom" -> "1335_isApprovedForAll"
+"1335__mint" -> "1335__doSafeTransferAcceptanceCheck"
+"1335__burn" -> "1335__beforeTokenTransfer"
+"1335__safeTransferFrom" -> "1335__beforeTokenTransfer"
+"1335__mintBatch" -> "1335__beforeTokenTransfer"
+}subgraph cluster_3256_DcentralFactory {
+label = "DcentralFactory"
+"3256_deployLogicContract" [label="deployLogicContract"]
+"3256_deployProxyContract" [label="deployProxyContract"]
+"3256__computeAddress" [label="_computeAddress"]
+"3256__deployLogicContract" [label="_deployLogicContract"]
+"3256_getLogicContractAddress" [label="getLogicContractAddress"]
+"3256_deployLogicContract" -> "3256__deployLogicContract"
+"3256_getLogicContractAddress" -> "3256__computeAddress"
+}subgraph cluster_1498_IERC1155Receiver {
+label = "IERC1155Receiver"
+"1498_onERC1155Received" [label="onERC1155Received"]
+"1498_onERC1155BatchReceived" [label="onERC1155BatchReceived"]
+}subgraph cluster_3101_SignedMath {
+label = "SignedMath"
+"3101_average" [label="average"]
+"3101_min" [label="min"]
+"3101_abs" [label="abs"]
+"3101_max" [label="max"]
+}subgraph cluster_solidity {
+label = "[Solidity]"
+"balance(address)" 
+"mload(uint256)" 
+"delegatecall(uint256,uint256,uint256,uint256,uint256,uint256)" 
+"revert(string)" 
+"require(bool,string)" 
+"revert(uint256,uint256)" 
+"create2(uint256,uint256,uint256,uint256)" 
+"mstore8(uint256,uint256)" 
+"calldatasize()" 
+"abi.encodePacked()" 
+"type()" 
+"returndatacopy(uint256,uint256,uint256)" 
+"byte(uint256,uint256)" 
+"keccak256(bytes)" 
+"gas()" 
+"code(address)" 
+"calldatacopy(uint256,uint256,uint256)" 
+"mulmod(uint256,uint256,uint256)" 
+"return(uint256,uint256)" 
+"require(bool)" 
+"returndatasize()" 
+"3478_fallback" -> "delegatecall(uint256,uint256,uint256,uint256,uint256,uint256)"
+"1843_isContract" -> "code(address)"
+"3478_fallback" -> "mload(uint256)"
+"1335_safeBatchTransferFrom" -> "require(bool,string)"
+"112_transferOwnership" -> "require(bool,string)"
+"1843_functionCallWithValue" -> "balance(address)"
+"1335__doSafeTransferAcceptanceCheck" -> "revert(string)"
+"3478_fallback" -> "returndatacopy(uint256,uint256,uint256)"
+"3478_fallback" -> "returndatasize()"
+"3478_fallback" -> "calldatacopy(uint256,uint256,uint256)"
+"1335__mint" -> "require(bool,string)"
+"1843_sendValue" -> "require(bool,string)"
+"1843_verifyCallResultFromTarget" -> "require(bool,string)"
+"1335__mintBatch" -> "require(bool,string)"
+"2094_toString" -> "abi.encodePacked()"
+"1335__setApprovalForAll" -> "require(bool,string)"
+"2094_toString" -> "byte(uint256,uint256)"
+"3478_fallback" -> "gas()"
+"3478_fallback" -> "return(uint256,uint256)"
+"1843__revert" -> "revert(string)"
+"1335__burnBatch" -> "require(bool,string)"
+"3478_fallback" -> "calldatasize()"
+"3478_fallback" -> "require(bool)"
+"3256__deployLogicContract" -> "mload(uint256)"
+"3256_deployLogicContract" -> "require(bool,string)"
+"3256__computeAddress" -> "keccak256(bytes)"
+"1335__doSafeBatchTransferAcceptanceCheck" -> "revert(string)"
+"2094_equal" -> "keccak256(bytes)"
+"3256__deployLogicContract" -> "create2(uint256,uint256,uint256,uint256)"
+"1335__burn" -> "require(bool,string)"
+"2996_mulDiv" -> "require(bool,string)"
+"2996_mulDiv" -> "mulmod(uint256,uint256,uint256)"
+"3435_init" -> "require(bool)"
+"1335__safeTransferFrom" -> "require(bool,string)"
+"2094_toHexString" -> "require(bool,string)"
+"1843_functionCallWithValue" -> "require(bool,string)"
+"3256_deployLogicContract" -> "type()"
+"3478_constructor" -> "require(bool,string)"
+"1843__revert" -> "revert(uint256,uint256)"
+"1335_safeTransferFrom" -> "require(bool,string)"
+"1843_sendValue" -> "balance(address)"
+"112__checkOwner" -> "require(bool,string)"
+"2094_toString" -> "mstore8(uint256,uint256)"
+"1843__revert" -> "mload(uint256)"
+"3256__deployLogicContract" -> "revert(uint256,uint256)"
+"3256_getLogicContractAddress" -> "type()"
+"3256_deployProxyContract" -> "require(bool,string)"
+"3256__computeAddress" -> "abi.encodePacked()"
+"2118_supportsInterface" -> "type()"
+"1335_supportsInterface" -> "type()"
+"1335_balanceOf" -> "require(bool,string)"
+"1335__safeBatchTransferFrom" -> "require(bool,string)"
+"3478_fallback" -> "revert(uint256,uint256)"
+"1335_balanceOfBatch" -> "require(bool,string)"
+}"1335__doSafeTransferAcceptanceCheck" -> "1498_onERC1155Received"
+"1335__doSafeTransferAcceptanceCheck" -> "1843_isContract"
+"1335__doSafeBatchTransferAcceptanceCheck" -> "1843_isContract"
+"2094_toString" -> "3101_abs"
+"2094_toHexString" -> "2996_log256"
+"2094_toString" -> "2996_log10"
+"1335__doSafeBatchTransferAcceptanceCheck" -> "1498_onERC1155BatchReceived"
+}
