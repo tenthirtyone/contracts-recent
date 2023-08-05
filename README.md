@@ -1,115 +1,133 @@
-# Deploy a smart contract to Polygon zkEVM Testnet with Hardhat and verify the contract
+# Gem Contract Infrastructure
 
-by [Steph](https://github.com/oceans404) aka [0ceans404](https://twitter.com/0ceans404) on Twitter
+This repository contains the code for a set of smart contracts adhering to the ERC1155 Multi-Token Standard. They're developed to provide robust functionality for token management, role management, royalty management, as well as support for ERC165, ERC1155, ERC2981 interfaces, and a range of compliance, proxy deployment, proxy pattern adherence, event emission, and gas usage considerations.
 
-[Polygon zkEVM](https://wiki.polygon.technology/docs/zkEVM/introduction) is the first zero-knowledge scaling solution that is fully equivalent to an EVM. All existing smart contracts, developer toolings and wallets work seamlessly. Polygon zkEVM harnesses the power of zero-knowledge proofs in order to reduce transaction costs and massively increase throughput, all while inheriting the security of Ethereum.
+`npx hardhat test`
 
-Here's how to deploy the smart contract in this repo to the Polygon zkEVM Testnet with Hardhat. If you're trying to deploy an existing repo, check out my [hardhat.config.js file](hardhat.config.js) then follow this repo's [Deploy steps starting here](https://github.com/oceans404/zkevm-hardhat-demo#deploy-to-the-polygon-zkevm-testnet)
+## Proxy Pattern
 
-## Getting Started
+![Proxy Diagram](images/Proxy.png)
 
-⭐️ Star this repo, then clone it and install dependencies
+- `delegatecall()` - Function in contract A which allows an external contract B (delegating) to modify A’s storage (see diagram below, Solidity docs)
+- Proxy Contract - The contract A which stores data, but uses the logic of external contract B by way of `delegatecall()`.
+- Logic Contract - The contract B which contains the logic used by Proxy Contract A
+- Proxiable Contract - Inherited in Logic Contract B to provide the upgrade functionality
 
-```shell
-git clone https://github.com/oceans404/zkevm-hardhat-demo
-npm i
+## Function Requirements
+
+### System Initialization
+
+```
+1.1 The system should permit only a single initialization.
+1.2 This initialization should set specified addresses as the default administrator and manager roles.
 ```
 
-Create a .env file
+### Role Management
 
-```shell
-cp .env.sample .env;
+```
+2.1 The system should implement role-based access control.
+2.2 The system should have a role management system where roles can be granted to specific addresses.
+2.3 An error should be thrown when attempting to grant a role to the zero address.
+2.4 An error should be thrown when a non-admin user tries to grant a role.
+2.5 An account with the DEFAULT_ADMIN_ROLE should be able to grant the MANAGER_ROLE.
+2.6 An account without the DEFAULT_ADMIN_ROLE should not be able to grant the MANAGER_ROLE.
+2.7 An account with the DEFAULT_ADMIN_ROLE should be able to revoke the MANAGER_ROLE.
+2.8 An account without the DEFAULT_ADMIN_ROLE should not be able to revoke the MANAGER_ROLE.
+2.9 Only an account with the DEFAULT_ADMIN_ROLE should be able to grant other roles.
+2.10 Only an account with the DEFAULT_ADMIN_ROLE should be able to revoke other roles.
 ```
 
-Update .env to set your ACCOUNT_PRIVATE_KEY environment variable. Here's [an article](https://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key#:~:text=On%20the%20account%20page%2C%20click,click%20%E2%80%9CConfirm%E2%80%9D%20to%20proceed) on how to get your private key from MetaMask.
+### Token Creation and Management
 
-## Code callouts in deploy.js
-
-The base of this project is the [default Hardhat Project Lock contract](https://hardhat.org/hardhat-runner/docs/getting-started#quick-start) bootstrapped when you select "Create a JavaScript project." I modified the deploy script slightly for easier testing.
-
-- lockedAmount: .0007 ETH
-- unlockTime: 3 minutes
-- include testnet explorer link in deployment console log statement
-
-Optionally run default hardhat tasks for local development:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+```
+3.1 The system should provide the capability to mint new ERC1155 tokens.
+3.2 Token minting should require specification of IDs and quantities, as well as target addresses.
+3.3 The system should allow batch minting of tokens using arrays of IDs and respective quantities.
+3.4 The system should permit the burning of tokens from specific addresses.
+3.5 Token burning should require specification of token IDs and quantities.
+3.6 The system should allow batch burning of tokens using arrays of IDs and respective quantities.
+3.7 The system should provide functionality to safely transfer tokens from one address to another.
+3.8 Token transfer should require specification of a token ID and quantity.
+3.9 The system should provide functionality for safe batch transfer of tokens using arrays of IDs and respective quantities.
+3.10 The system should not allow minting of new tokens without specific permissions.
+3.11 The system should not allow burning of tokens without specific permissions.
+3.12 The system should reject a token minting request if the requestor is not an owner of the contract.
+3.13 The system should reject a token burn request if the requestor is not an owner of the contract.
 ```
 
-## Deploy to the Polygon zkEVM Testnet
+### Manager Transferring
 
-Before you deploy to the Polygon zkEVM Testnet, you need zkEVM Testnet ETH. Watch my [bridging video](https://www.youtube.com/watch?v=eYZAPkTCgwg) to learn how to bridge Goerli ETH to Polygon zkEVM Testnet ETH.
-
-If you already have Goerli ETH in your account, start the video [here](https://youtu.be/eYZAPkTCgwg?t=179).
-
-Once you've funded your account with testnet ETH, run
-
-```shell
-npx hardhat run scripts/deploy.js --network zkEVM
+```
+4.1 The system should allow the manager to safely transfer a token from one account to another.
+4.2 Attempting to transfer a token from one account to another by a non-manager user should result in an error.
+4.3 The system should allow the manager to safely transfer multiple tokens from one account to another.
+4.4 Attempting to batch transfer tokens from one account to another by a non-manager user should result in an error.
+4.5 The system should allow the manager to burn a token from one account.
+4.6 Attempting to burn a token by a non-manager account should result in an error.
+4.7 The system should allow the manager to batch burn tokens from one account.
+4.8 Attempting to batch burn tokens by a non-manager account should result in an error.
 ```
 
-My result was 
+### Royalty Management
 
-```shell
-Lock with .0007 ETH and unlock timestamp 1677340384 
-    
-    Deployed to https://explorer.public.zkevm-test.net/address/0xc97d80F068c7Ef0fBBE05eBECD8500427F319b7D
+```
+5.1 The system should allow the setting of a default royalty for all tokens.
+5.2 Default royalty setting should require specification of an address and fee numerator.
+5.3 The system should permit the deletion of the default royalty.
+5.4 The system should allow setting a royalty for a specific token.
+5.5 Specific token royalty setting should require specification of an address and a fee numerator.
+5.6 The system should allow the resetting of the royalty for a specific token.
+5.7 The system should not allow setting of default royalty without the manager role.
+5.8 An error should be thrown when attempting to delete the default royalty without the manager role.
+5.9 The system should not allow setting of token royalty without the manager role.
+5.10 An error should be thrown when attempting to reset the token royalty without the manager role.
 ```
 
-Contract: https://explorer.public.zkevm-test.net/address/0xc97d80F068c7Ef0fBBE05eBECD8500427F319b7D
+### ERC165 Interface Support
 
-## Verify your Polygon zkEVM Testnet contract
+```
+6.1 The system should support the ERC165 interface.
+6.2 The system should support the ERC1155 interface.
+6.3 The system should support the ERC2981 interface.
+6.4 The system should support the Access Control interface.
+```
 
-As of today, there are no Polygon zkEVM Testnet explorer API keys, so you have to verify contracts manually.
+### ERC2981 Compliance
 
-1. Find your contract on the [Polygon zkEVM Testnet explorer](https://explorer.public.zkevm-test.net/).
+```
+7.1 The function feeDenominator in the contract should return BASE_POINTS.
+7.2 The function setDefaultRoyalty should correctly set a default royalty.
+7.3 The function deleteDefaultRoyalty should correctly remove the default royalty.
+7.4 The function setTokenRoyalty should correctly set a royalty for a specific token.
+7.5 The function resetTokenRoyalty should correctly reset the royalty for a specific token.
+7.6 The function royaltyInfo should correctly return royalty information for a token.
+7.7 The function royaltyInfo should return zero royalty information for a token without a royalty.
+```
 
-2. Select the "Code" tab.
+### Proxy Contract Deployment
 
-3. Click the "Verify and Publish" Button
+```
+8.1 The system should provide functionality to deploy a new proxy contract.
+8.2 Proxy contract deployment should initialize the contract with the caller as the owner.
+8.3 This operation should only be callable from the singleton instance of the contract.
+```
 
-4. Verify "Via Standard Input JSON"
+### ERC1155 Proxy Pattern
 
-5. Update "Compiler" based on your contract's compiler version
+```
+9.1 The ERC1155Proxy contract should delegate all calls to a separate implementation contract.
+9.2 The address of the implementation contract should be set at the time of the proxy's construction and remain immutable afterwards.
+```
 
-`pragma solidity ^0.8.9;` => v0.8.9+commit.e5eed63a
+### Event Emission
 
-6. In your local repo folder, navigate to the file in the build-info folder. artifacts > build-info > {superlongnumberfile}.json. Save this file to parse it with [Prettier](https://prettier.io/). Then find the input JSON object. It will look [something like this](https://docs.soliditylang.org/en/latest/using-the-compiler.html#input-description) `"input": {}`. Copy the input object value into a new file. Name and save this file locally. I saved mine as [example-standard-input.json](example-standard-input.json) in the root folder so you can check out the format, but use your own file.
+```
+10.1 The system should emit an Initialized event when a proxy contract is deployed.
+```
 
-7. Upload this file in the drag and drop "Standard Input JSON" file field.
+### Gas Usage Analysis
 
-8. Since we have an input, set "Try to fetch constructor arguments automatically" to NO.
-
-9. To add your ABI-encoded instrctor arguments, open the [Online ABI Encoder](https://abi.hashex.org/) and choose the auto-parse tab. 
-
-10. In your local repo folder, navigate to the file in the build-info folder. artifacts > build-info > {superlongnumberfile}.json. Find your ABI json array `"abi": []`, and copy/paste the array value into the auto-parse text box. Click "Parse."
-
-11. You'll see any inputs appear below. We need to specify the _unlockTime
-input value. We console logged this timestamp in deploy.js and it was 1677340384. Paste it in and you'll see the Encoded Data generated below.
-
-12. Copy the Encoded Data and use it for "ABI-encoded Constructor Arguments (if required by the contract)" back in the Polygon zkEVM Testnet explorer field.
-
-13. Click "Verify and Publish." The form will be in loading state. I opened the contract in a new tab and after about 5m I saw a green check mark next to the "Code" tab for verified even though the Loader never updated on the UI.
-
-[Here's my verified contact](https://explorer.public.zkevm-test.net/address/0xc97d80F068c7Ef0fBBE05eBECD8500427F319b7D/contracts#address-tabs)
-
-
-## Read unlock time
-
-Go to the "Read Contract" tab. [Here's mine](https://explorer.public.zkevm-test.net/address/0xc97d80F068c7Ef0fBBE05eBECD8500427F319b7D/read-contract#address-tabs)
-
-## Withdraw locked funds
-
-Before you withdraw funds you'll need to add the Polygon zkEVM Testnet as a Network within MetaMask so you can connect your account. Watch my [video](https://www.youtube.com/watch?v=Y1gOkTsXgSY) to learn how to add the Polygon zkEVM Testnet to MetaMask in less than 2 minutes.
-
-Go to your "Write Contract" tab. [Here's mine](
-https://explorer.public.zkevm-test.net/address/0xc97d80F068c7Ef0fBBE05eBECD8500427F319b7D/write-contract#address-tabs)
-
-Click "write" next to the withdraw function. You will have to connect to Polygon zkEVM testnet with the same account you used to deploy your smart contract. (The account whose private key you grabbed for the .env file). 
-
-If you look at my [transactions tab](https://explorer.public.zkevm-test.net/address/0xc97d80F068c7Ef0fBBE05eBECD8500427F319b7D/transactions#address-tabs) you can see I was able to successfully withdraw the funds I locked while deploying the contract.
+```
+11.1 The system should provide predictable gas usage for the EVM.
+11.2 The testing module should assess and report the gas usage for different operations including deploying contracts and minting tokens.
+```
