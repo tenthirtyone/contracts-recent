@@ -19,6 +19,7 @@ contract ERC1155Singleton is
     ERC2981,
     AccessControl
 {
+    uint256 currentTokenId = 0;
     /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     /// @notice Indicates if the contract has been initialized.
@@ -57,33 +58,71 @@ contract ERC1155Singleton is
         _grantRole(MANAGER_ROLE, manager);
 
         _setApprovalForAll(vault, manager, true);
+
+        _mint(vault, currentTokenId, 1, "0x");
+        currentTokenId++;
     }
 
     /// @notice Mints new tokens.
     /// @param to The address to mint tokens to.
-    /// @param id The token ID.
     /// @param amount The amount of tokens to mint.
     /// @param data Additional data with no specified format.
     function mint(
+        address to,
+        uint256 amount,
+        bytes memory data
+    ) public onlyRole(MANAGER_ROLE) {
+        _mint(to, currentTokenId, amount, data);
+        currentTokenId++;
+    }
+
+    /// @notice Increases the supply of an existing token.
+    /// @param to The address to mint tokens to.
+    /// @param amount The amount of tokens to mint.
+    /// @param data Additional data with no specified format.
+    function increaseSupply(
         address to,
         uint256 id,
         uint256 amount,
         bytes memory data
     ) public onlyRole(MANAGER_ROLE) {
+        require(id < currentTokenId, "Token id must exist.");
         _mint(to, id, amount, data);
     }
 
-    /// @notice Mints multiple tokens in a batch.
+    /// @notice  Increases the supply of a multiple existing token.
     /// @param to The address to mint tokens to.
-    /// @param ids An array of token IDs.
+    /// @param ids An array with the IDs of tokens to mint.
     /// @param amounts An array with the amounts of tokens to mint for each respective ID.
     /// @param data Additional data with no specified format.
-    function mintBatch(
+    function increaseSupplyBatch(
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
     ) public onlyRole(MANAGER_ROLE) {
+        require(ids.length == amounts.length, "Mismatched input arrays.");
+        for (uint256 i = 0; i < ids.length; i++) {
+            require(ids[i] < currentTokenId, "Token id must exist.");
+            _mint(to, ids[i], amounts[i], data);
+            currentTokenId++;
+        }
+    }
+
+    /// @notice Mints multiple tokens in a batch.
+    /// @param to The address to mint tokens to.
+    /// @param amounts An array with the amounts of tokens to mint for each respective ID.
+    /// @param data Additional data with no specified format.
+    function mintBatch(
+        address to,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public onlyRole(MANAGER_ROLE) {
+        uint256[] memory ids = new uint256[](amounts.length);
+        for (uint256 i = 0; i < amounts.length; i++) {
+            ids[i] = currentTokenId;
+            currentTokenId += 1;
+        }
         _mintBatch(to, ids, amounts, data);
     }
 

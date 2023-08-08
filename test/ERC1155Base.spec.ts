@@ -45,12 +45,12 @@ describe("ERC1155Singleton Singleton", function () {
     it("reverts when attempting to mint a new token", async function () {
       const { contract, owner } = await loadFixture(deploy);
 
-      await expect(contract.mint(owner.address, 1, 100, "0x")).to.be.reverted;
+      await expect(contract.mint(owner.address, 100, "0x")).to.be.reverted;
     });
     it("reverts when attempting to batch mint tokens without the manager role", async function () {
       const { contract, owner } = await loadFixture(deploy);
 
-      await expect(contract.connect(owner).mintBatch(owner.address, [1, 2], [1, 1], "0x")).to.be.reverted;
+      await expect(contract.connect(owner).mintBatch(owner.address, [1, 1], "0x")).to.be.reverted;
     });
   });
 

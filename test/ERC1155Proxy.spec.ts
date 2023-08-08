@@ -73,7 +73,7 @@ describe("ERC1155Proxy", function () {
 
     const proxy = await ethers.getContractAt("ERC1155Singleton", proxyAddress) as unknown as ERC1155Singleton;
 
-    return { proxy, owner };
+    return { proxy, owner, manager };
   }
 
   describe("Deployment", function () {
@@ -177,7 +177,7 @@ describe("ERC1155Proxy", function () {
   describe("Minting", function () {
     it("should mint a token", async () => {
       const { proxy, owner } = await loadFixture(deploy);
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
       const balance = await proxy.balanceOf(owner.address, 1);
       expect(balance).to.equal(1);
     });
@@ -186,7 +186,6 @@ describe("ERC1155Proxy", function () {
       const { proxy, owner } = await loadFixture(deploy);
       await proxy.mintBatch(
         owner.address,
-        [1, 2],
         [1, 1],
         ZERO_BYTES32
       );
@@ -202,7 +201,7 @@ describe("ERC1155Proxy", function () {
       await expect(
         proxy
           .connect(satoshi)
-          .mint(satoshi.address, 1, 1, ZERO_BYTES32)
+          .mint(satoshi.address, 1, ZERO_BYTES32)
       ).to.be.reverted;
     });
   });
@@ -210,7 +209,7 @@ describe("ERC1155Proxy", function () {
   describe("Burning", function () {
     it("should burn a token", async () => {
       const { proxy, owner } = await loadFixture(deploy);
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
       await proxy.burn(owner.address, 1, 1);
       const balance = await proxy.balanceOf(owner.address, 1);
       expect(balance).to.equal(0);
@@ -220,7 +219,6 @@ describe("ERC1155Proxy", function () {
       const { proxy, owner } = await loadFixture(deploy);
       await proxy.mintBatch(
         owner.address,
-        [1, 2],
         [1, 1],
         ZERO_BYTES32
       );
@@ -234,7 +232,7 @@ describe("ERC1155Proxy", function () {
     it("should reject a burn if not an owner", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
       await expect(proxy.connect(satoshi).burn(satoshi.address, 1, 1)).to.be
         .reverted;
     });
@@ -244,7 +242,7 @@ describe("ERC1155Proxy", function () {
     it("should safely transfer a token from one account to another", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
       await proxy.safeTransferFrom(
         owner.address,
         satoshi.address,
@@ -261,7 +259,6 @@ describe("ERC1155Proxy", function () {
       const [_owner, _manager, satoshi] = await ethers.getSigners();
       await proxy.mintBatch(
         owner.address,
-        [1, 2],
         [1, 1],
         ZERO_BYTES32
       );
@@ -281,7 +278,7 @@ describe("ERC1155Proxy", function () {
     it("should reject a transfer if not an owner", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
 
       await expect(
@@ -301,14 +298,14 @@ describe("ERC1155Proxy", function () {
       const [_owner, manager, satoshi] = await ethers.getSigners();
 
       // Mint a token to the owner
-      await proxy.mint(owner.address, 1, 100, "0x");
+      await proxy.mint(owner.address, 100, ZERO_BYTES32);
 
       // Verify that owner owns the token
       let balance = await proxy.balanceOf(owner.address, 1);
       expect(balance).to.equal(100);
 
       // Try to transfer a token from the owner to another address by the manager
-      await proxy.connect(manager).safeTransferFrom(owner.address, satoshi.address, 1, 50, "0x");
+      await proxy.connect(manager).safeTransferFrom(owner.address, satoshi.address, 1, 50, ZERO_BYTES32);
 
       // Verify that owner's balance has decreased
       balance = await proxy.balanceOf(owner.address, 1);
@@ -411,7 +408,7 @@ describe("ERC1155Proxy", function () {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
 
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
       await proxy.managerSafeTransferFrom(
         owner.address,
         satoshi.address,
@@ -426,7 +423,7 @@ describe("ERC1155Proxy", function () {
     it("should reject a transfer by non-admin", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
       await expect(
         proxy
           .connect(satoshi)
@@ -445,7 +442,6 @@ describe("ERC1155Proxy", function () {
       const [_owner, _manager, satoshi] = await ethers.getSigners();
       await proxy.mintBatch(
         owner.address,
-        [1, 2],
         [1, 1],
         ZERO_BYTES32
       );
@@ -467,7 +463,6 @@ describe("ERC1155Proxy", function () {
       const [_owner, _manager, satoshi] = await ethers.getSigners();
       await proxy.mintBatch(
         owner.address,
-        [1, 2],
         [1, 1],
         ZERO_BYTES32
       );
@@ -484,7 +479,53 @@ describe("ERC1155Proxy", function () {
       ).to.be.reverted;
     });
   });
+  describe("increaseSupply and increaseSupplyBatch functions", function () {
+    it("should increase the supply of an existing token", async function () {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+      const tokenId = 0;
+      const amount = 10;
+      const initialSupply = await proxy.balanceOf(owner.address, tokenId);
 
+      await proxy.connect(manager).increaseSupply(owner.address, tokenId, amount, ZERO_BYTES32);
+      const newSupply = await proxy.balanceOf(owner.address, tokenId);
+      expect(newSupply).to.equal(initialSupply.add(amount));
+    });
+
+    it("should revert for non-existing token in increaseSupply", async function () {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+      const nonExistentTokenId = 1000;
+      const amount = 10;
+      await expect(proxy.connect(manager).increaseSupply(owner.address, nonExistentTokenId, amount, ZERO_BYTES32)).to.be.revertedWith("Token id must exist.");
+    });
+
+    it("should increase the supply of multiple existing tokens in a batch", async function () {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+      const ids = [0, 1];
+      const amounts = [5, 7];
+      const initialSupplies = await Promise.all(ids.map(id => proxy.balanceOf(owner.address, id)));
+
+      await proxy.connect(manager).increaseSupplyBatch(owner.address, ids, amounts, ZERO_BYTES32);
+
+      for (let i = 0; i < ids.length; i++) {
+        const newSupply = await proxy.balanceOf(owner.address, ids[i]);
+        expect(newSupply).to.equal(initialSupplies[i].add(amounts[i]));
+      }
+    });
+
+    it("should revert for non-existing token in increaseSupplyBatch", async function () {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+      const ids = [0, 1000]; // 1000 is a non-existing token ID
+      const amounts = [5, 7];
+      await expect(proxy.connect(manager).increaseSupplyBatch(owner.address, ids, amounts, ZERO_BYTES32)).to.be.revertedWith("Token id must exist.");
+    });
+
+    it("should revert for mismatched input arrays in increaseSupplyBatch", async function () {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+      const ids = [0];
+      const amounts = [5, 7]; // Mismatched lengths
+      await expect(proxy.connect(manager).increaseSupplyBatch(owner.address, ids, amounts, ZERO_BYTES32)).to.be.revertedWith("Mismatched input arrays.");
+    });
+  });
 
   describe("Role Management", function () {
     it("allows a role to be granted to an account", async function () {

@@ -23,7 +23,9 @@ interface IERC1155Singleton {
 
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 
-    function mint(
+    function mint(address to, uint256 amount, bytes memory data) external;
+
+    function increaseSupply(
         address to,
         uint256 id,
         uint256 amount,
@@ -32,7 +34,6 @@ interface IERC1155Singleton {
 
     function mintBatch(
         address to,
-        uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
     ) external;

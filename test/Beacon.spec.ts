@@ -114,7 +114,7 @@ describe("UpgradeableBeacon", function () {
     it("should upgrade to the next version of the contract", async () => {
       const { proxy, owner, manager, beacon, erc1155AddressV2, factoryInstance } = await loadFixture(deploy);
 
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
       expect(await proxy.balanceOf(owner.address, 1)).to.equal(1);
       expect(await proxy.version()).to.equal(1);

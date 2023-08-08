@@ -87,7 +87,7 @@ describe("ERC1155Proxy", function () {
       const [_owner, manager, satoshi] = await ethers.getSigners();
 
       // Mint a token to the owner
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
 
       expect(await proxy.isApprovedForAll(owner.address, marketplace.address)).to.equal(true)
@@ -102,7 +102,7 @@ describe("ERC1155Proxy", function () {
       const [_owner, _manager, satoshi] = await ethers.getSigners();
 
       // Mint a token to the owner
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
       await proxy.connect(manager).safeTransferFrom(owner.address, manager.address, 1, 1, ZERO_BYTES32);
       // Create a listing in the marketplace
@@ -126,7 +126,7 @@ describe("ERC1155Proxy", function () {
 
 
       // Mint a token to the owner
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
       // Create a listing in the marketplace
       await marketplace.connect(owner).createListing(proxy.address, 1, 1, ethers.utils.parseEther("1.0"));
@@ -148,7 +148,7 @@ describe("ERC1155Proxy", function () {
       const [_owner, _manager, buyer1, buyer2] = await ethers.getSigners();
 
       // Mint a token to the owner
-      await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
       // Owner lists the token for sale
       await marketplace.connect(owner).createListing(proxy.address, 1, 1, ethers.utils.parseEther("1.0"));
@@ -186,7 +186,7 @@ describe("ERC1155Proxy", function () {
         const { proxy, owner, manager } = await loadFixture(deploy);
         const [_owner, _manager, recipient] = await ethers.getSigners();
         // Mint a token to the owner
-        await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+        await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
         // Owner transfers a unit of the token to the recipient
         await proxy.connect(owner).safeTransferFrom(owner.address, recipient.address, 1, 1, ZERO_BYTES32);
@@ -201,7 +201,7 @@ describe("ERC1155Proxy", function () {
         const { proxy, owner, manager } = await loadFixture(deploy);
         const [_owner, _manager, recipient] = await ethers.getSigners();
         // Mint 5 tokens to the owner
-        await proxy.mint(owner.address, 1, 5, ZERO_BYTES32);
+        await proxy.mint(owner.address, 5, ZERO_BYTES32);
 
         // Owner transfers 5 units of the token to the recipient
         await proxy.connect(owner).safeTransferFrom(owner.address, recipient.address, 1, 5, ZERO_BYTES32);
@@ -218,7 +218,7 @@ describe("ERC1155Proxy", function () {
         const { proxy, owner, manager, marketplace } = await loadFixture(deploy);
         const [_owner, _manager, buyer] = await ethers.getSigners();
         // Mint a token to the owner
-        await proxy.mint(owner.address, 1, 1, ZERO_BYTES32);
+        await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
         // Owner lists the token for sale
         await marketplace.connect(owner).createListing(proxy.address, 1, 1, ethers.utils.parseEther("1.0"));

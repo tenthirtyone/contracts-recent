@@ -89,7 +89,6 @@ describe("Gas Usage", function () {
     const mintTx = await proxy.mint(
       owner.address,
       1,
-      1,
       ethers.utils.formatBytes32String("")
     );
     const mintReceipt = await mintTx.wait();
