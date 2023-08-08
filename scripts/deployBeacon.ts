@@ -46,13 +46,9 @@ async function main() {
 
   const beaconReceipt = await beaconTx.wait();
 
-
-
-  //console.log(`SingletonFactory deployed at ${beaconAddress}`)
+  console.log(`Beacon deployed at ${beaconReceipt.events[0].address}`)
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;

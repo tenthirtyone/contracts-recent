@@ -12,7 +12,7 @@ export const CONTRACT_SALT = "Dcentral.me Token Contract";
 const manager = "0x54B4D9e7D58B6F4CF2F053fACFf57fE330E91d01"
 const encodedString = hre.ethers.utils.formatBytes32String(CONTRACT_SALT);
 const FACTORY_ADDRESS = "0xa96d115aa928544016e21795457A866B12D60447"
-const BEACON_ADDRESS = "0x790E5ABBDECcaFd353cA31df1D90F10b404a7Dd0"
+const BEACON_ADDRESS = "0x471A4b7de2FE71F44db772122320baB88bFb853C"
 const SALT = encodedString
 
 async function main() {
