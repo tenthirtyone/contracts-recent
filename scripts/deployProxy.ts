@@ -30,8 +30,17 @@ async function main() {
   );
 
   const receipt = await deployBeaconProxyTx.wait();
+  const proxyAddress = receipt.logs[0].address;
 
-  console.log(receipt)
+  console.log(`Proxy deployed to ${proxyAddress}`)
+
+  const proxyContract = new hre.ethers.Contract(proxyAddress, ERC1155SingletonABI, owner);
+
+  const mintTx = await proxyContract.mint(owner.address, 1, "0x");
+
+  const mintTxReceipt = await mintTx.wait();
+
+  await proxyContract.mint(owner.address, 1, "0x");
 }
 
 main().catch((error) => {

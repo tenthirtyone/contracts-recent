@@ -17,7 +17,7 @@ async function main() {
   const factory = await hre.ethers.getContractAt("SingletonFactory", FACTORY_ADDRESS);
 
   console.log(
-    `Deployed to https://explorer.public.zkevm-test.net/address/${factory.address}`
+    `Using factory at https://explorer.public.zkevm-test.net/address/${factory.address}`
   );
 
   const tx = await factory.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });

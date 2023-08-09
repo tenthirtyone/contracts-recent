@@ -514,7 +514,7 @@ describe("ERC1155Proxy", function () {
 
     it("should revert for non-existing token in increaseSupplyBatch", async function () {
       const { proxy, owner, manager } = await loadFixture(deploy);
-      const ids = [0, 1000]; // 1000 is a non-existing token ID
+      const ids = [0, 1000];
       const amounts = [5, 7];
       await expect(proxy.connect(manager).increaseSupplyBatch(owner.address, ids, amounts, ZERO_BYTES32)).to.be.revertedWith("Token id must exist.");
     });
