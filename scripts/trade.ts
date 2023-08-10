@@ -19,17 +19,25 @@ const manager = "0x54B4D9e7D58B6F4CF2F053fACFf57fE330E91d01"
 const encodedString = ethers.utils.formatBytes32String(CONTRACT_SALT);
 const FACTORY_ADDRESS = "0xa96d115aa928544016e21795457A866B12D60447"
 const BEACON_ADDRESS = "0x471A4b7de2FE71F44db772122320baB88bFb853C"
-const PROXY_ADDRESS = "0x0746836dEF8c7cB37EB9274306D5b6F8b2528ab7"
-const VAULT_ADDRESS = "0x795fa5ae8fE4E4bE23A200fF8C6AFdAb26537eFB"
+const PROXY_ADDRESS = "0xBcdf1eE710c70E259649fD3E4a0573701Ec8043C"
+const VAULT_ADDRESS = "0x818F945545bAae45C0c57BdDA31eA70807DE5743"
 const SALT = encodedString
 const MNEMONIC = process.env.MNEMONIC || "";
 
 async function main() {
   const [manager, satoshi, conan, solo, rothbard] = createWallets(MNEMONIC, 5);
 
-  const tokenContract = new ethers.Contract(PROXY_ADDRESS, ERC1155SingletonABI, conan);
+  console.log(`manager: ${manager.address}`)
+  console.log(`satoshi: ${satoshi.address}`)
+  console.log(`conan: ${conan.address}`)
+  console.log(`solo: ${solo.address}`)
+  console.log(`rothbard: ${rothbard.address}`)
 
-  const directSaleTx = await tokenContract.safeTransferFrom(conan.address, solo.address, 2, 1, "0x", { gasLimit: 30000000 })
+  // change who connects
+  const tokenContract = new ethers.Contract(PROXY_ADDRESS, ERC1155SingletonABI, satoshi);
+
+  // change who transfers
+  const directSaleTx = await tokenContract.safeTransferFrom(satoshi.address, rothbard.address, 1, 1, "0x", { gasLimit: 30000000 })
 
   const directSaleReceipt = await directSaleTx.wait();
 

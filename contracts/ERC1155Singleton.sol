@@ -19,15 +19,15 @@ contract ERC1155Singleton is
     ERC2981,
     AccessControl
 {
-    uint256 currentTokenId = 0;
+    uint256 public currentTokenId = 0;
+
     /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     /// @notice Indicates if the contract has been initialized.
-    /// @notice defaults are equivalent to constructor settings and do not work. Ensure that initialize sets field declarations.
-    bool public didInit;
+    bool public didInit = false;
     /// @notice Map to track registered interfaces
     mapping(bytes4 => bool) private _supportedInterfaces;
-    /// @notice Emitted when a new proxy contract is deployed.
+    /// @notice Emitted when init is called.
     event Initialized(
         address proxyContractAddress,
         address owner,
@@ -113,7 +113,7 @@ contract ERC1155Singleton is
     /// @param to The address to mint tokens to.
     /// @param amounts An array with the amounts of tokens to mint for each respective ID.
     /// @param data Additional data with no specified format.
-    function mintBatch(
+    function mintBatchToExisting(
         address to,
         uint256[] memory amounts,
         bytes memory data

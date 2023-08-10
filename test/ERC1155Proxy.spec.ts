@@ -34,7 +34,6 @@ describe("ERC1155Proxy", function () {
     const SingletonFactory = await ethers.getContractFactory(
       "MockSingletonFactory"
     );
-
     const factoryInstance = await SingletonFactory.deploy();
 
     const erc1155Address = await factoryInstance.callStatic.computeAddress(
@@ -67,6 +66,7 @@ describe("ERC1155Proxy", function () {
       callData
     );
 
+    console.log('here')
     await beacon.deployProxyContract(
       callData
     );
@@ -184,15 +184,19 @@ describe("ERC1155Proxy", function () {
 
     it("should mint multiple tokens", async () => {
       const { proxy, owner } = await loadFixture(deploy);
-      await proxy.mintBatch(
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
+
+      await proxy.mintBatchToExisting(
         owner.address,
         [1, 1],
         ZERO_BYTES32
       );
       const balance1 = await proxy.balanceOf(owner.address, 1);
       const balance2 = await proxy.balanceOf(owner.address, 2);
-      expect(balance1).to.equal(1);
-      expect(balance2).to.equal(1);
+      expect(balance1).to.equal(2);
+      expect(balance2).to.equal(2);
     });
 
     it("should reject a mint if not an owner", async () => {
@@ -217,7 +221,10 @@ describe("ERC1155Proxy", function () {
 
     it("should burn multiple tokens", async () => {
       const { proxy, owner } = await loadFixture(deploy);
-      await proxy.mintBatch(
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
+      await proxy.mintBatchToExisting(
         owner.address,
         [1, 1],
         ZERO_BYTES32
@@ -257,7 +264,10 @@ describe("ERC1155Proxy", function () {
     it("should safely transfer multiple tokens from one account to another", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mintBatch(
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
+      await proxy.mintBatchToExisting(
         owner.address,
         [1, 1],
         ZERO_BYTES32
@@ -299,6 +309,7 @@ describe("ERC1155Proxy", function () {
 
       // Mint a token to the owner
       await proxy.mint(owner.address, 100, ZERO_BYTES32);
+
 
       // Verify that owner owns the token
       let balance = await proxy.balanceOf(owner.address, 1);
@@ -440,7 +451,10 @@ describe("ERC1155Proxy", function () {
     it("should safely transfer multiple tokens from one account to another by owner as a manager", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mintBatch(
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
+      await proxy.mintBatchToExisting(
         owner.address,
         [1, 1],
         ZERO_BYTES32
@@ -461,7 +475,10 @@ describe("ERC1155Proxy", function () {
     it("should reject a batch transfer by non-admin", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mintBatch(
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
+      await proxy.mintBatchToExisting(
         owner.address,
         [1, 1],
         ZERO_BYTES32

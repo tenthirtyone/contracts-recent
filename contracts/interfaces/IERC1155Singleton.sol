@@ -32,7 +32,7 @@ interface IERC1155Singleton {
         bytes memory data
     ) external;
 
-    function mintBatch(
+    function mintBatchToExisting(
         address to,
         uint256[] memory amounts,
         bytes memory data

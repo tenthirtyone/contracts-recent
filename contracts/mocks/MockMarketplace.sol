@@ -84,6 +84,44 @@ contract MockMarketplace is IERC1155Receiver, ERC165 {
         payable(listing.seller).transfer(msg.value);
     }
 
+    function buyListingPayRoyalty(uint256 listingId) public payable {
+        Listing memory listing = listings[listingId];
+        require(
+            msg.value >= listing.price,
+            "Not enough Ether for this transaction."
+        );
+
+        delete listings[listingId];
+
+        // Retrieve royalty information for the token
+        (address royaltyReceiver, uint256 royaltyAmount) = ERC2981(
+            listing.tokenContract
+        ).royaltyInfo(listing.tokenId, listing.price);
+
+        // Ensure the royalty amount does not exceed the listing price
+        require(
+            royaltyAmount <= listing.price,
+            "Royalty exceeds listing price"
+        );
+
+        // Perform the transfer to the buyer
+        IERC1155(listing.tokenContract).safeTransferFrom(
+            address(this),
+            msg.sender,
+            listing.tokenId,
+            listing.amount,
+            ""
+        );
+
+        // Pay the royalty to the royalty receiver
+        if (royaltyReceiver != address(0) && royaltyAmount > 0) {
+            payable(royaltyReceiver).transfer(royaltyAmount);
+        }
+
+        // Pay the remaining amount to the seller
+        payable(listing.seller).transfer(listing.price - royaltyAmount);
+    }
+
     function onERC1155Received(
         address,
         address,

@@ -7,7 +7,8 @@ import {
   INTERFACE_ID_ERC2981,
   INTERFACE_ID_ACCESS_CONTROL,
   ZERO_ADDRESS,
-  ROYALTY
+  ROYALTY,
+  ZERO_BYTES32
 } from "./utils";
 import { ERC1155Singleton } from "../typechain"
 
@@ -49,8 +50,9 @@ describe("ERC1155Singleton Singleton", function () {
     });
     it("reverts when attempting to batch mint tokens without the manager role", async function () {
       const { contract, owner } = await loadFixture(deploy);
+      const [_owner, manager, satoshi] = await ethers.getSigners();
 
-      await expect(contract.connect(owner).mintBatch(owner.address, [1, 1], "0x")).to.be.reverted;
+      await expect(contract.connect(satoshi).mintBatchToExisting(owner.address, [1, 1], "0x")).to.be.reverted;
     });
   });
 
