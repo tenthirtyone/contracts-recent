@@ -52,7 +52,7 @@ describe("ERC1155Singleton Singleton", function () {
       const { contract, owner } = await loadFixture(deploy);
       const [_owner, manager, satoshi] = await ethers.getSigners();
 
-      await expect(contract.connect(satoshi).mintBatchToExisting(owner.address, [1, 1], "0x")).to.be.reverted;
+      await expect(contract.connect(satoshi).mintBatch(owner.address, [1, 1], "0x")).to.be.reverted;
     });
   });
 

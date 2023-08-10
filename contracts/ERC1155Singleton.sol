@@ -113,7 +113,7 @@ contract ERC1155Singleton is
     /// @param to The address to mint tokens to.
     /// @param amounts An array with the amounts of tokens to mint for each respective ID.
     /// @param data Additional data with no specified format.
-    function mintBatchToExisting(
+    function mintBatch(
         address to,
         uint256[] memory amounts,
         bytes memory data

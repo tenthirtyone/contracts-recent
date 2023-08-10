@@ -66,7 +66,7 @@ describe("ERC1155Proxy", function () {
       callData
     );
 
-    console.log('here')
+
     await beacon.deployProxyContract(
       callData
     );
@@ -188,15 +188,16 @@ describe("ERC1155Proxy", function () {
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
 
-      await proxy.mintBatchToExisting(
+      await proxy.mintBatch(
         owner.address,
         [1, 1],
         ZERO_BYTES32
       );
-      const balance1 = await proxy.balanceOf(owner.address, 1);
-      const balance2 = await proxy.balanceOf(owner.address, 2);
-      expect(balance1).to.equal(2);
-      expect(balance2).to.equal(2);
+      const balance1 = await proxy.balanceOf(owner.address, 3);
+      const balance2 = await proxy.balanceOf(owner.address, 4);
+
+      expect(balance1).to.equal(1);
+      expect(balance2).to.equal(1);
     });
 
     it("should reject a mint if not an owner", async () => {
@@ -221,15 +222,11 @@ describe("ERC1155Proxy", function () {
 
     it("should burn multiple tokens", async () => {
       const { proxy, owner } = await loadFixture(deploy);
-      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
+      await proxy.mint(owner.address, 2, ZERO_BYTES32) // 0
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
-      await proxy.mintBatchToExisting(
-        owner.address,
-        [1, 1],
-        ZERO_BYTES32
-      );
-      await proxy.burnBatch(owner.address, [1, 2], [1, 1]);
+
+      await proxy.burnBatch(owner.address, [1, 2], [2, 1]);
       const balance1 = await proxy.balanceOf(owner.address, 1);
       const balance2 = await proxy.balanceOf(owner.address, 2);
       expect(balance1).to.equal(0);
@@ -267,11 +264,7 @@ describe("ERC1155Proxy", function () {
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
-      await proxy.mintBatchToExisting(
-        owner.address,
-        [1, 1],
-        ZERO_BYTES32
-      );
+
       await proxy.safeBatchTransferFrom(
         owner.address,
         satoshi.address,
@@ -454,11 +447,7 @@ describe("ERC1155Proxy", function () {
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
-      await proxy.mintBatchToExisting(
-        owner.address,
-        [1, 1],
-        ZERO_BYTES32
-      );
+
       await proxy.managerSafeBatchTransferFrom(
         owner.address,
         satoshi.address,
@@ -478,11 +467,7 @@ describe("ERC1155Proxy", function () {
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
       await proxy.mint(owner.address, 1, ZERO_BYTES32) // 2
-      await proxy.mintBatchToExisting(
-        owner.address,
-        [1, 1],
-        ZERO_BYTES32
-      );
+
       await expect(
         proxy
           .connect(satoshi)
