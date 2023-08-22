@@ -19,8 +19,8 @@ const manager = "0x54B4D9e7D58B6F4CF2F053fACFf57fE330E91d01"
 const encodedString = ethers.utils.formatBytes32String(CONTRACT_SALT);
 const FACTORY_ADDRESS = "0xa96d115aa928544016e21795457A866B12D60447"
 const BEACON_ADDRESS = "0x471A4b7de2FE71F44db772122320baB88bFb853C"
-const PROXY_ADDRESS = "0x2e4bE51Ca9D8A8343668369fc4eB07078e1f60d6"
-const VAULT_ADDRESS = "0x99a317768Bc283B1ddEf827289328b464e98e41b"
+const PROXY_ADDRESS = "0x5a4a4BcC4292a7a8Ea1b1fC267AA479B90aF803f"
+const VAULT_ADDRESS = "0xaD010e071604420764871Ad43620e4BaEC00B3ba"
 const SALT = encodedString
 const MNEMONIC = process.env.MNEMONIC || "";
 
@@ -35,7 +35,7 @@ async function main() {
 
   const tokenContract = new ethers.Contract(PROXY_ADDRESS, ERC1155SingletonABI, manager);
 
-  const directSaleTx = await tokenContract.managerSafeTransferFrom(VAULT_ADDRESS, satoshi.address, 1, 10, "0x", { gasLimit: 30000000 })
+  const directSaleTx = await tokenContract.managerSafeTransferFrom(VAULT_ADDRESS, satoshi.address, 10, 1000, "0x", { gasLimit: 30000000 })
 
   const directSaleReceipt = await directSaleTx.wait();
 

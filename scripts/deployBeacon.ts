@@ -1,3 +1,4 @@
+require("dotenv").config();
 import { abi as ERC1155SingletonABI, bytecode as ERC1155Bytecode } from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
 import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
 import { abi as FactoryABI } from "../artifacts/contracts/SingletonFactory.sol/SingletonFactory.json";
