@@ -96,6 +96,14 @@ describe("Gas Usage", function () {
       console.log(`Gas used for mint: ${mintReceipt.gasUsed.toString()}`);
     }
 
+    const batchTokenCount = 1178;
+    const amounts = new Array(batchTokenCount).fill(1e3)
+
+    const batchMint = await proxy.mintBatch(owner.address, amounts, "0x", { gasLimit: 30000000 });
+    const batchReceipt = await batchMint.wait();
+
+    console.log(`Maximum batchMint: ${batchTokenCount} tokens for total gas: ${batchReceipt.gasUsed}`)
+
     return { proxy, owner };
   }
 

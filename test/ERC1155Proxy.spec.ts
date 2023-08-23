@@ -502,6 +502,8 @@ describe("ERC1155Proxy", function () {
 
     it("should increase the supply of multiple existing tokens in a batch", async function () {
       const { proxy, owner, manager } = await loadFixture(deploy);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32) // 1
       const ids = [0, 1];
       const amounts = [5, 7];
       const initialSupplies = await Promise.all(ids.map(id => proxy.balanceOf(owner.address, id)));

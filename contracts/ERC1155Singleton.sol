@@ -105,7 +105,6 @@ contract ERC1155Singleton is
         for (uint256 i = 0; i < ids.length; i++) {
             require(ids[i] < currentTokenId, "Token id must exist.");
             _mint(to, ids[i], amounts[i], data);
-            currentTokenId++;
         }
     }
 

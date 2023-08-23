@@ -23,8 +23,6 @@ async function main() {
   console.log(`solo: ${solo.address}`)
   console.log(`rothbard: ${rothbard.address}`)
 
-
-
   // change who connects
   const satoshiTokenContract = new ethers.Contract(PROXY_ADDRESS, ERC1155SingletonABI, satoshi);
   const satoshiMarketContract = new ethers.Contract(MARKET_ADDRESS, MarketABI, satoshi);
