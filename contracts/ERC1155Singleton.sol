@@ -74,7 +74,9 @@ contract ERC1155Singleton is
     ) public onlyRole(MANAGER_ROLE) {
         _mint(to, currentTokenId, amount, data);
 
-        currentTokenId++;
+        unchecked {
+            currentTokenId++;
+        }
     }
 
     /// @notice Increases the supply of an existing token.
