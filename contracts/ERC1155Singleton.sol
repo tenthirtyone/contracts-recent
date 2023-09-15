@@ -59,8 +59,8 @@ contract ERC1155Singleton is
 
         _setApprovalForAll(vault, manager, true);
 
-        _mint(vault, currentTokenId, 1, "0x");
-        currentTokenId++;
+        _mint(vault, 0, 1, "0x");
+        currentTokenId = 1;
     }
 
     /// @notice Mints new tokens.
@@ -73,6 +73,7 @@ contract ERC1155Singleton is
         bytes memory data
     ) public onlyRole(MANAGER_ROLE) {
         _mint(to, currentTokenId, amount, data);
+
         currentTokenId++;
     }
 
@@ -120,7 +121,9 @@ contract ERC1155Singleton is
         uint256[] memory ids = new uint256[](amounts.length);
         for (uint256 i = 0; i < amounts.length; i++) {
             ids[i] = currentTokenId;
-            currentTokenId += 1;
+            unchecked {
+                currentTokenId += 1;
+            }
         }
         _mintBatch(to, ids, amounts, data);
     }
