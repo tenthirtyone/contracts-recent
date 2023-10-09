@@ -15,7 +15,7 @@ import {
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat");
-const BEACON_ADDRESS = "0xDd1Edc0AFB12b06A7D41530EA69AAe6a819EAa95";
+const BEACON_ADDRESS = "0xd515C0188f9D790e4c7f342F9C01c70Ff72807BD";
 const CONTRACT_URI = "https://dcentral.me/contracturi";
 const TOKEN_URI = "https://dcentral.me/tokenuri";
 const DEFAULT_ROYALTY = 1000; // 10% for the big guy
