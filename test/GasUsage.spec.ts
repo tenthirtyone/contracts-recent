@@ -1,15 +1,16 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { abi as ERC1155SingletonABI, bytecode as ERC1155Bytecode } from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
+import {
+  abi as ERC1155SingletonABI,
+  bytecode as ERC1155Bytecode,
+} from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
 import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
 
-import { ERC1155Singleton } from "../typechain"
+import { ERC1155Singleton } from "../typechain";
+
+import { createSalt, CONTRACT_URI, TOKEN_URI, LICENSE_URI } from "./utils";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
-
-function createSalt(string: string) {
-  return ethers.utils.formatBytes32String(string);
-}
 
 describe("Gas Usage", function () {
   const SALT = createSalt("Dcentral.me Token Contract");
@@ -21,7 +22,9 @@ describe("Gas Usage", function () {
       "MockSingletonFactory"
     );
     await SingletonFactory.deploy({ gasLimit: 30000000 });
-    const factoryInstance = await SingletonFactory.deploy({ gasLimit: 30000000 });
+    const factoryInstance = await SingletonFactory.deploy({
+      gasLimit: 30000000,
+    });
     const block = await ethers.provider.getBlock(1);
 
     if (block) {
@@ -33,7 +36,9 @@ describe("Gas Usage", function () {
       ERC1155Bytecode
     );
 
-    const tx = await factoryInstance.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
+    const tx = await factoryInstance.deploy(SALT, ERC1155Bytecode, {
+      gasLimit: 30000000,
+    });
     const erc1155SingletonReceipt = await tx.wait();
 
     if (erc1155SingletonReceipt) {
@@ -43,7 +48,10 @@ describe("Gas Usage", function () {
     }
 
     const abiCoder = new ethers.utils.AbiCoder();
-    const encodedParameters = abiCoder.encode(["address", "address"], [erc1155Address, owner.address]);
+    const encodedParameters = abiCoder.encode(
+      ["address", "address"],
+      [erc1155Address, owner.address]
+    );
     const beaconInitCode = BeaconBytecode + encodedParameters.slice(2);
 
     const beaconAddress = await factoryInstance.computeAddress(
@@ -51,44 +59,44 @@ describe("Gas Usage", function () {
       beaconInitCode
     );
 
-    const beaconTx = await factoryInstance.deploy(SALT, beaconInitCode, { gasLimit: 30000000 });
+    const beaconTx = await factoryInstance.deploy(SALT, beaconInitCode, {
+      gasLimit: 30000000,
+    });
     const beaconReceipt = await beaconTx.wait();
 
     if (beaconReceipt) {
-      console.log(
-        `Gas used for Beacon: ${beaconReceipt.gasUsed.toString()}`
-      );
+      console.log(`Gas used for Beacon: ${beaconReceipt.gasUsed.toString()}`);
     }
 
-    const beacon = await ethers.getContractAt(
-      "Beacon",
-      beaconAddress
-    );
+    const beacon = await ethers.getContractAt("Beacon", beaconAddress);
 
     const iface = new ethers.utils.Interface(ERC1155SingletonABI);
-    const callData = iface.encodeFunctionData("init", [owner.address, manager.address]);
+    const callData = iface.encodeFunctionData("init", [
+      owner.address,
+      CONTRACT_URI,
+      TOKEN_URI,
+      0,
+    ]);
 
-    const proxyAddress = await beacon.callStatic.deployProxyContract(
-      callData
-    );
+    const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
 
-    const proxyTx = await beacon.deployProxyContract(
-      callData
-    );
+    const proxyTx = await beacon.deployProxyContract(callData);
 
     const proxyReceipt = await proxyTx.wait();
 
     if (proxyReceipt) {
-      console.log(
-        `Gas used for Proxy: ${proxyReceipt.gasUsed.toString()}`
-      );
+      console.log(`Gas used for Proxy: ${proxyReceipt.gasUsed.toString()}`);
     }
 
-    const proxy = await ethers.getContractAt("ERC1155Singleton", proxyAddress) as unknown as ERC1155Singleton;
+    const proxy = (await ethers.getContractAt(
+      "ERC1155Singleton",
+      proxyAddress
+    )) as unknown as ERC1155Singleton;
 
     const mintTx = await proxy.mint(
       owner.address,
       1,
+      LICENSE_URI,
       ethers.utils.formatBytes32String("")
     );
     const mintReceipt = await mintTx.wait();
@@ -96,13 +104,24 @@ describe("Gas Usage", function () {
       console.log(`Gas used for mint: ${mintReceipt.gasUsed.toString()}`);
     }
 
-    const batchTokenCount = 1178;
-    const amounts = new Array(batchTokenCount).fill(1e3)
+    const batchTokenCount = 550;
+    const amounts = new Array(batchTokenCount).fill(1e3);
+    const licenses = new Array(batchTokenCount).fill(LICENSE_URI);
 
-    const batchMint = await proxy.mintBatch(owner.address, amounts, "0x", { gasLimit: 30000000 });
+    const batchMint = await proxy.mintBatch(
+      owner.address,
+      amounts,
+      licenses,
+      "0x",
+      {
+        gasLimit: 30000000,
+      }
+    );
     const batchReceipt = await batchMint.wait();
 
-    console.log(`Maximum batchMint: ${batchTokenCount} tokens for total gas: ${batchReceipt.gasUsed}`)
+    console.log(
+      `Maximum batchMint: ${batchTokenCount} tokens for total gas: ${batchReceipt.gasUsed}`
+    );
 
     return { proxy, owner };
   }

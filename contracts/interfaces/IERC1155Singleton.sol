@@ -3,7 +3,12 @@
 pragma solidity ^0.8.0;
 
 interface IERC1155Singleton {
-    function init(address admin, address manager) external;
+    function init(
+        address owner,
+        string memory contractURI_,
+        string memory tokenURI_,
+        uint96 defaultRoyalty
+    ) external;
 
     function feeDenominator() external view returns (uint96);
 
@@ -23,42 +28,17 @@ interface IERC1155Singleton {
 
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 
-    function mint(address to, uint256 amount, bytes memory data) external;
-
-    function increaseSupply(
+    function mint(
         address to,
-        uint256 id,
         uint256 amount,
+        string memory licenseUri,
         bytes memory data
     ) external;
 
     function mintBatch(
         address to,
         uint256[] memory amounts,
-        bytes memory data
-    ) external;
-
-    function burn(address account, uint256 id, uint256 amount) external;
-
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) external;
-
-    function managerSafeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) external;
-
-    function managerSafeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
+        string[] memory licenseUri,
         bytes memory data
     ) external;
 

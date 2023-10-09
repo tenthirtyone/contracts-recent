@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 import "./interfaces/IERC1155Singleton.sol";
+import "./license/ERC5218Partial.sol";
 
 /// @title ERC1155Singleton
 /// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
@@ -17,9 +18,11 @@ contract ERC1155Singleton is
     IERC1155Singleton,
     ERC1155,
     ERC2981,
+    ERC5218Partial,
     AccessControl
 {
     uint256 public currentTokenId = 0;
+    string public contractURI;
 
     /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
@@ -36,9 +39,7 @@ contract ERC1155Singleton is
 
     /// @dev Contract constructor. Sets token URI and transfers ownership to zero address to establish a singleton mode.
     constructor()
-        ERC1155(
-            "https://app.dcentral.me/api/assets/{chainId}/{address}/{id}.json"
-        )
+        ERC1155("https://dcentral.me/api/assets/{chainId}/{address}/{id}.json")
     {
         _grantRole(DEFAULT_ADMIN_ROLE, address(0));
         _grantRole(MANAGER_ROLE, address(0));
@@ -47,20 +48,28 @@ contract ERC1155Singleton is
     }
 
     /// @notice Initializes the contract. Can only be done once.
-    /// @param vault The address that will be set as the owner of the contract.
-    /// @param manager The address that will be set as the manager of the contract.
-    function init(address vault, address manager) public {
+    /// @param owner The address that will be set as the owner of the contract.
+    /// @param contractURI_ The URI for the contract metadata.
+    /// @param tokenURI_ The URI for the contract metadata.
+    /// @param defaultRoyalty The royalty payment in base points.
+    function init(
+        address owner,
+        string memory contractURI_,
+        string memory tokenURI_,
+        uint96 defaultRoyalty
+    ) public {
         require(!didInit, "Contract has already been initialized");
         didInit = true;
 
-        _grantRole(DEFAULT_ADMIN_ROLE, vault);
-        _grantRole(MANAGER_ROLE, vault);
-        _grantRole(MANAGER_ROLE, manager);
+        contractURI = contractURI_;
+        _setURI(tokenURI_);
 
-        _setApprovalForAll(vault, manager, true);
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _grantRole(MANAGER_ROLE, owner);
 
-        _mint(vault, 0, 1, "0x");
-        currentTokenId = 1;
+        _setDefaultRoyalty(owner, defaultRoyalty);
+
+        currentTokenId = 0;
     }
 
     /// @notice Mints new tokens.
@@ -70,44 +79,14 @@ contract ERC1155Singleton is
     function mint(
         address to,
         uint256 amount,
+        string memory licenseUri,
         bytes memory data
     ) public onlyRole(MANAGER_ROLE) {
         _mint(to, currentTokenId, amount, data);
+        _createLicense(currentTokenId, licenseUri);
 
         unchecked {
             currentTokenId++;
-        }
-    }
-
-    /// @notice Increases the supply of an existing token.
-    /// @param to The address to mint tokens to.
-    /// @param amount The amount of tokens to mint.
-    /// @param data Additional data with no specified format.
-    function increaseSupply(
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public onlyRole(MANAGER_ROLE) {
-        require(id < currentTokenId, "Token id must exist.");
-        _mint(to, id, amount, data);
-    }
-
-    /// @notice  Increases the supply of a multiple existing token.
-    /// @param to The address to mint tokens to.
-    /// @param ids An array with the IDs of tokens to mint.
-    /// @param amounts An array with the amounts of tokens to mint for each respective ID.
-    /// @param data Additional data with no specified format.
-    function increaseSupplyBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public onlyRole(MANAGER_ROLE) {
-        require(ids.length == amounts.length, "Mismatched input arrays.");
-        for (uint256 i = 0; i < ids.length; i++) {
-            require(ids[i] < currentTokenId, "Token id must exist.");
-            _mint(to, ids[i], amounts[i], data);
         }
     }
 
@@ -118,78 +97,18 @@ contract ERC1155Singleton is
     function mintBatch(
         address to,
         uint256[] memory amounts,
+        string[] memory licenseUris,
         bytes memory data
     ) public onlyRole(MANAGER_ROLE) {
         uint256[] memory ids = new uint256[](amounts.length);
         for (uint256 i = 0; i < amounts.length; i++) {
             ids[i] = currentTokenId;
+            _createLicense(currentTokenId, licenseUris[i]);
             unchecked {
                 currentTokenId += 1;
             }
         }
         _mintBatch(to, ids, amounts, data);
-    }
-
-    /// @notice Burns tokens.
-    /// @param account The address to burn tokens from.
-    /// @param id The token ID.
-    /// @param amount The amount of tokens to burn.
-    function burn(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) public onlyRole(MANAGER_ROLE) {
-        _burn(account, id, amount);
-    }
-
-    /// @notice Burns multiple tokens in a batch.
-    /// @param account The address to burn tokens from.
-    /// @param ids An array of token IDs.
-    /// @param amounts An array with the amounts of tokens to burn for each respective ID.
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) public onlyRole(MANAGER_ROLE) {
-        _burnBatch(account, ids, amounts);
-    }
-
-    /// @notice Allows the vault to safely transfer tokens from one address to another.
-    /// @param from Address to transfer tokens from.
-    /// @param to Address to transfer tokens to.
-    /// @param id The token ID.
-    /// @param amount Amount of tokens to transfer.
-    /// @param data Additional data with no specified format.
-    function managerSafeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public onlyRole(MANAGER_ROLE) {
-        _safeTransferFrom(from, to, id, amount, data);
-    }
-
-    /// @notice Allows the vault to safely transfer multiple tokens in a batch from one address to another.
-    /// @param from Address to transfer tokens from.
-    /// @param to Address to transfer tokens to.
-    /// @param ids An array of token IDs.
-    /// @param amounts An array with the amounts of tokens to transfer for each respective ID.
-    /// @param data Additional data with no specified format.
-    function managerSafeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public onlyRole(MANAGER_ROLE) {
-        _safeBatchTransferFrom(from, to, ids, amounts, data);
-    }
-
-    /// @notice Gets the denominator for the fee calculation
-    /// @return The denominator for the fee calculation
-    function feeDenominator() public pure returns (uint96) {
-        return _feeDenominator();
     }
 
     /// @notice Sets the default royalty for all tokens
@@ -201,6 +120,12 @@ contract ERC1155Singleton is
         uint96 feeNumerator
     ) public onlyRole(MANAGER_ROLE) {
         _setDefaultRoyalty(receiver, feeNumerator);
+    }
+
+    /// @notice Gets the denominator for the fee calculation
+    /// @return The denominator for the fee calculation
+    function feeDenominator() public pure returns (uint96) {
+        return _feeDenominator();
     }
 
     /// @notice Deletes the default royalty for all tokens
