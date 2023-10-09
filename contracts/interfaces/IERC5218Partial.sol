@@ -1,6 +1,7 @@
 pragma solidity ^0.8.0;
 
 /// @title ERC-5218: NFT Rights Management
+/// @dev 5218 is technically stagnant and should not be used. This partial version maintains some interface functions and not much else.
 interface IERC5218Partial {
     /// @dev This emits when a new license is created by any mechanism.
     event CreateLicense(uint256 _licenseId, uint256 _tokenId, string _uri);
