@@ -38,9 +38,7 @@ contract ERC1155Singleton is
     );
 
     /// @dev Contract constructor. Sets token URI and transfers ownership to zero address to establish a singleton mode.
-    constructor()
-        ERC1155("https://dcentral.me/api/assets/{chainId}/{address}/{id}.json")
-    {
+    constructor() ERC1155("") {
         _grantRole(DEFAULT_ADMIN_ROLE, address(0));
         _grantRole(MANAGER_ROLE, address(0));
         // Singleton
@@ -70,6 +68,11 @@ contract ERC1155Singleton is
         _setDefaultRoyalty(owner, defaultRoyalty);
 
         currentTokenId = 0;
+    }
+
+    function tokenURI(uint256 _tokenId) public view returns (string memory) {
+        return
+            string(abi.encodePacked(uri(_tokenId), Strings.toString(_tokenId)));
     }
 
     /// @notice Mints new tokens.

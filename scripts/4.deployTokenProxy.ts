@@ -28,7 +28,6 @@ async function main() {
     owner
   );
   console.log("Connected to the beacon contract at:", BEACON_ADDRESS);
-
   console.log(`Beacon contract owner is: ${await beaconContract.owner()}`);
 
   const iface = new hre.ethers.utils.Interface(ERC1155SingletonABI);

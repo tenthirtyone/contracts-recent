@@ -1,6 +1,11 @@
-import { abi as ERC1155SingletonABI, bytecode as ERC1155Bytecode } from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
-import { abi as BEACONABI, bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
-import { abi as FactoryABI } from "../artifacts/contracts/SingletonFactory.sol/SingletonFactory.json";
+import {
+  abi as ERC1155SingletonABI,
+  bytecode as ERC1155Bytecode,
+} from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
+import {
+  abi as BEACONABI,
+  bytecode as BeaconBytecode,
+} from "../artifacts/contracts/Beacon.sol/Beacon.json";
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
@@ -8,20 +13,20 @@ import { abi as FactoryABI } from "../artifacts/contracts/SingletonFactory.sol/S
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat");
-export const CONTRACT_SALT = "Dcentral.me Token Contract";
-const manager = "0x54B4D9e7D58B6F4CF2F053fACFf57fE330E91d01"
-const encodedString = hre.ethers.utils.formatBytes32String(CONTRACT_SALT);
-const FACTORY_ADDRESS = "0xa96d115aa928544016e21795457A866B12D60447"
-const BEACON_ADDRESS = "0x471A4b7de2FE71F44db772122320baB88bFb853C"
-const ERC1155_LOGIC_CONTRACT = "0x1568717986237cc4adFd2521DcCd21B927239C3e"
-const SALT = encodedString
+
+const BEACON_ADDRESS = "0xd515C0188f9D790e4c7f342F9C01c70Ff72807BD";
+const ERC1155_LOGIC_CONTRACT = "0xc32DBc83a619b9FfF744fab779003192FbfBd7b8";
 
 async function main() {
   const [owner] = await hre.ethers.getSigners();
-  const beaconContract = new hre.ethers.Contract(BEACON_ADDRESS, BEACONABI, owner);
+  const beaconContract = new hre.ethers.Contract(
+    BEACON_ADDRESS,
+    BEACONABI,
+    owner
+  );
   console.log("Connected to the beacon contract at:", BEACON_ADDRESS);
 
-  console.log(`Beacon contract owner is: ${await beaconContract.owner()}`)
+  console.log(`Beacon contract owner is: ${await beaconContract.owner()}`);
 
   const deployBeaconProxyTx = await beaconContract.upgradeTo(
     ERC1155_LOGIC_CONTRACT
@@ -29,7 +34,7 @@ async function main() {
 
   const receipt = await deployBeaconProxyTx.wait();
 
-  console.log(receipt)
+  console.log(receipt);
 }
 
 main().catch((error) => {

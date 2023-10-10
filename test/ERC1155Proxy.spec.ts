@@ -97,8 +97,10 @@ describe("ERC1155Proxy", function () {
     });
     it("sets the token uri", async () => {
       const { proxy, owner } = await loadFixture(deploy);
-      const uri = await proxy.uri(0);
-      expect(uri).to.equal(TOKEN_URI);
+      const tokenId = 0;
+      const uri = await proxy.tokenURI(tokenId);
+
+      expect(uri).to.equal(TOKEN_URI.concat(tokenId.toString()));
     });
   });
 

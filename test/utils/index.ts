@@ -37,6 +37,5 @@ export const CONTRACT_URI = JSON.stringify({
   image: "external-link-url/image.png",
   external_link: "external-link-url",
 });
-export const TOKEN_URI =
-  "https://dcentral.me/api/contracts/${chain}/${address}/${tokenId}";
+export const TOKEN_URI = "https://dcentral.me/api/collections/someidentifier/";
 export const LICENSE_URI = "https://dcentral.me";
