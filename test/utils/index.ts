@@ -29,8 +29,14 @@ export const DEFAULT_OWNER_ROLE = ZERO_BYTES32;
 export const MANAGER_ROLE = keccak256(toUtf8Bytes("MANAGER_ROLE"));
 export const CONTRACT_SALT = "Dcentral.me Token Contract";
 export const ROYALTY = 5000;
-export const CONTRACT_URI =
-  "https://dcentral.me/api/contracts/${chain}/${address}";
+export const CONTRACT_URI_MIMETYPE = "data:application/json;utf8,";
+export const CONTRACT_URI = JSON.stringify({
+  name: "Dcentral Tokens",
+  description:
+    "Dcentral Tokens are adorable aquatic beings primarily for demonstrating what can be done using the Dcentral platform. Adopt one today to try out all the Dcentral buying, selling, and bidding feature set.",
+  image: "external-link-url/image.png",
+  external_link: "external-link-url",
+});
 export const TOKEN_URI =
   "https://dcentral.me/api/contracts/${chain}/${address}/${tokenId}";
 export const LICENSE_URI = "https://dcentral.me";

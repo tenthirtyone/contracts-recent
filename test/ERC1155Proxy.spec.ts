@@ -22,6 +22,7 @@ import {
   CONTRACT_URI,
   TOKEN_URI,
   LICENSE_URI,
+  CONTRACT_URI_MIMETYPE,
 } from "./utils";
 
 import { ERC1155Singleton } from "../typechain";
@@ -91,7 +92,8 @@ describe("ERC1155Proxy", function () {
     it("sets the contract uri", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const uri = await proxy.contractURI();
-      expect(uri).to.equal(CONTRACT_URI);
+      console.log(uri);
+      expect(uri).to.equal(CONTRACT_URI_MIMETYPE.concat(CONTRACT_URI));
     });
     it("sets the token uri", async () => {
       const { proxy, owner } = await loadFixture(deploy);

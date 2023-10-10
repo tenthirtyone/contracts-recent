@@ -61,7 +61,7 @@ contract ERC1155Singleton is
         require(!didInit, "Contract has already been initialized");
         didInit = true;
 
-        contractURI = contractURI_;
+        _setContractURI(contractURI_);
         _setURI(tokenURI_);
 
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
@@ -174,6 +174,20 @@ contract ERC1155Singleton is
     /// @param interfaceId The interface identifier, as specified in ERC-165
     function _registerInterface(bytes4 interfaceId) internal {
         _supportedInterfaces[interfaceId] = true;
+    }
+
+    /// @param contractURI_ the stringified JSON for the contractURI
+    function setContractURI(
+        string memory contractURI_
+    ) public onlyRole(MANAGER_ROLE) {
+        _setContractURI(contractURI_);
+    }
+
+    /// @param contractURI_ the stringified JSON for the contractURI
+    function _setContractURI(string memory contractURI_) internal {
+        contractURI = string(
+            abi.encodePacked("data:application/json;utf8,", contractURI_)
+        );
     }
 
     /// @notice Returns true if this contract implements the interface defined by `interfaceId`.
