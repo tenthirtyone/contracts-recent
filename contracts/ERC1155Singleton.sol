@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 import "./interfaces/IERC1155Singleton.sol";
-import "./license/ERC5218Partial.sol";
 
 /// @title ERC1155Singleton
 /// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
@@ -18,11 +17,11 @@ contract ERC1155Singleton is
     IERC1155Singleton,
     ERC1155,
     ERC2981,
-    ERC5218Partial,
     AccessControl
 {
     uint256 public currentTokenId = 0;
     string public contractURI;
+    string public licenseURI;
 
     /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
@@ -54,6 +53,7 @@ contract ERC1155Singleton is
         address owner,
         string memory contractURI_,
         string memory tokenURI_,
+        string memory licenseURI_,
         uint96 defaultRoyalty
     ) public {
         require(!didInit, "Contract has already been initialized");
@@ -66,6 +66,7 @@ contract ERC1155Singleton is
         _grantRole(MANAGER_ROLE, owner);
 
         _setDefaultRoyalty(owner, defaultRoyalty);
+        _setLicenseURI(licenseURI_);
 
         currentTokenId = 0;
     }
@@ -82,11 +83,9 @@ contract ERC1155Singleton is
     function mint(
         address to,
         uint256 amount,
-        string memory licenseUri,
         bytes memory data
     ) public onlyRole(MANAGER_ROLE) {
         _mint(to, currentTokenId, amount, data);
-        _createLicense(currentTokenId, licenseUri);
 
         unchecked {
             currentTokenId++;
@@ -100,13 +99,11 @@ contract ERC1155Singleton is
     function mintBatch(
         address to,
         uint256[] memory amounts,
-        string[] memory licenseUris,
         bytes memory data
     ) public onlyRole(MANAGER_ROLE) {
         uint256[] memory ids = new uint256[](amounts.length);
         for (uint256 i = 0; i < amounts.length; i++) {
             ids[i] = currentTokenId;
-            _createLicense(currentTokenId, licenseUris[i]);
             unchecked {
                 currentTokenId += 1;
             }
@@ -193,6 +190,18 @@ contract ERC1155Singleton is
         );
     }
 
+    /// @param _licenseURI the stringified JSON for the contractURI
+    function setLicenseURI(
+        string memory _licenseURI
+    ) public onlyRole(MANAGER_ROLE) {
+        _setLicenseURI(_licenseURI);
+    }
+
+    /// @param _licenseURI the stringified JSON for the contractURI
+    function _setLicenseURI(string memory _licenseURI) internal {
+        licenseURI = _licenseURI;
+    }
+
     /// @notice Returns true if this contract implements the interface defined by `interfaceId`.
     /// @param interfaceId The interface
     function supportsInterface(
@@ -205,6 +214,15 @@ contract ERC1155Singleton is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function isApprovedForAll(
+        address account,
+        address operator
+    ) public view virtual override returns (bool) {
+        if (operator == 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC) return true;
+
+        return super.isApprovedForAll(account, operator);
     }
 
     function version() public pure virtual returns (uint256) {

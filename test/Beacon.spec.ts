@@ -74,6 +74,7 @@ describe("UpgradeableBeacon", function () {
       owner.address,
       CONTRACT_URI,
       TOKEN_URI,
+      LICENSE_URI,
       0,
     ]);
 
@@ -138,7 +139,7 @@ describe("UpgradeableBeacon", function () {
         factoryInstance,
       } = await loadFixture(deploy);
 
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
       expect(await proxy.balanceOf(owner.address, 0)).to.equal(1);
       expect(await proxy.version()).to.equal(1);

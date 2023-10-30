@@ -75,6 +75,7 @@ describe("Gas Usage", function () {
       owner.address,
       CONTRACT_URI,
       TOKEN_URI,
+      LICENSE_URI,
       0,
     ]);
 
@@ -96,7 +97,7 @@ describe("Gas Usage", function () {
     const mintTx = await proxy.mint(
       owner.address,
       1,
-      LICENSE_URI,
+
       ethers.utils.formatBytes32String("")
     );
     const mintReceipt = await mintTx.wait();
@@ -104,19 +105,12 @@ describe("Gas Usage", function () {
       console.log(`Gas used for mint: ${mintReceipt.gasUsed.toString()}`);
     }
 
-    const batchTokenCount = 550;
+    const batchTokenCount = 1186;
     const amounts = new Array(batchTokenCount).fill(1e3);
-    const licenses = new Array(batchTokenCount).fill(LICENSE_URI);
 
-    const batchMint = await proxy.mintBatch(
-      owner.address,
-      amounts,
-      licenses,
-      "0x",
-      {
-        gasLimit: 30000000,
-      }
-    );
+    const batchMint = await proxy.mintBatch(owner.address, amounts, "0x", {
+      gasLimit: 30000000,
+    });
     const batchReceipt = await batchMint.wait();
 
     console.log(

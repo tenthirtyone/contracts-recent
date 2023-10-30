@@ -15,7 +15,7 @@ import {
 const hre = require("hardhat");
 
 const BEACON_ADDRESS = "0xd515C0188f9D790e4c7f342F9C01c70Ff72807BD";
-const ERC1155_LOGIC_CONTRACT = "0xc32DBc83a619b9FfF744fab779003192FbfBd7b8";
+const ERC1155_LOGIC_CONTRACT = "0x2cf82A4363Ac78067a7CA4b6990EFe54ea1D1Aec";
 
 async function main() {
   const [owner] = await hre.ethers.getSigners();

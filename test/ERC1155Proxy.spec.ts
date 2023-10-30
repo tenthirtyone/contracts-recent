@@ -23,6 +23,7 @@ import {
   TOKEN_URI,
   LICENSE_URI,
   CONTRACT_URI_MIMETYPE,
+  SEAPORT_1_5_ADDRESS,
 } from "./utils";
 
 import { ERC1155Singleton } from "../typechain";
@@ -69,6 +70,7 @@ describe("ERC1155Proxy", function () {
       owner.address,
       CONTRACT_URI,
       TOKEN_URI,
+      LICENSE_URI,
       ROYALTY,
     ]);
     const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
@@ -80,7 +82,7 @@ describe("ERC1155Proxy", function () {
       proxyAddress
     )) as unknown as ERC1155Singleton;
 
-    return { proxy, owner };
+    return { proxy, owner, manager };
   }
 
   describe("Deployment", function () {
@@ -101,6 +103,22 @@ describe("ERC1155Proxy", function () {
       const uri = await proxy.tokenURI(tokenId);
 
       expect(uri).to.equal(TOKEN_URI.concat(tokenId.toString()));
+    });
+    it("sets a default approval for Seaport 1.5 contract address for all users", async () => {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+
+      const isApprovedForOwner = await proxy.isApprovedForAll(
+        owner.address,
+        SEAPORT_1_5_ADDRESS
+      );
+
+      const isApprovedForRandoUser = await proxy.isApprovedForAll(
+        manager.address,
+        SEAPORT_1_5_ADDRESS
+      );
+
+      expect(isApprovedForOwner).to.equal(true);
+      expect(isApprovedForRandoUser).to.equal(true);
     });
   });
 
@@ -231,23 +249,18 @@ describe("ERC1155Proxy", function () {
   describe("Minting", function () {
     it("should mint a token", async () => {
       const { proxy, owner } = await loadFixture(deploy);
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
       const balance = await proxy.balanceOf(owner.address, 0);
       expect(balance).to.equal(1);
     });
 
     it("should mint multiple tokens", async () => {
       const { proxy, owner } = await loadFixture(deploy);
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32); // 0
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32); // 1
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32); // 2
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 2
 
-      await proxy.mintBatch(
-        owner.address,
-        [1, 1],
-        [LICENSE_URI, LICENSE_URI],
-        ZERO_BYTES32
-      );
+      await proxy.mintBatch(owner.address, [1, 1], ZERO_BYTES32);
       const balance1 = await proxy.balanceOf(owner.address, 3);
       const balance2 = await proxy.balanceOf(owner.address, 4);
 
@@ -259,25 +272,16 @@ describe("ERC1155Proxy", function () {
       const { proxy, owner } = await loadFixture(deploy);
       const [_, _manager, satoshi] = await ethers.getSigners();
       await expect(
-        proxy
-          .connect(satoshi)
-          .mint(satoshi.address, 1, LICENSE_URI, ZERO_BYTES32)
+        proxy.connect(satoshi).mint(satoshi.address, 1, ZERO_BYTES32)
       ).to.be.reverted;
     });
   });
 
   describe("License", function () {
-    it("should create a license with the same id as the token", async () => {
-      const { proxy, owner } = await loadFixture(deploy);
-      let licenseUri = await proxy.getLicenseURI(0);
+    it("should create a license for the collection", async () => {
+      const { proxy } = await loadFixture(deploy);
 
-      expect(await proxy.isLicenseActive(0)).to.equal(false);
-      expect(licenseUri).to.equal("");
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
-      licenseUri = await proxy.getLicenseURI(0);
-      console.log(licenseUri);
-      expect(licenseUri).to.equal(LICENSE_URI);
-      expect(await proxy.isLicenseActive(0)).to.equal(true);
+      expect(await proxy.licenseURI()).to.equal(LICENSE_URI);
     });
   });
 
@@ -285,7 +289,7 @@ describe("ERC1155Proxy", function () {
     it("should safely transfer a token from one account to another", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
       await proxy.safeTransferFrom(
         owner.address,
         satoshi.address,
@@ -300,9 +304,9 @@ describe("ERC1155Proxy", function () {
     it("should safely transfer multiple tokens from one account to another", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32); // 0
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32); // 1
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32); // 2
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 2
 
       await proxy.safeBatchTransferFrom(
         owner.address,
@@ -320,7 +324,7 @@ describe("ERC1155Proxy", function () {
     it("should reject a transfer if not an owner", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const [_owner, _manager, satoshi] = await ethers.getSigners();
-      await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
       await expect(
         proxy

@@ -47,7 +47,7 @@ describe("ERC1155Singleton Singleton", function () {
       const { contract, owner } = await loadFixture(deploy);
 
       await expect(
-        contract.init(owner.address, CONTRACT_URI, TOKEN_URI, 0)
+        contract.init(owner.address, CONTRACT_URI, TOKEN_URI, LICENSE_URI, 0)
       ).to.be.revertedWith("Contract has already been initialized");
     });
   });
@@ -55,17 +55,14 @@ describe("ERC1155Singleton Singleton", function () {
     it("reverts when attempting to mint a new token", async function () {
       const { contract, owner } = await loadFixture(deploy);
 
-      await expect(contract.mint(owner.address, 100, LICENSE_URI, "0x")).to.be
-        .reverted;
+      await expect(contract.mint(owner.address, 100, "0x")).to.be.reverted;
     });
     it("reverts when attempting to batch mint tokens without the manager role", async function () {
       const { contract, owner } = await loadFixture(deploy);
       const [_owner, manager, satoshi] = await ethers.getSigners();
 
       await expect(
-        contract
-          .connect(satoshi)
-          .mintBatch(owner.address, [1, 1], [LICENSE_URI, LICENSE_URI], "0x")
+        contract.connect(satoshi).mintBatch(owner.address, [1, 1], "0x")
       ).to.be.reverted;
     });
   });

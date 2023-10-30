@@ -13,6 +13,7 @@ import {
   CONTRACT_SALT,
   ROYALTY,
   BASE_POINTS,
+  CONTRACT_URI,
   LICENSE_URI,
 } from "./utils";
 
@@ -65,7 +66,8 @@ describe("ERC1155Proxy", function () {
     const iface = new ethers.utils.Interface(ERC1155SingletonABI);
     const callData = iface.encodeFunctionData("init", [
       owner.address,
-      "contracturi",
+      CONTRACT_URI,
+      LICENSE_URI,
       owner.address,
       0,
     ]);
@@ -98,7 +100,7 @@ describe("ERC1155Proxy", function () {
         const [_owner, _manager, satoshi, conan] = await ethers.getSigners();
 
         // Mint a token to the owner
-        await proxy.mint(owner.address, 10, LICENSE_URI, ZERO_BYTES32);
+        await proxy.mint(owner.address, 10, ZERO_BYTES32);
 
         // Token is direct sale from vault to the user, Satoshi.
         await proxy
@@ -116,7 +118,7 @@ describe("ERC1155Proxy", function () {
         const [_owner, _manager, satoshi, conan] = await ethers.getSigners();
 
         // Mint a token to the owner
-        await proxy.mint(owner.address, 10, LICENSE_URI, ZERO_BYTES32);
+        await proxy.mint(owner.address, 10, ZERO_BYTES32);
 
         // Token is direct sale from vault to the user, Satoshi.
         await proxy
@@ -138,7 +140,7 @@ describe("ERC1155Proxy", function () {
         const [_owner, _manager, satoshi, conan] = await ethers.getSigners();
 
         // Mint a token to the owner
-        await proxy.mint(owner.address, 10, LICENSE_URI, ZERO_BYTES32);
+        await proxy.mint(owner.address, 10, ZERO_BYTES32);
 
         // Token is direct sale from vault to the user, Satoshi.
         await proxy
@@ -178,7 +180,7 @@ describe("ERC1155Proxy", function () {
           .connect(owner)
           .setDefaultRoyalty(royaltyReceiver.address, ROYALTY);
         // Mint a token to the owner
-        await proxy.mint(owner.address, 10, LICENSE_URI, ZERO_BYTES32);
+        await proxy.mint(owner.address, 10, ZERO_BYTES32);
 
         // Token is direct sale from vault to the user, Satoshi.
         await proxy
@@ -233,7 +235,7 @@ describe("ERC1155Proxy", function () {
         const [_owner, _manager, satoshi] = await ethers.getSigners();
 
         // Mint a token to the owner
-        await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+        await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
         // Create a listing in the marketplace
         await marketplace
@@ -261,7 +263,7 @@ describe("ERC1155Proxy", function () {
         const [_owner, _manager, satoshi] = await ethers.getSigners();
 
         // Mint a token to the owner
-        await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+        await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
         // Create a listing in the marketplace
         await marketplace
@@ -297,7 +299,7 @@ describe("ERC1155Proxy", function () {
         const [_owner, _manager, buyer1, buyer2] = await ethers.getSigners();
 
         // Mint a token to the owner
-        await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+        await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
         // Owner lists the token for sale
         await marketplace
@@ -347,7 +349,7 @@ describe("ERC1155Proxy", function () {
           const { proxy, owner, manager } = await loadFixture(deploy);
           const [_owner, _manager, recipient] = await ethers.getSigners();
           // Mint a token to the owner
-          await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+          await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
           // Owner transfers a unit of the token to the recipient
           await proxy
@@ -370,7 +372,7 @@ describe("ERC1155Proxy", function () {
           const { proxy, owner, manager } = await loadFixture(deploy);
           const [_owner, _manager, recipient] = await ethers.getSigners();
           // Mint 5 tokens to the owner
-          await proxy.mint(owner.address, 5, LICENSE_URI, ZERO_BYTES32);
+          await proxy.mint(owner.address, 5, ZERO_BYTES32);
 
           // Owner transfers 5 units of the token to the recipient
           await proxy
@@ -396,7 +398,7 @@ describe("ERC1155Proxy", function () {
           );
           const [_owner, _manager, buyer] = await ethers.getSigners();
           // Mint a token to the owner
-          await proxy.mint(owner.address, 1, LICENSE_URI, ZERO_BYTES32);
+          await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
           // Owner lists the token for sale
           await marketplace

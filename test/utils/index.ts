@@ -39,3 +39,4 @@ export const CONTRACT_URI = JSON.stringify({
 });
 export const TOKEN_URI = "https://dcentral.me/api/collections/someidentifier/";
 export const LICENSE_URI = "https://dcentral.me";
+export const SEAPORT_1_5_ADDRESS = "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC";

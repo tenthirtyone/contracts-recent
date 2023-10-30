@@ -7,6 +7,7 @@ interface IERC1155Singleton {
         address owner,
         string memory contractURI_,
         string memory tokenURI_,
+        string memory licenseURI_,
         uint96 defaultRoyalty
     ) external;
 
@@ -28,17 +29,11 @@ interface IERC1155Singleton {
 
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 
-    function mint(
-        address to,
-        uint256 amount,
-        string memory licenseUri,
-        bytes memory data
-    ) external;
+    function mint(address to, uint256 amount, bytes memory data) external;
 
     function mintBatch(
         address to,
         uint256[] memory amounts,
-        string[] memory licenseUri,
         bytes memory data
     ) external;
 
