@@ -36,7 +36,7 @@ export const CONTRACT_URI = JSON.stringify({
     "Dcentral Tokens are adorable aquatic beings primarily for demonstrating what can be done using the Dcentral platform. Adopt one today to try out all the Dcentral buying, selling, and bidding feature set.",
   image: "external-link-url/image.png",
   external_link: "external-link-url",
-  salt: "",
+  salt: "User-level Salt",
 });
 export const TOKEN_URI = "https://dcentral.me/nft/ethereum/";
 export const LICENSE_URI = "https://dcentral.me";
