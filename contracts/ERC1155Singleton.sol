@@ -73,7 +73,32 @@ contract ERC1155Singleton is
 
     function tokenURI(uint256 _tokenId) public view returns (string memory) {
         return
-            string(abi.encodePacked(uri(_tokenId), Strings.toString(_tokenId)));
+            string(
+                abi.encodePacked(
+                    uri(_tokenId),
+                    _addressToString(address(this)),
+                    "/",
+                    Strings.toString(_tokenId)
+                )
+            );
+    }
+
+    function _addressToString(
+        address _address
+    ) internal pure returns (string memory) {
+        bytes32 _bytes = bytes32(uint256(uint160(_address)));
+        bytes memory HEX = "0123456789abcdef";
+        bytes memory _string = new bytes(42);
+
+        _string[0] = "0";
+        _string[1] = "x";
+
+        for (uint i = 0; i < 20; i++) {
+            _string[2 + i * 2] = HEX[uint8(_bytes[i + 12] >> 4)];
+            _string[3 + i * 2] = HEX[uint8(_bytes[i + 12] & 0x0F)];
+        }
+
+        return string(_string);
     }
 
     /// @notice Mints new tokens.

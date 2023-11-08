@@ -102,7 +102,12 @@ describe("ERC1155Proxy", function () {
       const tokenId = 0;
       const uri = await proxy.tokenURI(tokenId);
 
-      expect(uri).to.equal(TOKEN_URI.concat(tokenId.toString()));
+      expect(uri.toLowerCase()).to.equal(
+        TOKEN_URI.concat(proxy.address)
+          .concat("/")
+          .concat(tokenId.toString())
+          .toLowerCase()
+      );
     });
     it("sets a default approval for Seaport 1.5 contract address for all users", async () => {
       const { proxy, owner, manager } = await loadFixture(deploy);
