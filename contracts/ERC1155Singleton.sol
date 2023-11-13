@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 import "./interfaces/IERC1155Singleton.sol";
+import "./interfaces/LazyMint.sol";
 
 /// @title ERC1155Singleton
 /// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
@@ -17,7 +18,8 @@ contract ERC1155Singleton is
     IERC1155Singleton,
     ERC1155,
     ERC2981,
-    AccessControl
+    AccessControl,
+    LazyMint
 {
     uint256 public currentTokenId = 0;
     string public contractURI;
