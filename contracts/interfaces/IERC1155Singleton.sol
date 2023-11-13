@@ -37,5 +37,5 @@ interface IERC1155Singleton {
         bytes memory data
     ) external;
 
-    function version() external pure returns (uint256);
+    function version() external pure returns (string memory);
 }

@@ -250,7 +250,7 @@ contract ERC1155Singleton is
         return super.isApprovedForAll(account, operator);
     }
 
-    function version() public pure virtual returns (uint256) {
-        return 1;
+    function version() public pure virtual returns (string memory) {
+        return "1";
     }
 }

@@ -16,7 +16,7 @@ export const CONTRACT_SALT = "Dcentral.me Token Contract";
 
 const encodedString = hre.ethers.utils.formatBytes32String(CONTRACT_SALT);
 const FACTORY_ADDRESS = "0x7eCcF14E9671eEA813d42cB42C5BE58f46980666";
-const SINGLETON_ADDRESS = "0xafbcea3ff00da26d4d989b7eec9d8bc6ad2c4e18";
+const SINGLETON_ADDRESS = "0x87eCe5eC9627c9EA13631769E55aB153020e905a";
 const SALT = encodedString;
 
 async function main() {
