@@ -18,11 +18,17 @@ contract ERC1155Core is ERC165, IERC1155Core, ERC1155, ERC2981, AccessControl {
 
     /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+
     /// @notice Indicates if the contract has been initialized.
     bool public didInit = false;
-    /// @notice Map to track registered interfaces
+
+    /// @notice Maps interface IDs to their support status
     mapping(bytes4 => bool) private _supportedInterfaces;
-    /// @notice Emitted when init is called.
+
+    /// @notice Emitted when the contract is initialized
+    /// @param proxyContractAddress The address of the proxy contract
+    /// @param owner The address of the owner after initialization
+    /// @param manager The address of the manager after initialization
     event Initialized(
         address proxyContractAddress,
         address owner,
@@ -62,6 +68,10 @@ contract ERC1155Core is ERC165, IERC1155Core, ERC1155, ERC2981, AccessControl {
         _setLicenseURI(licenseURI_);
     }
 
+    /// @notice Returns the URI for a given token ID
+    /// @dev Concatenates the base URI, contract address, and token ID to form the full token URI
+    /// @param _tokenId The token ID for which to return the URI
+    /// @return The URI of the given token ID
     function tokenURI(uint256 _tokenId) public view returns (string memory) {
         return
             string(
@@ -74,6 +84,9 @@ contract ERC1155Core is ERC165, IERC1155Core, ERC1155, ERC2981, AccessControl {
             );
     }
 
+    /// @notice Converts an address into a string representation
+    /// @param _address The address to convert
+    /// @return The string representation of the address
     function _addressToString(
         address _address
     ) internal pure returns (string memory) {
@@ -197,6 +210,11 @@ contract ERC1155Core is ERC165, IERC1155Core, ERC1155, ERC2981, AccessControl {
         return super.supportsInterface(interfaceId);
     }
 
+    /// @notice Returns whether the operator is authorized to manage the tokens of the account
+    /// @dev Overrides the default behavior for certain operator addresses
+    /// @param account The address of the token holder
+    /// @param operator The address of the operator to check
+    /// @return True if the operator is approved for all tokens of the account, false otherwise
     function isApprovedForAll(
         address account,
         address operator
@@ -206,6 +224,8 @@ contract ERC1155Core is ERC165, IERC1155Core, ERC1155, ERC2981, AccessControl {
         return super.isApprovedForAll(account, operator);
     }
 
+    /// @notice Returns the version of the contract
+    /// @return The version as a string
     function version() public pure virtual returns (string memory) {
         return "1";
     }
