@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import "./ERC1155Singleton.sol";
 import "./ERC1155BeaconProxy.sol";
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 contract Beacon is UpgradeableBeacon {
     event ProxyDeployed(address proxy);

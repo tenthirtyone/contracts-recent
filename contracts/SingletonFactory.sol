@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 /// @title EIP 2470 SingletonFactory (https://github.com/status-im/EIPs/blob/singleton-factory/EIPS/eip-2470.md)
 /// @notice This contract deploys new contracts using CREATE2 and computes their addresses and should be deployed by the same key on every chain.
