@@ -12,7 +12,13 @@ import "../interfaces/IERC1155Core.sol";
 
 /// @title 1155Core
 /// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
-contract ERC1155Core is ERC165, IERC1155Core, ERC1155, ERC2981, AccessControl {
+abstract contract ERC1155Core is
+    ERC165,
+    IERC1155Core,
+    ERC1155,
+    ERC2981,
+    AccessControl
+{
     string public contractURI;
     string public licenseURI;
 
