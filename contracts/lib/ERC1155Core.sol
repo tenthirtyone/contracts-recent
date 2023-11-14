@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
 import "../interfaces/IERC1155Core.sol";
 
@@ -17,7 +18,8 @@ abstract contract ERC1155Core is
     IERC1155Core,
     ERC1155,
     ERC2981,
-    AccessControl
+    AccessControl,
+    EIP712
 {
     string public contractURI;
     string public licenseURI;
@@ -42,7 +44,7 @@ abstract contract ERC1155Core is
     );
 
     /// @dev Contract constructor. Sets token URI and transfers ownership to zero address to establish a singleton mode.
-    constructor() ERC1155("") {
+    constructor() ERC1155("") EIP712("DcentralSFT-Voucher", "1") {
         _grantRole(DEFAULT_ADMIN_ROLE, address(0));
         _grantRole(MANAGER_ROLE, address(0));
         // Singleton
