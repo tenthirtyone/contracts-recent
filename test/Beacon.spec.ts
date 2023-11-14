@@ -75,7 +75,6 @@ describe("UpgradeableBeacon", function () {
       CONTRACT_URI,
       TOKEN_URI,
       LICENSE_URI,
-      0,
     ]);
 
     const proxyAddress = await beacon.callStatic.deployProxyContract(callData);

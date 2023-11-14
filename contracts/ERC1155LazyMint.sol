@@ -26,15 +26,13 @@ contract ERC1155LazyMint is ERC1155Core, ILazyMint {
     /// @param owner The address that will be set as the owner of the contract.
     /// @param contractURI_ The URI for the contract metadata.
     /// @param tokenURI_ The URI for the contract metadata.
-    /// @param defaultRoyalty The royalty payment in base points.
     function init(
         address owner,
         string memory contractURI_,
         string memory tokenURI_,
-        string memory licenseURI_,
-        uint96 defaultRoyalty
+        string memory licenseURI_
     ) public override {
-        super.init(owner, contractURI_, tokenURI_, licenseURI_, defaultRoyalty);
+        super.init(owner, contractURI_, tokenURI_, licenseURI_);
 
         _grantRole(MINTER_ROLE, owner);
     }

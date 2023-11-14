@@ -7,23 +7,8 @@ interface IERC1155Core {
         address owner,
         string memory contractURI_,
         string memory tokenURI_,
-        string memory licenseURI_,
-        uint96 defaultRoyalty
+        string memory licenseURI_
     ) external;
-
-    function feeDenominator() external view returns (uint96);
-
-    function setDefaultRoyalty(address receiver, uint96 feeNumerator) external;
-
-    function deleteDefaultRoyalty() external;
-
-    function setTokenRoyalty(
-        uint256 tokenId,
-        address receiver,
-        uint96 feeNumerator
-    ) external;
-
-    function resetTokenRoyalty(uint256 tokenId) external;
 
     function grantRole(bytes32 role, address account) external;
 

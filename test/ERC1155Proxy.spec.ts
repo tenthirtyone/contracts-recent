@@ -71,7 +71,6 @@ describe("ERC1155Proxy", function () {
       CONTRACT_URI,
       TOKEN_URI,
       LICENSE_URI,
-      ROYALTY,
     ]);
     const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
 
@@ -140,114 +139,13 @@ describe("ERC1155Proxy", function () {
         true
       );
     });
-    it("should support ERC2981 interface", async () => {
-      const { proxy } = await loadFixture(deploy);
 
-      expect(await proxy.supportsInterface(INTERFACE_ID_ERC2981)).to.equal(
-        true
-      );
-    });
     it("should support Access Control interface", async () => {
       const { proxy } = await loadFixture(deploy);
 
       expect(
         await proxy.supportsInterface(INTERFACE_ID_ACCESS_CONTROL)
       ).to.equal(true);
-    });
-  });
-
-  describe("ERC2981 Compliance", function () {
-    it("feeDenominator returns BASE_POINTS", async function () {
-      const { proxy } = await loadFixture(deploy);
-      const feeDenominator = await proxy.feeDenominator();
-      expect(feeDenominator).to.equal(BASE_POINTS);
-    });
-    it("sets the default royalty at init", async function () {
-      const { proxy, owner } = await loadFixture(deploy);
-
-      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
-        0,
-        BASE_POINTS
-      );
-      expect(receiver).to.equal(owner.address);
-      expect(royaltyFraction).to.equal(ROYALTY);
-    });
-    it("setDefaultRoyalty correctly sets a new default royalty", async function () {
-      const { proxy, owner } = await loadFixture(deploy);
-
-      await proxy.setDefaultRoyalty(owner.address, ROYALTY * 2, {
-        from: owner.address,
-      });
-      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
-        0,
-        BASE_POINTS
-      );
-      expect(receiver).to.equal(owner.address);
-      expect(royaltyFraction).to.equal(ROYALTY * 2);
-    });
-
-    it("deleteDefaultRoyalty correctly removes default royalty", async function () {
-      const { proxy, owner } = await loadFixture(deploy);
-
-      await proxy.setDefaultRoyalty(owner.address, ROYALTY, {
-        from: owner.address,
-      });
-      await proxy.deleteDefaultRoyalty({ from: owner.address });
-
-      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
-        0,
-        BASE_POINTS
-      );
-      expect(receiver).to.equal(ZERO_ADDRESS);
-      expect(royaltyFraction).to.equal(0);
-    });
-    it("setTokenRoyalty correctly sets royalty for specific token", async function () {
-      const { proxy, owner } = await loadFixture(deploy);
-
-      await proxy.setTokenRoyalty(1, owner.address, ROYALTY * 2, {
-        from: owner.address,
-      });
-      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
-        1,
-        BASE_POINTS
-      );
-      expect(receiver).to.equal(owner.address);
-      expect(royaltyFraction).to.equal(ROYALTY * 2);
-    });
-    it("resetTokenRoyalty correctly resets royalty to the default royalty for specific token", async function () {
-      const { proxy, owner } = await loadFixture(deploy);
-
-      await proxy.setTokenRoyalty(0, owner.address, ROYALTY * 2, {
-        from: owner.address,
-      });
-      await proxy.resetTokenRoyalty(0, { from: owner.address });
-      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
-        0,
-        BASE_POINTS
-      );
-      expect(royaltyFraction).to.equal(ROYALTY);
-    });
-    it("should correctly return royalty info for a token", async () => {
-      const { proxy, owner } = await loadFixture(deploy);
-
-      await proxy.setTokenRoyalty(0, owner.address, ROYALTY);
-      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
-        0,
-        BASE_POINTS
-      );
-      expect(receiver).to.equal(owner.address);
-      expect(royaltyFraction).to.equal(ROYALTY);
-    });
-
-    it("should return zero royalty info for token without royalty", async () => {
-      const { proxy, owner } = await loadFixture(deploy);
-      await proxy.deleteDefaultRoyalty({ from: owner.address });
-      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
-        0,
-        BASE_POINTS
-      );
-
-      expect(royaltyFraction).to.equal(0);
     });
   });
 

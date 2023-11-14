@@ -47,7 +47,7 @@ describe("ERC1155Singleton Singleton", function () {
       const { contract, owner } = await loadFixture(deploy);
 
       await expect(
-        contract.init(owner.address, CONTRACT_URI, TOKEN_URI, LICENSE_URI, 0)
+        contract.init(owner.address, CONTRACT_URI, TOKEN_URI, LICENSE_URI)
       ).to.be.revertedWith("Contract has already been initialized");
     });
   });
@@ -67,34 +67,6 @@ describe("ERC1155Singleton Singleton", function () {
     });
   });
 
-  describe("Royalties", function () {
-    it("reverts when attempting to set default royalty without the manager role", async function () {
-      const { contract, owner } = await loadFixture(deploy);
-
-      await expect(
-        contract.connect(owner).setDefaultRoyalty(owner.address, ROYALTY)
-      ).to.be.reverted;
-    });
-    it("reverts when attempting to delete default royalty without the manager role", async function () {
-      const { contract, owner } = await loadFixture(deploy);
-
-      await expect(contract.connect(owner).deleteDefaultRoyalty()).to.be
-        .reverted;
-    });
-    it("reverts when attempting to set token royalty without the manager role", async function () {
-      const { contract, owner } = await loadFixture(deploy);
-
-      await expect(
-        contract.connect(owner).setTokenRoyalty(1, owner.address, ROYALTY)
-      ).to.be.reverted;
-    });
-    it("reverts when attempting to reset token royalty without the manager role", async function () {
-      const { contract, owner } = await loadFixture(deploy);
-
-      await expect(contract.connect(owner).resetTokenRoyalty(1)).to.be.reverted;
-    });
-  });
-
   describe("ERC165 Interface support", function () {
     it("should support ERC165 interface", async () => {
       const { contract, owner } = await loadFixture(deploy);
@@ -110,13 +82,7 @@ describe("ERC1155Singleton Singleton", function () {
         true
       );
     });
-    it("should support ERC2981 interface", async () => {
-      const { contract } = await loadFixture(deploy);
 
-      expect(await contract.supportsInterface(INTERFACE_ID_ERC2981)).to.equal(
-        true
-      );
-    });
     it("should support Access Control interface", async () => {
       const { contract } = await loadFixture(deploy);
 
