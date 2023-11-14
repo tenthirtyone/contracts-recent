@@ -103,7 +103,16 @@ describe("Gas Usage", function () {
       console.log(`Gas used for mint: ${mintReceipt.gasUsed.toString()}`);
     }
 
-    const batchTokenCount = 1225;
+    // current optimized record
+    /*
+      Gas used for SingletonFactory: 175543
+      Gas used for ERC1155Singleton: 2455401
+      Gas used for Beacon: 990519
+      Gas used for Proxy: 736320
+      Gas used for mint: 83648
+      1225 tokens batched
+    */
+    const batchTokenCount = 1183;
     const amounts = new Array(batchTokenCount).fill(1e3);
 
     const batchMint = await proxy.mintBatch(owner.address, amounts, "0x", {
