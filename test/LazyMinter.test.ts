@@ -15,13 +15,14 @@ import {
 } from "./utils";
 
 import { ERC1155Singleton } from "../typechain";
+import { LazyMinter } from "../lib/";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
 
 describe("ERC1155Proxy", function () {
   const SALT = createSalt(CONTRACT_SALT);
-
+  let lazyMinter;
   async function deploy() {
     const [owner, manager] = await ethers.getSigners();
 
@@ -78,6 +79,16 @@ describe("ERC1155Proxy", function () {
       const { proxy, owner } = await loadFixture(deploy);
       expect(proxy).to.exist;
       expect(owner).to.exist;
+    });
+    it.only("creates a LazyMinter", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      console.log(lazyMinter);
     });
   });
 });
