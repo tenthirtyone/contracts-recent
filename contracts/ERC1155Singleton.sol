@@ -18,8 +18,7 @@ contract ERC1155Singleton is
     IERC1155Singleton,
     ERC1155,
     ERC2981,
-    AccessControl,
-    LazyMint
+    AccessControl
 {
     uint256 public currentTokenId = 0;
     string public contractURI;

@@ -142,12 +142,12 @@ describe("UpgradeableBeacon", function () {
       await proxy.mint(owner.address, 1, ZERO_BYTES32);
 
       expect(await proxy.balanceOf(owner.address, 0)).to.equal(1);
-      expect(await proxy.version()).to.equal(1);
+      expect(await proxy.version()).to.equal("1");
 
       await beacon.upgradeTo(erc1155AddressV2);
 
       expect(await proxy.balanceOf(owner.address, 0)).to.equal(1);
-      expect(await proxy.version()).to.equal(2);
+      expect(await proxy.version()).to.equal("2");
     });
   });
 });

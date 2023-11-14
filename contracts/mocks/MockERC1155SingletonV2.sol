@@ -10,7 +10,7 @@ contract MockERC1155SingletonV2 is ERC1155Singleton {
     /// @notice Creates a new Dcentral1155 contract instance
     constructor() {}
 
-    function version() public pure virtual override returns (uint256) {
-        return 2;
+    function version() public pure virtual override returns (string memory) {
+        return "2";
     }
 }
