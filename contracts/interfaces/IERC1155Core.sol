@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface IERC1155Singleton {
+interface IERC1155Core {
     function init(
         address owner,
         string memory contractURI_,
@@ -28,14 +28,6 @@ interface IERC1155Singleton {
     function grantRole(bytes32 role, address account) external;
 
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
-
-    function mint(address to, uint256 amount, bytes memory data) external;
-
-    function mintBatch(
-        address to,
-        uint256[] memory amounts,
-        bytes memory data
-    ) external;
 
     function version() external pure returns (string memory);
 }
