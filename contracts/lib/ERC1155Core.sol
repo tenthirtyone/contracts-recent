@@ -20,7 +20,6 @@ abstract contract ERC1155Core is
     EIP712
 {
     string public contractURI;
-    string public licenseURI;
 
     /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
@@ -31,6 +30,7 @@ abstract contract ERC1155Core is
     /// @notice Maps interface IDs to their support status
     mapping(bytes4 => bool) private _supportedInterfaces;
 
+    string public licenseURI;
     /// @notice Emitted when the contract is initialized
     /// @param proxyContractAddress The address of the proxy contract
     /// @param owner The address of the owner after initialization
