@@ -75,7 +75,9 @@ abstract contract ERC1155Core is
     /// @dev Concatenates the base URI, contract address, and token ID to form the full token URI
     /// @param _tokenId The token ID for which to return the URI
     /// @return The URI of the given token ID
-    function tokenURI(uint256 _tokenId) public view returns (string memory) {
+    function tokenURI(
+        uint256 _tokenId
+    ) public view virtual returns (string memory) {
         return
             string(
                 abi.encodePacked(

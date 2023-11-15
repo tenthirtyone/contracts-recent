@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.9;
 
-interface ILazyMint {
+interface IERC1155LazyMint {
     struct NFTVoucher {
         uint256 tokenId;
         uint256 minPrice;

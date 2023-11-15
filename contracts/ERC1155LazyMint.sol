@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Based on https://github.com/yusefnapora/lazy-minting
 
 pragma solidity ^0.8.9;
 
@@ -9,12 +10,12 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import "./lib/ERC1155Core.sol";
 import "./lib/URIStorage.sol";
-import "./interfaces/ILazyMint.sol";
+import "./interfaces/IERC1155LazyMint.sol";
 
 /// @title ERC1155LazyMint
 /// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
 /// Because this is an 1155 contract, and
-contract ERC1155LazyMint is ILazyMint, ERC1155Core, URIStorage {
+contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
     using ECDSA for bytes32;
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
