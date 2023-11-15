@@ -4,17 +4,17 @@ pragma solidity ^0.8.9;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import "./lib/ERC1155Core.sol";
+import "./lib/URIStorage.sol";
 import "./interfaces/ILazyMint.sol";
 
 /// @title ERC1155LazyMint
 /// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
 /// Because this is an 1155 contract, and
-contract ERC1155LazyMint is ERC1155Core, ILazyMint {
+contract ERC1155LazyMint is ILazyMint, ERC1155Core, URIStorage {
     using ECDSA for bytes32;
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
@@ -60,7 +60,7 @@ contract ERC1155LazyMint is ERC1155Core, ILazyMint {
 
         // first assign the token to the signer, to establish provenance on-chain
         _mint(signer, voucher.tokenId, 1, signature); // data is optional, passing signature saves on creating a new var
-        // _setTokenURI(voucher.tokenId, voucher.uri);
+        _setTokenURI(voucher.tokenId, voucher.uri);
 
         // transfer the token to the redeemer
         _safeTransferFrom(signer, redeemer, voucher.tokenId, 1, signature);
@@ -120,5 +120,18 @@ contract ERC1155LazyMint is ERC1155Core, ILazyMint {
     ) internal view returns (address) {
         bytes32 digest = _hash(voucher);
         return digest.toEthSignedMessageHash().recover(signature);
+    }
+
+    function _setTokenURI(
+        uint256 tokenId,
+        string memory _tokenURI
+    ) internal virtual override(URIStorage) {
+        URIStorage._setTokenURI(tokenId, _tokenURI);
+    }
+
+    function tokenURI(
+        uint256 _tokenId
+    ) public view override(ERC1155Core, URIStorage) returns (string memory) {
+        return _getTokenURI(_tokenId);
     }
 }
