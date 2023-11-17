@@ -7,15 +7,8 @@ import "../interfaces/IERC2981.sol";
 /// @title ERC2981
 /// @dev A simplified ERC2981
 abstract contract ERC2981 is IERC2981 {
-    RoyaltyInfo private _defaultRoyaltyInfo;
-
-    function feeDenominator() external pure virtual returns (uint96) {
-        return _feeDenominator();
-    }
-
-    function _feeDenominator() internal pure virtual returns (uint96) {
-        return 10000;
-    }
+    address private _receiver;
+    uint96 private _feeNumerator;
 
     function setDefaultRoyalty(
         address receiver,
@@ -28,10 +21,8 @@ abstract contract ERC2981 is IERC2981 {
         address receiver,
         uint96 feeNumerator
     ) internal virtual {
-        uint256 denominator = _feeDenominator();
-
         require(
-            feeNumerator < denominator,
+            feeNumerator < 10000,
             "Royalty fee will exceed the sale price."
         );
         require(
@@ -39,18 +30,16 @@ abstract contract ERC2981 is IERC2981 {
             "Reciver address cannot be the Zero Address."
         );
 
-        _defaultRoyaltyInfo = RoyaltyInfo(receiver, feeNumerator);
+        _receiver = receiver;
+        _feeNumerator = feeNumerator;
     }
 
     function royaltyInfo(
         uint256 tokenId, // Our royalty is set for the collection but spec requires this
         uint256 salePrice
     ) public view virtual returns (address, uint256) {
-        RoyaltyInfo memory royalty = _defaultRoyaltyInfo;
+        uint256 royaltyAmount = (salePrice * _feeNumerator) / 10000;
 
-        uint256 royaltyAmount = (salePrice * royalty.royaltyFraction) /
-            _feeDenominator();
-
-        return (royalty.receiver, royaltyAmount);
+        return (_receiver, royaltyAmount);
     }
 }
