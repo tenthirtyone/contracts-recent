@@ -7,7 +7,8 @@ interface IERC1155Core {
         address owner,
         string memory contractURI_,
         string memory tokenURI_,
-        string memory licenseURI_
+        string memory licenseURI_,
+        uint96 defaultRoyalty
     ) external;
 
     function grantRole(bytes32 role, address account) external;

@@ -71,6 +71,7 @@ describe("ERC1155Proxy", function () {
       CONTRACT_URI,
       TOKEN_URI,
       LICENSE_URI,
+      ROYALTY,
     ]);
     const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
 
@@ -185,6 +186,64 @@ describe("ERC1155Proxy", function () {
       const { proxy } = await loadFixture(deploy);
 
       expect(await proxy.licenseURI()).to.equal(LICENSE_URI);
+    });
+  });
+
+  describe("ERC2981 Compliance", function () {
+    it("feeDenominator returns BASE_POINTS", async function () {
+      const { proxy } = await loadFixture(deploy);
+      const feeDenominator = await proxy.feeDenominator();
+      expect(feeDenominator).to.equal(BASE_POINTS);
+    });
+    it("sets the default royalty at init", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(royaltyFraction).to.equal(ROYALTY);
+    });
+    it("setDefaultRoyalty correctly sets a new default royalty", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const TEN_PERCENT = 1000;
+
+      await proxy.setDefaultRoyalty(owner.address, TEN_PERCENT, {
+        from: owner.address,
+      });
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(royaltyFraction).to.equal(TEN_PERCENT);
+    });
+    it("setDefaultRoyalty correctly overrides a previous royalty", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+      const TEN_PERCENT = 1000;
+
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+
+      await proxy.setDefaultRoyalty(owner.address, ROYALTY, {
+        from: owner.address,
+      });
+
+      expect(royaltyFraction).to.equal(ROYALTY);
+
+      await proxy.setDefaultRoyalty(owner.address, TEN_PERCENT, {
+        from: owner.address,
+      });
+      const [_receiver, _royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(_royaltyFraction).to.equal(TEN_PERCENT);
     });
   });
 

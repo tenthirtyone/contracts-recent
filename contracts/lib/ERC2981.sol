@@ -9,8 +9,19 @@ import "../interfaces/IERC2981.sol";
 abstract contract ERC2981 is IERC2981 {
     RoyaltyInfo private _defaultRoyaltyInfo;
 
+    function feeDenominator() external pure virtual returns (uint96) {
+        return _feeDenominator();
+    }
+
     function _feeDenominator() internal pure virtual returns (uint96) {
         return 10000;
+    }
+
+    function setDefaultRoyalty(
+        address receiver,
+        uint96 feeNumerator
+    ) external virtual {
+        _setDefaultRoyalty(receiver, feeNumerator);
     }
 
     function _setDefaultRoyalty(

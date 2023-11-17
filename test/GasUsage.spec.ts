@@ -7,7 +7,13 @@ import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Be
 
 import { ERC1155Singleton } from "../typechain";
 
-import { createSalt, CONTRACT_URI, TOKEN_URI, LICENSE_URI } from "./utils";
+import {
+  createSalt,
+  CONTRACT_URI,
+  TOKEN_URI,
+  LICENSE_URI,
+  ROYALTY,
+} from "./utils";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
@@ -76,6 +82,7 @@ describe("Gas Usage", function () {
       CONTRACT_URI,
       TOKEN_URI,
       LICENSE_URI,
+      ROYALTY,
     ]);
 
     const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
@@ -112,7 +119,7 @@ describe("Gas Usage", function () {
       Gas used for mint: 83648
       1225 tokens batched
     */
-    const batchTokenCount = 1183;
+    const batchTokenCount = 1185;
     const amounts = new Array(batchTokenCount).fill(1e3);
 
     const batchMint = await proxy.mintBatch(owner.address, amounts, "0x", {
@@ -123,6 +130,17 @@ describe("Gas Usage", function () {
     console.log(
       `Maximum batchMint: ${batchTokenCount} tokens for total gas: ${batchReceipt.gasUsed}`
     );
+
+    const xferTx = await proxy.safeTransferFrom(
+      owner.address,
+      manager.address,
+      0,
+      1,
+      "0x00"
+    );
+    const xferReceipt = await xferTx.wait();
+
+    console.log(xferReceipt.gasUsed);
 
     return { proxy, owner };
   }

@@ -18,6 +18,7 @@ import {
   CONTRACT_URI,
   TOKEN_URI,
   LICENSE_URI,
+  ROYALTY,
 } from "./utils";
 
 import { ERC1155Singleton } from "../typechain";
@@ -75,6 +76,7 @@ describe("UpgradeableBeacon", function () {
       CONTRACT_URI,
       TOKEN_URI,
       LICENSE_URI,
+      ROYALTY,
     ]);
 
     const proxyAddress = await beacon.callStatic.deployProxyContract(callData);

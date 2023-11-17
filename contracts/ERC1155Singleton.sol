@@ -18,9 +18,10 @@ contract ERC1155Singleton is ERC1155Core, IMint {
         address owner,
         string memory contractURI_,
         string memory tokenURI_,
-        string memory licenseURI_
+        string memory licenseURI_,
+        uint96 defaultRoyalty
     ) public override {
-        super.init(owner, contractURI_, tokenURI_, licenseURI_);
+        super.init(owner, contractURI_, tokenURI_, licenseURI_, defaultRoyalty);
 
         currentTokenId = 0;
     }

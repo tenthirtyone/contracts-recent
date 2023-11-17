@@ -60,7 +60,8 @@ abstract contract ERC1155Core is
         address owner,
         string memory contractURI_,
         string memory tokenURI_,
-        string memory licenseURI_
+        string memory licenseURI_,
+        uint96 defaultRoyalty
     ) public virtual {
         require(!didInit, "Contract has already been initialized");
         didInit = true;
@@ -72,6 +73,8 @@ abstract contract ERC1155Core is
         _grantRole(MANAGER_ROLE, owner);
 
         _setLicenseURI(licenseURI_);
+
+        _setDefaultRoyalty(owner, defaultRoyalty);
     }
 
     /// @notice Returns the URI for a given token ID

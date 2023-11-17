@@ -47,7 +47,13 @@ describe("ERC1155Singleton Singleton", function () {
       const { contract, owner } = await loadFixture(deploy);
 
       await expect(
-        contract.init(owner.address, CONTRACT_URI, TOKEN_URI, LICENSE_URI)
+        contract.init(
+          owner.address,
+          CONTRACT_URI,
+          TOKEN_URI,
+          LICENSE_URI,
+          ROYALTY
+        )
       ).to.be.revertedWith("Contract has already been initialized");
     });
   });
