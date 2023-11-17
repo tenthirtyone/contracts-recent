@@ -1,7 +1,7 @@
 const ethers = require("ethers");
 const { TypedDataUtils } = require("ethers-eip712");
 
-const SIGNING_DOMAIN_NAME = "LazyNFT-Voucher";
+const SIGNING_DOMAIN_NAME = "DcentralSFT-Voucher";
 const SIGNING_DOMAIN_VERSION = "1";
 
 export class LazyMinter {
@@ -53,7 +53,7 @@ export class LazyMinter {
     };
   }
 
-  async createVoucher(tokenId, uri, minPrice = 0) {
+  async createVoucher(tokenId, uri, minPrice = 0, maxSupply = 1, recipient) {
     const voucher = { tokenId, uri, minPrice };
     const typedData = await this._formatVoucher(voucher);
     const digest = TypedDataUtils.encodeDigest(typedData);
@@ -65,3 +65,5 @@ export class LazyMinter {
     };
   }
 }
+
+export default LazyMinter;

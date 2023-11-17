@@ -26,6 +26,8 @@ import {
   SEAPORT_1_5_ADDRESS,
 } from "./utils";
 
+import { LazyMinter } from "../lib/LazyMinter";
+
 import { ERC1155LazyMint } from "../typechain";
 
 const hre = require("hardhat");
@@ -35,7 +37,7 @@ describe("ERC1155Proxy", function () {
   const SALT = createSalt(CONTRACT_SALT);
 
   async function deploy() {
-    const [owner, manager] = await ethers.getSigners();
+    const [owner, redeemer] = await ethers.getSigners();
 
     const SingletonFactory = await ethers.getContractFactory(
       "MockSingletonFactory"
@@ -78,11 +80,11 @@ describe("ERC1155Proxy", function () {
     await beacon.deployProxyContract(callData);
 
     const proxy = (await ethers.getContractAt(
-      "ERC1155Singleton",
+      "ERC1155LazyMint",
       proxyAddress
     )) as unknown as ERC1155LazyMint;
 
-    return { proxy, owner, manager };
+    return { proxy, owner, redeemer };
   }
 
   describe("Deployment", function () {
@@ -90,6 +92,34 @@ describe("ERC1155Proxy", function () {
       const { proxy, owner } = await loadFixture(deploy);
       expect(proxy).to.exist;
       expect(owner).to.exist;
+    });
+    it("Should redeem an NFT from a signed voucher", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        0,
+        supply,
+        owner.address
+      );
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+      const redeemTx = await proxy.redeem(redeemer.address, voucher, signature);
+      const redeemReceipt = await redeemTx.wait();
+
+      const totalSupply = await proxy.totalSupply(tokenId);
+
+      expect(totalSupply).to.equal(supply);
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
     });
   });
 });

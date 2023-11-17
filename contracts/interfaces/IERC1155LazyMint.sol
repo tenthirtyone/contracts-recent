@@ -6,8 +6,6 @@ interface IERC1155LazyMint {
     struct NFTVoucher {
         uint256 tokenId;
         uint256 minPrice;
-        uint256 maxSupply;
-        address recipient;
         string uri;
     }
 

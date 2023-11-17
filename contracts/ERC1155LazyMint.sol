@@ -61,7 +61,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         _safeTransferFrom(signer, redeemer, voucher.tokenId, 1, signature);
 
         // Transfer the eth to the recipient
-        payable(voucher.recipient).transfer(msg.value);
+        payable(redeemer).transfer(msg.value); // fix this line
         return voucher.tokenId;
     }
 
@@ -92,7 +92,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
     function _verify(
         NFTVoucher calldata voucher,
         bytes memory signature
-    ) internal view returns (address) {
+    ) public view returns (address) {
         bytes32 digest = _hash(voucher);
         return digest.toEthSignedMessageHash().recover(signature);
     }
