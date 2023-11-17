@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
 import "../interfaces/IERC1155Core.sol";
-
-import "./ERC2981.sol";
 
 /// @title 1155Core
 /// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
@@ -20,6 +20,7 @@ abstract contract ERC1155Core is
     ERC1155,
     EIP712,
     ERC2981,
+    ERC1155Supply,
     AccessControl
 {
     string public contractURI;
@@ -172,7 +173,7 @@ abstract contract ERC1155Core is
         public
         view
         virtual
-        override(ERC165, ERC1155, AccessControl, IERC1155Core)
+        override(ERC165, ERC1155, ERC2981, AccessControl, IERC1155Core)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -190,6 +191,60 @@ abstract contract ERC1155Core is
         if (operator == 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC) return true;
 
         return super.isApprovedForAll(account, operator);
+    }
+
+    /// @notice Sets the default royalty for all tokens
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param receiver The address that will receive the royalty
+    /// @param feeNumerator The numerator for calculating the royalty fee
+    function setDefaultRoyalty(
+        address receiver,
+        uint96 feeNumerator
+    ) public onlyRole(MANAGER_ROLE) {
+        _setDefaultRoyalty(receiver, feeNumerator);
+    }
+
+    /// @notice Gets the denominator for the fee calculation
+    /// @return The denominator for the fee calculation
+    function feeDenominator() public pure returns (uint96) {
+        return _feeDenominator();
+    }
+
+    /// @notice Deletes the default royalty for all tokens
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    function deleteDefaultRoyalty() public onlyRole(MANAGER_ROLE) {
+        _deleteDefaultRoyalty();
+    }
+
+    /// @notice Sets the royalty for a specific token
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param tokenId The ID of the token
+    /// @param receiver The address that will receive the royalty
+    /// @param feeNumerator The numerator for calculating the royalty fee
+    function setTokenRoyalty(
+        uint256 tokenId,
+        address receiver,
+        uint96 feeNumerator
+    ) public onlyRole(MANAGER_ROLE) {
+        _setTokenRoyalty(tokenId, receiver, feeNumerator);
+    }
+
+    /// @notice Resets the royalty for a specific token
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param tokenId The ID of the token
+    function resetTokenRoyalty(uint256 tokenId) public onlyRole(MANAGER_ROLE) {
+        _resetTokenRoyalty(tokenId);
+    }
+
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override(ERC1155, ERC1155Supply) {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /// @notice Returns the version of the contract

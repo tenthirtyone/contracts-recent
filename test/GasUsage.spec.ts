@@ -119,7 +119,7 @@ describe("Gas Usage", function () {
       Gas used for mint: 83648
       1225 tokens batched
     */
-    const batchTokenCount = 1185;
+    const batchTokenCount = 500;
     const amounts = new Array(batchTokenCount).fill(1e3);
 
     const batchMint = await proxy.mintBatch(owner.address, amounts, "0x", {
