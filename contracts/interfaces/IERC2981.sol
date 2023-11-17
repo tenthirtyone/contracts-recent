@@ -3,7 +3,13 @@
 pragma solidity ^0.8.0;
 
 interface IERC2981 {
-    function feeDenominator() external view returns (uint96);
+    struct RoyaltyInfo {
+        address receiver;
+        uint96 royaltyFraction;
+    }
 
-    function setDefaultRoyalty(address receiver, uint96 feeNumerator) external;
+    function royaltyInfo(
+        uint256 _tokenId,
+        uint256 _salePrice
+    ) external view returns (address receiver, uint256 royaltyAmount);
 }
