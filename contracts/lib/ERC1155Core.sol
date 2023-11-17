@@ -9,20 +9,25 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
 import "../interfaces/IERC1155Core.sol";
+import "../interfaces/IERC2981.sol";
 
 /// @title 1155Core
 /// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
 abstract contract ERC1155Core is
-    ERC165,
     IERC1155Core,
+    IERC2981,
+    ERC165,
     ERC1155,
     AccessControl,
     EIP712
 {
     string public contractURI;
+    string public licenseURI;
 
     /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+
+    uint96 _feeDenominator = 10000;
 
     /// @notice Indicates if the contract has been initialized.
     bool public didInit = false;
@@ -30,7 +35,6 @@ abstract contract ERC1155Core is
     /// @notice Maps interface IDs to their support status
     mapping(bytes4 => bool) private _supportedInterfaces;
 
-    string public licenseURI;
     /// @notice Emitted when the contract is initialized
     /// @param proxyContractAddress The address of the proxy contract
     /// @param owner The address of the owner after initialization
@@ -69,6 +73,10 @@ abstract contract ERC1155Core is
         _grantRole(MANAGER_ROLE, owner);
 
         _setLicenseURI(licenseURI_);
+    }
+
+    function feeDenominator() external view returns (uint96) {
+        return _feeDenominator;
     }
 
     /// @notice Returns the URI for a given token ID
