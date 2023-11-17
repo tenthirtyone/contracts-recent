@@ -181,6 +181,20 @@ describe("ERC1155Proxy", function () {
     });
   });
 
+  describe("Supply", function () {
+    it.only("tracks the supply of tokens", async () => {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+      await proxy.mint(owner.address, 2, ZERO_BYTES32);
+
+      const balance1 = await proxy.balanceOf(owner.address, 0);
+
+      expect(balance1).to.equal(2);
+
+      const totalSupply = await proxy.totalSupply(0);
+      expect(totalSupply).to.equal(2);
+    });
+  });
+
   describe("License", function () {
     it("should create a license for the collection", async () => {
       const { proxy } = await loadFixture(deploy);
