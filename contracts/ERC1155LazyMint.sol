@@ -17,11 +17,6 @@ import "./interfaces/IERC1155LazyMint.sol";
 /// Because this is an 1155 contract, and
 contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
     using ECDSA for bytes32;
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    mapping(address => uint256) pendingWithdrawals;
-    // TokenId to maxSupply
-    mapping(uint256 => uint256) maxSupply;
 
     /// @notice Initializes the contract. Can only be done once.
     /// @param owner The address that will be set as the owner of the contract.
@@ -36,7 +31,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
     ) public override {
         super.init(owner, contractURI_, tokenURI_, licenseURI_, defaultRoyalty);
 
-        _grantRole(MINTER_ROLE, owner);
+        _grantRole(MANAGER_ROLE, owner);
     }
 
     /// @notice Redeems an NFTVoucher for an actual NFT, creating it in the process.
@@ -53,7 +48,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
 
         // make sure that the signer is authorized to mint NFTs
         require(
-            hasRole(MINTER_ROLE, signer),
+            hasRole(MANAGER_ROLE, signer),
             "Signature invalid or unauthorized"
         );
 
@@ -67,29 +62,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         // transfer the token to the redeemer
         _safeTransferFrom(signer, redeemer, voucher.tokenId, 1, signature);
 
-        // transfer payment to signer's withdrawal balance
-        pendingWithdrawals[signer] += msg.value;
-
         return voucher.tokenId;
-    }
-
-    function withdraw() public {
-        require(
-            hasRole(MINTER_ROLE, msg.sender),
-            "Only authorized minters can withdraw"
-        );
-
-        // IMPORTANT: casting msg.sender to a payable address is only safe if ALL members of the minter role are payable addresses.
-        address payable receiver = payable(msg.sender);
-
-        uint amount = pendingWithdrawals[receiver];
-        // zero account before transfer to prevent re-entrancy attack
-        pendingWithdrawals[receiver] = 0;
-        receiver.transfer(amount);
-    }
-
-    function availableToWithdraw() public view returns (uint256) {
-        return pendingWithdrawals[msg.sender];
     }
 
     /// @notice Returns a hash of the given NFTVoucher, prepared using EIP712 typed data hashing rules.

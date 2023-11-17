@@ -182,7 +182,7 @@ describe("ERC1155Proxy", function () {
   });
 
   describe("Supply", function () {
-    it.only("tracks the supply of tokens", async () => {
+    it("tracks the supply of tokens", async () => {
       const { proxy, owner, manager } = await loadFixture(deploy);
       await proxy.mint(owner.address, 2, ZERO_BYTES32);
 
