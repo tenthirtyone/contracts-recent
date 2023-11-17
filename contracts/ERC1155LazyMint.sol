@@ -30,8 +30,6 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         uint96 defaultRoyalty
     ) public override {
         super.init(owner, contractURI_, tokenURI_, licenseURI_, defaultRoyalty);
-
-        _grantRole(MANAGER_ROLE, owner);
     }
 
     /// @notice Redeems an NFTVoucher for an actual NFT, creating it in the process.
@@ -62,6 +60,8 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         // transfer the token to the redeemer
         _safeTransferFrom(signer, redeemer, voucher.tokenId, 1, signature);
 
+        // Transfer the eth to the recipient
+        payable(voucher.recipient).transfer(msg.value);
         return voucher.tokenId;
     }
 

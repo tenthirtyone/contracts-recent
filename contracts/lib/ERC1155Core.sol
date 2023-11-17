@@ -84,7 +84,7 @@ abstract contract ERC1155Core is
     /// @return The URI of the given token ID
     function tokenURI(
         uint256 _tokenId
-    ) public view virtual returns (string memory) {
+    ) external view virtual returns (string memory) {
         return
             string(
                 abi.encodePacked(

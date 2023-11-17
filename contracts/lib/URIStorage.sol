@@ -24,7 +24,7 @@ abstract contract URIStorage {
      */
     function tokenURI(
         uint256 tokenId
-    ) public view virtual returns (string memory) {
+    ) external view virtual returns (string memory) {
         return _tokenURIs[tokenId];
     }
 

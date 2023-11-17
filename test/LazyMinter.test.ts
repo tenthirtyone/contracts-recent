@@ -48,7 +48,6 @@ describe("ERC1155Proxy", function () {
     );
 
     await factoryInstance.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
-    console.log("Here");
 
     const abiCoder = new ethers.utils.AbiCoder();
     const encodedParameters = abiCoder.encode(
