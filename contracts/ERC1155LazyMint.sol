@@ -31,10 +31,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         address signer = _verify(voucher, signature);
 
         // make sure that the signer is authorized to mint NFTs
-        require(
-            hasRole(MANAGER_ROLE, signer),
-            "Signature invalid or unauthorized"
-        );
+        require(hasRole(MANAGER_ROLE, signer));
 
         if (_maxSupply[voucher.tokenId] == 0) {
             _maxSupply[voucher.tokenId] = voucher.maxSupply;
@@ -46,10 +43,10 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         );
 
         // make sure that the redeemer is paying enough to cover the buyer's cost
-        require(msg.value >= voucher.minPrice, "Insufficient funds to redeem");
+        require(msg.value >= (quantity * voucher.minPrice));
 
         // first assign the token to the signer, to establish provenance on-chain
-        _mint(signer, voucher.tokenId, 1, signature); // data is optional, passing signature saves on creating a new var
+        _mint(signer, voucher.tokenId, quantity, signature); // data is optional, passing signature saves on creating a new var
         _setTokenURI(voucher.tokenId, voucher.uri);
 
         // transfer the token to the redeemer
@@ -61,8 +58,9 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
             signature
         );
 
+        (address receiver, ) = royaltyInfo(voucher.tokenId, 0);
         // Transfer the eth to the recipient
-        payable(voucher.recipient).transfer(msg.value); // fix this line
+        payable(receiver).transfer(msg.value); // fix this line
         return voucher.tokenId;
     }
 
