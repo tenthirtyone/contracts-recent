@@ -13,6 +13,7 @@ interface IERC1155LazyMint {
 
     function redeem(
         address redeemer,
+        uint256 quantity,
         NFTVoucher calldata voucher,
         bytes memory signature
     ) external payable returns (uint256);

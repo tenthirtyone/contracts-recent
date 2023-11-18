@@ -3,10 +3,7 @@
 
 pragma solidity ^0.8.9;
 
-import "hardhat/console.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import "./lib/ERC1155Core.sol";
 import "./lib/URIStorage.sol";
@@ -26,6 +23,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
     /// @param signature An EIP712 signature of the voucher, produced by the NFT creator.
     function redeem(
         address redeemer,
+        uint256 quantity,
         NFTVoucher calldata voucher,
         bytes memory signature
     ) public payable returns (uint256) {
@@ -38,6 +36,15 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
             "Signature invalid or unauthorized"
         );
 
+        if (_maxSupply[voucher.tokenId] == 0) {
+            _maxSupply[voucher.tokenId] = voucher.maxSupply;
+        }
+
+        require(
+            (totalSupply(voucher.tokenId) + quantity) <=
+                _maxSupply[voucher.tokenId]
+        );
+
         // make sure that the redeemer is paying enough to cover the buyer's cost
         require(msg.value >= voucher.minPrice, "Insufficient funds to redeem");
 
@@ -46,7 +53,13 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         _setTokenURI(voucher.tokenId, voucher.uri);
 
         // transfer the token to the redeemer
-        _safeTransferFrom(signer, redeemer, voucher.tokenId, 1, signature);
+        _safeTransferFrom(
+            signer,
+            redeemer,
+            voucher.tokenId,
+            quantity,
+            signature
+        );
 
         // Transfer the eth to the recipient
         payable(voucher.recipient).transfer(msg.value); // fix this line

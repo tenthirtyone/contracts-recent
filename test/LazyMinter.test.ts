@@ -116,7 +116,7 @@ describe("ERC1155Proxy", function () {
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
       const redeemTx = await proxy
         .connect(redeemer)
-        .redeem(redeemer.address, voucher, signature, {
+        .redeem(redeemer.address, 1, voucher, signature, {
           value: tokenPrice,
         });
       const redeemReceipt = await redeemTx.wait();
@@ -130,6 +130,46 @@ describe("ERC1155Proxy", function () {
       expect(balanceDelta).to.equal(tokenPrice);
       expect(totalSupply).to.equal(supply);
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
+    });
+    it("mints more than once per voucher", async () => {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 2;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        10,
+        owner.address
+      );
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+      const redeemTx2 = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+
+      await redeemTx.wait();
+      await redeemTx2.wait();
+
+      const totalSupply = await proxy.totalSupply(tokenId);
+
+      expect(totalSupply).to.equal(supply);
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(2);
     });
   });
 });
