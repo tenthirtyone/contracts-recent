@@ -18,19 +18,7 @@ import "./interfaces/IERC1155LazyMint.sol";
 contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
     using ECDSA for bytes32;
 
-    /// @notice Initializes the contract. Can only be done once.
-    /// @param owner The address that will be set as the owner of the contract.
-    /// @param contractURI_ The URI for the contract metadata.
-    /// @param tokenURI_ The URI for the contract metadata.
-    function init(
-        address owner,
-        string memory contractURI_,
-        string memory tokenURI_,
-        string memory licenseURI_,
-        uint96 defaultRoyalty
-    ) public override {
-        super.init(owner, contractURI_, tokenURI_, licenseURI_, defaultRoyalty);
-    }
+    mapping(uint256 => uint256) _maxSupply;
 
     /// @notice Redeems an NFTVoucher for an actual NFT, creating it in the process.
     /// @param redeemer The address of the account which will receive the NFT upon success.
@@ -61,7 +49,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         _safeTransferFrom(signer, redeemer, voucher.tokenId, 1, signature);
 
         // Transfer the eth to the recipient
-        payable(redeemer).transfer(msg.value); // fix this line
+        payable(voucher.recipient).transfer(msg.value); // fix this line
         return voucher.tokenId;
     }
 
@@ -75,11 +63,13 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "NFTVoucher(uint256 tokenId,uint256 minPrice,string uri)"
+                            "NFTVoucher(uint256 tokenId,uint256 minPrice,string uri,uint256 maxSupply,address recipient)"
                         ),
                         voucher.tokenId,
                         voucher.minPrice,
-                        keccak256(bytes(voucher.uri))
+                        keccak256(bytes(voucher.uri)),
+                        voucher.maxSupply,
+                        voucher.recipient
                     )
                 )
             );

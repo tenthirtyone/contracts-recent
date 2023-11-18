@@ -7,6 +7,8 @@ interface IERC1155LazyMint {
         uint256 tokenId;
         uint256 minPrice;
         string uri;
+        uint256 maxSupply;
+        address recipient;
     }
 
     function redeem(

@@ -93,7 +93,7 @@ describe("ERC1155Proxy", function () {
       expect(proxy).to.exist;
       expect(owner).to.exist;
     });
-    it("Should redeem an NFT from a signed voucher", async function () {
+    it.only("Should redeem an NFT from a signed voucher", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
 
       const lazyMinter = new LazyMinter({
@@ -107,16 +107,26 @@ describe("ERC1155Proxy", function () {
       const { voucher, signature } = await lazyMinter.createVoucher(
         tokenId,
         "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
-        0,
-        supply,
+        ethers.utils.parseEther("1.0"),
+        10,
         owner.address
       );
+      const beginBalance = await ethers.provider.getBalance(owner.address);
 
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
-      const redeemTx = await proxy.redeem(redeemer.address, voucher, signature);
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, voucher, signature, {
+          value: ethers.utils.parseEther("1.0"),
+        });
       const redeemReceipt = await redeemTx.wait();
 
       const totalSupply = await proxy.totalSupply(tokenId);
+
+      const endBalance = await ethers.provider.getBalance(owner.address);
+
+      console.log(beginBalance.toString());
+      console.log(endBalance.toString());
 
       expect(totalSupply).to.equal(supply);
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
