@@ -4,12 +4,21 @@ const { TypedDataUtils } = require("ethers-eip712");
 const SIGNING_DOMAIN_NAME = "DcentralSFT-Voucher";
 const SIGNING_DOMAIN_VERSION = "1";
 
+/**
+ * Class representing a LazyMinter for NFT vouchers.
+ */
 export class LazyMinter {
   public contractAddress: string;
   public signer: any;
   public types: any;
   private _domain: any;
 
+  /**
+   * Creates an instance of LazyMinter.
+   * @param {object} param - Parameters for LazyMinter.
+   * @param {string} param.contractAddress - The contract address.
+   * @param {any} param.signer - Signer for transactions.
+   */
   constructor({ contractAddress, signer }) {
     this.contractAddress = contractAddress;
     this.signer = signer;
@@ -31,6 +40,10 @@ export class LazyMinter {
     };
   }
 
+  /**
+   * Gets the signing domain for the contract.
+   * @returns {Promise<object>} The domain object.
+   */
   async _signingDomain() {
     if (this._domain != null) {
       return this._domain;
@@ -45,6 +58,11 @@ export class LazyMinter {
     return this._domain;
   }
 
+  /**
+   * Formats a voucher for signing.
+   * @param {object} voucher - The voucher to format.
+   * @returns {Promise<object>} The formatted voucher.
+   */
   async _formatVoucher(voucher) {
     const domain = await this._signingDomain();
     return {
@@ -55,6 +73,15 @@ export class LazyMinter {
     };
   }
 
+  /**
+   * Creates a signed voucher.
+   * @param {number} tokenId - The token ID.
+   * @param {string} uri - URI for the NFT.
+   * @param {number} [minPrice=0] - Minimum price for the NFT.
+   * @param {number} maxSupply - Maximum supply of the NFT.
+   * @param {string} recipient - Recipient address.
+   * @returns {Promise<object>} An object containing the voucher, signature, and digest.
+   */
   async createVoucher(tokenId, uri, minPrice = 0, maxSupply, recipient) {
     const voucher = { tokenId, uri, minPrice, maxSupply, recipient };
     const typedData = await this._formatVoucher(voucher);

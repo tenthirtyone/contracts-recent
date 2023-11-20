@@ -93,7 +93,7 @@ describe("ERC1155Proxy", function () {
       expect(proxy).to.exist;
       expect(owner).to.exist;
     });
-    it.only("Should redeem an NFT from a signed voucher", async function () {
+    it("Should redeem an NFT from a signed voucher", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
       const lazyMinter = new LazyMinter({
