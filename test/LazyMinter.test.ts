@@ -93,7 +93,7 @@ describe("ERC1155Proxy", function () {
       expect(proxy).to.exist;
       expect(owner).to.exist;
     });
-    it("Should redeem an NFT from a signed voucher", async function () {
+    it("should redeem an NFT from a signed voucher", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
       const lazyMinter = new LazyMinter({
@@ -131,7 +131,7 @@ describe("ERC1155Proxy", function () {
       expect(totalSupply).to.equal(supply);
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
     });
-    it("mints more than once per voucher", async () => {
+    it("should mint up to the maxSupply of the voucher", async () => {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("0");
       const lazyMinter = new LazyMinter({
@@ -171,5 +171,11 @@ describe("ERC1155Proxy", function () {
       expect(totalSupply).to.equal(supply);
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(2);
     });
+    it("should fail to redeem an NFT that's reached its max supply", async function () {});
+    it("should fail to redeem an NFT voucher that's signed by an unauthorized account", async function () {});
+    it("should fail to redeem an NFT voucher that's been modified", async function () {});
+    it("Should redeem if payment is >= minPrice * quantity", async function () {});
+    it("Should fail to redeem if payment is < minPrice", async function () {});
+    it("Should fail to redeem if the payment receiver cannot receive eth", async function () {});
   });
 });
