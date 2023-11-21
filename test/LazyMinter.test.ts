@@ -131,6 +131,34 @@ describe("Lazy Mint", function () {
       expect(totalSupply).to.equal(supply);
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
     });
+    it("should correctly update token URI on voucher redemption", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 1;
+      const tokenUri =
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        tokenUri,
+        tokenPrice,
+        10,
+        owner.address
+      );
+
+      await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+      expect(await proxy.tokenURI(tokenId)).to.equal(tokenUri);
+    });
     it("should mint up to the maxSupply of the voucher", async () => {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("0");
@@ -333,7 +361,7 @@ describe("Lazy Mint", function () {
         }) // @ts-ignore
       ).to.be.reverted;
     });
-    it.only("Should fail to redeem if the payment receiver cannot receive eth", async function () {
+    it("Should fail to redeem if the payment receiver cannot receive eth", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const NoPayContract = await ethers.getContractFactory(
         "MockNoPayContract"
@@ -367,5 +395,11 @@ describe("Lazy Mint", function () {
         })
       );
     });
+  });
+
+  describe("Payment Handling", function () {
+    it("should correctly transfer funds to the owner on redemption", async function () {});
+
+    it("should handle overpayment scenarios correctly", async function () {});
   });
 });

@@ -16,12 +16,12 @@ export const CONTRACT_SALT = "Dcentral.me Token Contract";
 
 const encodedString = hre.ethers.utils.formatBytes32String(CONTRACT_SALT);
 const FACTORY_ADDRESS = "0x7eCcF14E9671eEA813d42cB42C5BE58f46980666";
-const SINGLETON_ADDRESS = "0xe7D9F77371511178b00E19832818e08F60FAd2a5";
+const SINGLETON_ADDRESS = "0x041D87c0D6AFDdEa4f5C3afeaCfcD14F5580E94B";
 const SALT = encodedString;
 
 async function main() {
   const [owner, manager] = await hre.ethers.getSigners();
-
+  console.log(owner);
   const factory = new hre.ethers.Contract(FACTORY_ADDRESS, FactoryABI, owner);
   const abiCoder = new hre.ethers.utils.AbiCoder();
   const encodedParameters = abiCoder.encode(
@@ -29,7 +29,6 @@ async function main() {
     [SINGLETON_ADDRESS, owner.address]
   );
 
-  console.log(owner.address);
   const beaconInitCode = BeaconBytecode + encodedParameters.slice(2);
 
   // This gasLimit must be manually set. This is approximately twice the amount necessary
@@ -37,7 +36,7 @@ async function main() {
   const beaconTx = await factory.deploy(SALT, beaconInitCode);
 
   const beaconReceipt = await beaconTx.wait();
-
+  console.log(beaconReceipt);
   console.log(`Beacon deployed at ${beaconReceipt.events[0].address}`);
 }
 

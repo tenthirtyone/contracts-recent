@@ -10,8 +10,7 @@ import "./lib/URIStorage.sol";
 import "./interfaces/IERC1155LazyMint.sol";
 
 /// @title ERC1155LazyMint
-/// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
-/// Because this is an 1155 contract, and
+/// @dev A contract implementing ERC1155 with an additional initialization logic, lazy minting, and administration functions.
 contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
     using ECDSA for bytes32;
 

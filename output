@@ -1,0 +1,2721 @@
+./test/LazyMinter.test.ts
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+import {
+  abi as ERC1155SingletonABI,
+  bytecode as ERC1155Bytecode,
+} from "../artifacts/contracts/ERC1155LazyMint.sol/ERC1155LazyMint.json";
+import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
+import {
+  createSalt,
+  createBytes32,
+  MANAGER_ROLE,
+  DEFAULT_OWNER_ROLE,
+  INTERFACE_ID_ERC165,
+  INTERFACE_ID_ERC1155,
+  INTERFACE_ID_ERC2981,
+  INTERFACE_ID_ACCESS_CONTROL,
+  ZERO_BYTES32,
+  BASE_POINTS,
+  ZERO_ADDRESS,
+  CONTRACT_SALT,
+  ROYALTY,
+  CONTRACT_URI,
+  TOKEN_URI,
+  LICENSE_URI,
+  CONTRACT_URI_MIMETYPE,
+  SEAPORT_1_5_ADDRESS,
+} from "./utils";
+
+import { LazyMinter } from "../lib/LazyMinter";
+
+import { ERC1155LazyMint, MockNoPayContract } from "../typechain";
+
+const hre = require("hardhat");
+const ethers = hre.ethers;
+
+describe("Lazy Mint", function () {
+  const SALT = createSalt(CONTRACT_SALT);
+
+  async function deploy() {
+    const [owner, redeemer] = await ethers.getSigners();
+
+    const SingletonFactory = await ethers.getContractFactory(
+      "MockSingletonFactory"
+    );
+    const factoryInstance = await SingletonFactory.deploy();
+
+    const erc1155Address = await factoryInstance.callStatic.computeAddress(
+      SALT,
+      ERC1155Bytecode
+    );
+
+    await factoryInstance.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
+
+    const abiCoder = new ethers.utils.AbiCoder();
+    const encodedParameters = abiCoder.encode(
+      ["address", "address"],
+      [erc1155Address, owner.address]
+    );
+    const beaconInitCode = BeaconBytecode + encodedParameters.slice(2);
+
+    const beaconAddress = await factoryInstance.computeAddress(
+      SALT,
+      beaconInitCode
+    );
+
+    await factoryInstance.deploy(SALT, beaconInitCode, { gasLimit: 30000000 });
+
+    const beacon = await ethers.getContractAt("Beacon", beaconAddress);
+
+    const iface = new ethers.utils.Interface(ERC1155SingletonABI);
+    const callData = iface.encodeFunctionData("init", [
+      owner.address,
+      CONTRACT_URI,
+      TOKEN_URI,
+      LICENSE_URI,
+      ROYALTY,
+    ]);
+    const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
+
+    await beacon.deployProxyContract(callData);
+
+    const proxy = (await ethers.getContractAt(
+      "ERC1155LazyMint",
+      proxyAddress
+    )) as unknown as ERC1155LazyMint;
+
+    return { proxy, owner, redeemer };
+  }
+
+  describe("Deployment", function () {
+    it("should deploy contract", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      expect(proxy).to.exist;
+      expect(owner).to.exist;
+    });
+    it("should redeem an NFT from a signed voucher", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        10,
+        owner.address
+      );
+      const beginBalance = await ethers.provider.getBalance(owner.address);
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+      const redeemReceipt = await redeemTx.wait();
+
+      const totalSupply = await proxy.totalSupply(tokenId);
+
+      const endBalance = await ethers.provider.getBalance(owner.address);
+
+      const balanceDelta = endBalance.sub(beginBalance);
+
+      expect(balanceDelta).to.equal(tokenPrice);
+      expect(totalSupply).to.equal(supply);
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
+    });
+    it("should mint up to the maxSupply of the voucher", async () => {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 2;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        supply,
+        owner.address
+      );
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+      const redeemTx2 = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+
+      await redeemTx.wait();
+      await redeemTx2.wait();
+
+      const totalSupply = await proxy.totalSupply(tokenId);
+
+      expect(totalSupply).to.equal(supply);
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(supply);
+    });
+    it("should fail to redeem an NFT when totalSupply will be > maxSupply", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 2;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        supply,
+        owner.address
+      );
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+
+      await expect(
+        proxy.redeem(redeemer.address, supply + 1, voucher, signature, {
+          value: tokenPrice,
+        }) // @ts-ignore
+      ).to.be.reverted;
+    });
+    it("should fail to redeem an NFT voucher that's signed by an unauthorized account", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: redeemer,
+      });
+
+      const tokenId = 1;
+      const supply = 2;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        supply,
+        owner.address
+      );
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+
+      await proxy.connect(redeemer);
+
+      await expect(
+        proxy.redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        }) // @ts-ignore
+      ).to.be.reverted;
+    });
+    it("should fail to redeem an NFT voucher that's been modified", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 2;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        supply,
+        owner.address
+      );
+
+      voucher.recipient = redeemer.address;
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+
+      await proxy.connect(redeemer);
+
+      await expect(
+        proxy.redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        }) // @ts-ignore
+      ).to.be.reverted;
+    });
+    it("Should redeem if payment is > minPrice * quantity", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const tokenPriceX2 = ethers.utils.parseEther("2.0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        10,
+        owner.address
+      );
+      const beginBalance = await ethers.provider.getBalance(owner.address);
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPriceX2,
+        });
+      const redeemReceipt = await redeemTx.wait();
+
+      const totalSupply = await proxy.totalSupply(tokenId);
+
+      const endBalance = await ethers.provider.getBalance(owner.address);
+
+      const balanceDelta = endBalance.sub(beginBalance);
+
+      expect(balanceDelta).to.equal(tokenPriceX2);
+      expect(totalSupply).to.equal(supply);
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
+    });
+    it("Should fail to redeem if payment is < minPrice", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const zeroEth = ethers.utils.parseEther("0");
+      const tokenPrice = ethers.utils.parseEther("1");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 2;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        supply,
+        owner.address
+      );
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+
+      await proxy.connect(redeemer);
+
+      await expect(
+        proxy.redeem(redeemer.address, 1, voucher, signature, {
+          value: zeroEth,
+        }) // @ts-ignore
+      ).to.be.reverted;
+    });
+    it.only("Should fail to redeem if the payment receiver cannot receive eth", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const NoPayContract = await ethers.getContractFactory(
+        "MockNoPayContract"
+      );
+      const noPayContract = (await NoPayContract.deploy({
+        gasLimit: 30000000,
+      })) as unknown as MockNoPayContract;
+
+      const tokenPrice = ethers.utils.parseEther("1");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 2;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        supply,
+        noPayContract.address
+      );
+
+      await proxy.connect(redeemer);
+
+      await expect(
+        proxy.redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        })
+      );
+    });
+  });
+
+  describe("Payment Handling", function () {
+    it("should correctly transfer funds to the owner on redemption", async function () {});
+
+    it("should handle overpayment scenarios correctly", async function () {});
+  });
+});
+./test/SingletonFactory.spec.ts
+// @ts-nocheck
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+import { bytecode } from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
+import { createSalt } from "./utils";
+
+const hre = require("hardhat");
+const ethers = hre.ethers;
+
+describe("SingletonFactory", function () {
+  let contract;
+  const SALT = createSalt("Dcentral.me Token Contract");
+
+  async function deploy() {
+    const [owner] = await ethers.getSigners();
+
+    const ContractFactory = await ethers.getContractFactory("MockSingletonFactory");
+    const contract = await ContractFactory.deploy({ gasLimit: 30000000 });
+
+    return { contract, owner };
+  }
+
+  beforeEach(async () => {
+    const { contract: contractFixture } = await loadFixture(deploy);
+    contract = contractFixture;
+  });
+
+  describe("Deployment", function () {
+    it("should predict the target address", async () => {
+      await contract.computeAddress(SALT, bytecode);
+    });
+    it("should deploy bytecode", async () => {
+      await contract.deploy(SALT, bytecode, { gasLimit: 30000000 });
+    });
+    it("predicted deployment address should match the deployment address", async () => {
+      const predictedAddress = await contract.callStatic.computeAddress(
+        SALT,
+        bytecode
+      );
+      let deployedBytecode = await ethers.provider.getCode(predictedAddress);
+
+      expect(deployedBytecode).to.equal("0x");
+
+      await contract.deploy(SALT, bytecode, { gasLimit: 30000000 });
+
+      deployedBytecode = await ethers.provider.getCode(predictedAddress);
+
+      expect(deployedBytecode.length > 2).to.equal(true);
+    });
+    it("should revert when trying to deploy with same salt", async () => {
+      await contract.deploy(SALT, bytecode, { gasLimit: 30000000 });
+      try {
+        await contract.deploy(SALT, bytecode, { gasLimit: 30000000 });
+      } catch (e) {
+        return;
+      }
+      throw new Error("Transaction did not revert duplicate salt.");
+    });
+    it("should emit ContractDeployed event when a contract is deployed", async () => {
+      await expect(await contract.deploy(SALT, bytecode, { gasLimit: 30000000 }))
+        .to.emit(contract, "ContractDeployed")
+        .withArgs(await contract.computeAddress(SALT, bytecode));
+    });
+    it("should fail to deploy with empty bytecode", async () => {
+      await expect(contract.deploy(SALT, "0x", { gasLimit: 30000000 })).to.be.reverted;
+    });
+    it("should compute different address with different salt", async () => {
+      const differentSalt = createSalt("Different salt");
+      const address1 = await contract.computeAddress(SALT, bytecode);
+      const address2 = await contract.computeAddress(differentSalt, bytecode);
+      expect(address1).to.not.equal(address2);
+    });
+    it("should compute different address with different bytecode", async () => {
+      const differentBytecode = "0x60606040";
+      const address1 = await contract.computeAddress(SALT, bytecode);
+      const address2 = await contract.computeAddress(SALT, differentBytecode);
+      expect(address1).to.not.equal(address2);
+    });
+  });
+});
+./test/end-to-end/EndToEnd.spec.ts
+./test/ERC1155Base.spec.ts
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+import {
+  DEFAULT_OWNER_ROLE,
+  INTERFACE_ID_ERC165,
+  INTERFACE_ID_ERC1155,
+  INTERFACE_ID_ERC2981,
+  INTERFACE_ID_ACCESS_CONTROL,
+  ZERO_ADDRESS,
+  ROYALTY,
+  ZERO_BYTES32,
+  CONTRACT_URI,
+  TOKEN_URI,
+  LICENSE_URI,
+} from "./utils";
+import { ERC1155Singleton } from "../typechain";
+
+const hre = require("hardhat");
+const ethers = hre.ethers;
+
+describe("ERC1155Singleton Singleton", function () {
+  async function deploy() {
+    const [owner] = await ethers.getSigners();
+
+    const ContractFactory = await ethers.getContractFactory("ERC1155Singleton");
+    const contract = (await ContractFactory.deploy({
+      gasLimit: 30000000,
+    })) as unknown as ERC1155Singleton;
+
+    return { contract, owner };
+  }
+
+  describe("Deployment", function () {
+    it("sets the DEFAULT_OWNER_ROLE to the 0 address", async function () {
+      const { contract } = await loadFixture(deploy);
+
+      const isSingleton = await contract.hasRole(
+        DEFAULT_OWNER_ROLE,
+        ZERO_ADDRESS
+      );
+
+      expect(isSingleton).to.equal(true);
+    });
+  });
+  describe("Initialization", function () {
+    it("reverts when attempting to initialize again", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+
+      await expect(
+        contract.init(
+          owner.address,
+          CONTRACT_URI,
+          TOKEN_URI,
+          LICENSE_URI,
+          ROYALTY
+        )
+      ).to.be.revertedWith("Contract has already been initialized");
+    });
+  });
+  describe("Minting", function () {
+    it("reverts when attempting to mint a new token", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+
+      await expect(contract.mint(owner.address, 100, "0x")).to.be.reverted;
+    });
+    it("reverts when attempting to batch mint tokens without the manager role", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+      const [_owner, manager, satoshi] = await ethers.getSigners();
+
+      await expect(
+        contract.connect(satoshi).mintBatch(owner.address, [1, 1], "0x")
+      ).to.be.reverted;
+    });
+  });
+
+  describe("Royalties", function () {
+    it("reverts when attempting to set default royalty without the manager role", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+
+      await expect(
+        contract.connect(owner).setDefaultRoyalty(owner.address, ROYALTY)
+      ).to.be.reverted;
+    });
+    it("reverts when attempting to delete default royalty without the manager role", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+
+      await expect(contract.connect(owner).deleteDefaultRoyalty()).to.be
+        .reverted;
+    });
+    it("reverts when attempting to set token royalty without the manager role", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+
+      await expect(
+        contract.connect(owner).setTokenRoyalty(1, owner.address, ROYALTY)
+      ).to.be.reverted;
+    });
+    it("reverts when attempting to reset token royalty without the manager role", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+
+      await expect(contract.connect(owner).resetTokenRoyalty(1)).to.be.reverted;
+    });
+  });
+
+  describe("ERC165 Interface support", function () {
+    it("should support ERC165 interface", async () => {
+      const { contract, owner } = await loadFixture(deploy);
+
+      expect(await contract.supportsInterface(INTERFACE_ID_ERC165)).to.equal(
+        true
+      );
+    });
+    it("should support ERC1155 interface", async () => {
+      const { contract } = await loadFixture(deploy);
+
+      expect(await contract.supportsInterface(INTERFACE_ID_ERC1155)).to.equal(
+        true
+      );
+    });
+    it("should support ERC2981 interface", async () => {
+      const { contract } = await loadFixture(deploy);
+
+      expect(await contract.supportsInterface(INTERFACE_ID_ERC2981)).to.equal(
+        true
+      );
+    });
+    it("should support Access Control interface", async () => {
+      const { contract } = await loadFixture(deploy);
+
+      expect(
+        await contract.supportsInterface(INTERFACE_ID_ACCESS_CONTROL)
+      ).to.equal(true);
+    });
+  });
+
+  describe("Role Management", function () {
+    it("allows a role to be granted to an account", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+      const newRole = ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("NEW_ROLE")
+      );
+
+      await expect(contract.grantRole(newRole, owner.address)).to.be.reverted;
+    });
+
+    it("reverts when attempting to grant a role to the zero address", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+      const newRole = ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("NEW_ROLE")
+      );
+
+      await expect(contract.grantRole(newRole, ZERO_ADDRESS)).to.be.reverted;
+    });
+
+    it("reverts when a non-admin tries to grant a role", async function () {
+      const { contract, owner } = await loadFixture(deploy);
+      const newRole = ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("NEW_ROLE")
+      );
+
+      await expect(contract.connect(owner).grantRole(newRole, owner.address)).to
+        .be.reverted;
+    });
+  });
+});
+./test/utils/index.ts
+const hre = require("hardhat");
+const ethers = hre.ethers;
+
+export function createBytes32(string: string) {
+  return ethers.utils.formatBytes32String(string);
+}
+
+export function createSalt(string: string) {
+  return ethers.utils.formatBytes32String(string);
+}
+
+export function keccak256(data: Uint8Array) {
+  return ethers.utils.keccak256(data);
+}
+
+export function toUtf8Bytes(data: any): Uint8Array {
+  return ethers.utils.toUtf8Bytes(data);
+}
+
+export const INTERFACE_ID_ERC165 = "0x01ffc9a7";
+export const INTERFACE_ID_ERC1155 = "0xd9b67a26";
+export const INTERFACE_ID_ERC2981 = "0x2a55205a";
+export const INTERFACE_ID_ACCESS_CONTROL = "0x01ffc9a7";
+export const BASE_POINTS = 10000;
+export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+export const ZERO_BYTES32 =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+export const DEFAULT_OWNER_ROLE = ZERO_BYTES32;
+export const MANAGER_ROLE = keccak256(toUtf8Bytes("MANAGER_ROLE"));
+export const CONTRACT_SALT = "Dcentral.me Token Contract";
+export const ROYALTY = 5000;
+export const CONTRACT_URI_MIMETYPE = "data:application/json;utf8,";
+export const CONTRACT_URI = JSON.stringify({
+  name: "Dcentral Tokens",
+  description:
+    "Dcentral Tokens are adorable aquatic beings primarily for demonstrating what can be done using the Dcentral platform. Adopt one today to try out all the Dcentral buying, selling, and bidding feature set.",
+  image: "external-link-url/image.png",
+  external_link: "external-link-url",
+  salt: "User-level Salt",
+});
+export const TOKEN_URI = "https://dcentral.me/nft/ethereum/";
+export const LICENSE_URI = "https://dcentral.me";
+export const SEAPORT_1_5_ADDRESS = "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC";
+./test/ERC1155Proxy.spec.ts
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+import {
+  abi as ERC1155SingletonABI,
+  bytecode as ERC1155Bytecode,
+} from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
+import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
+import {
+  createSalt,
+  createBytes32,
+  MANAGER_ROLE,
+  DEFAULT_OWNER_ROLE,
+  INTERFACE_ID_ERC165,
+  INTERFACE_ID_ERC1155,
+  INTERFACE_ID_ERC2981,
+  INTERFACE_ID_ACCESS_CONTROL,
+  ZERO_BYTES32,
+  BASE_POINTS,
+  ZERO_ADDRESS,
+  CONTRACT_SALT,
+  ROYALTY,
+  CONTRACT_URI,
+  TOKEN_URI,
+  LICENSE_URI,
+  CONTRACT_URI_MIMETYPE,
+  SEAPORT_1_5_ADDRESS,
+} from "./utils";
+
+import { ERC1155Singleton } from "../typechain";
+
+const hre = require("hardhat");
+const ethers = hre.ethers;
+
+describe("ERC1155Proxy", function () {
+  const SALT = createSalt(CONTRACT_SALT);
+
+  async function deploy() {
+    const [owner, manager] = await ethers.getSigners();
+
+    const SingletonFactory = await ethers.getContractFactory(
+      "MockSingletonFactory"
+    );
+    const factoryInstance = await SingletonFactory.deploy();
+
+    const erc1155Address = await factoryInstance.callStatic.computeAddress(
+      SALT,
+      ERC1155Bytecode
+    );
+
+    await factoryInstance.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
+
+    const abiCoder = new ethers.utils.AbiCoder();
+    const encodedParameters = abiCoder.encode(
+      ["address", "address"],
+      [erc1155Address, owner.address]
+    );
+    const beaconInitCode = BeaconBytecode + encodedParameters.slice(2);
+
+    const beaconAddress = await factoryInstance.computeAddress(
+      SALT,
+      beaconInitCode
+    );
+
+    await factoryInstance.deploy(SALT, beaconInitCode, { gasLimit: 30000000 });
+
+    const beacon = await ethers.getContractAt("Beacon", beaconAddress);
+
+    const iface = new ethers.utils.Interface(ERC1155SingletonABI);
+    const callData = iface.encodeFunctionData("init", [
+      owner.address,
+      CONTRACT_URI,
+      TOKEN_URI,
+      LICENSE_URI,
+      ROYALTY,
+    ]);
+    const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
+
+    await beacon.deployProxyContract(callData);
+
+    const proxy = (await ethers.getContractAt(
+      "ERC1155Singleton",
+      proxyAddress
+    )) as unknown as ERC1155Singleton;
+
+    return { proxy, owner, manager };
+  }
+
+  describe("Deployment", function () {
+    it("should deploy contract", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      expect(proxy).to.exist;
+      expect(owner).to.exist;
+    });
+    it("sets the contract uri", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const uri = await proxy.contractURI();
+      console.log(uri);
+      expect(uri).to.equal(CONTRACT_URI_MIMETYPE.concat(CONTRACT_URI));
+    });
+    it("sets the token uri", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const tokenId = 0;
+      const uri = await proxy.tokenURI(tokenId);
+
+      expect(uri.toLowerCase()).to.equal(
+        TOKEN_URI.concat(proxy.address)
+          .concat("/")
+          .concat(tokenId.toString())
+          .toLowerCase()
+      );
+    });
+    it("sets a default approval for Seaport 1.5 contract address for all users", async () => {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+
+      const isApprovedForOwner = await proxy.isApprovedForAll(
+        owner.address,
+        SEAPORT_1_5_ADDRESS
+      );
+
+      const isApprovedForRandoUser = await proxy.isApprovedForAll(
+        manager.address,
+        SEAPORT_1_5_ADDRESS
+      );
+
+      expect(isApprovedForOwner).to.equal(true);
+      expect(isApprovedForRandoUser).to.equal(true);
+    });
+  });
+
+  describe("ERC165 Interface support", function () {
+    it("should support ERC165 interface", async () => {
+      const { proxy } = await loadFixture(deploy);
+
+      expect(await proxy.supportsInterface(INTERFACE_ID_ERC165)).to.equal(true);
+    });
+    it("should support ERC1155 interface", async () => {
+      const { proxy } = await loadFixture(deploy);
+
+      expect(await proxy.supportsInterface(INTERFACE_ID_ERC1155)).to.equal(
+        true
+      );
+    });
+
+    it("should support Access Control interface", async () => {
+      const { proxy } = await loadFixture(deploy);
+
+      expect(
+        await proxy.supportsInterface(INTERFACE_ID_ACCESS_CONTROL)
+      ).to.equal(true);
+    });
+  });
+
+  describe("Minting", function () {
+    it("should mint a token", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
+      const balance = await proxy.balanceOf(owner.address, 0);
+      expect(balance).to.equal(1);
+    });
+
+    it("should mint multiple tokens", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 2
+
+      await proxy.mintBatch(owner.address, [1, 1], ZERO_BYTES32);
+      const balance1 = await proxy.balanceOf(owner.address, 3);
+      const balance2 = await proxy.balanceOf(owner.address, 4);
+
+      expect(balance1).to.equal(1);
+      expect(balance2).to.equal(1);
+    });
+
+    it("should reject a mint if not an owner", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_, _manager, satoshi] = await ethers.getSigners();
+      await expect(
+        proxy.connect(satoshi).mint(satoshi.address, 1, ZERO_BYTES32)
+      ).to.be.reverted;
+    });
+  });
+
+  describe("Supply", function () {
+    it("tracks the supply of tokens", async () => {
+      const { proxy, owner, manager } = await loadFixture(deploy);
+      await proxy.mint(owner.address, 2, ZERO_BYTES32);
+
+      const balance1 = await proxy.balanceOf(owner.address, 0);
+
+      expect(balance1).to.equal(2);
+
+      const totalSupply = await proxy.totalSupply(0);
+      expect(totalSupply).to.equal(2);
+    });
+  });
+
+  describe("License", function () {
+    it("should create a license for the collection", async () => {
+      const { proxy } = await loadFixture(deploy);
+
+      expect(await proxy.licenseURI()).to.equal(LICENSE_URI);
+    });
+  });
+
+  describe("ERC2981 Compliance", function () {
+    it("feeDenominator returns BASE_POINTS", async function () {
+      const { proxy } = await loadFixture(deploy);
+      const feeDenominator = await proxy.feeDenominator();
+      expect(feeDenominator).to.equal(BASE_POINTS);
+    });
+    it("sets the default royalty at init", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(royaltyFraction).to.equal(ROYALTY);
+    });
+    it("setDefaultRoyalty correctly sets a new default royalty", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const TEN_PERCENT = 1000;
+
+      await proxy.setDefaultRoyalty(owner.address, TEN_PERCENT, {
+        from: owner.address,
+      });
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(royaltyFraction).to.equal(TEN_PERCENT);
+    });
+    it("setDefaultRoyalty correctly overrides a previous royalty", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+      const TEN_PERCENT = 1000;
+
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+
+      await proxy.setDefaultRoyalty(owner.address, ROYALTY, {
+        from: owner.address,
+      });
+
+      expect(royaltyFraction).to.equal(ROYALTY);
+
+      await proxy.setDefaultRoyalty(owner.address, TEN_PERCENT, {
+        from: owner.address,
+      });
+      const [_receiver, _royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(_royaltyFraction).to.equal(TEN_PERCENT);
+    });
+  });
+
+  describe("Transferring", function () {
+    it("should safely transfer a token from one account to another", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
+      await proxy.safeTransferFrom(
+        owner.address,
+        satoshi.address,
+        0,
+        1,
+        ZERO_BYTES32
+      );
+      const balance = await proxy.balanceOf(satoshi.address, 0);
+      expect(balance).to.equal(1);
+    });
+
+    it("should safely transfer multiple tokens from one account to another", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 0
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 1
+      await proxy.mint(owner.address, 1, ZERO_BYTES32); // 2
+
+      await proxy.safeBatchTransferFrom(
+        owner.address,
+        satoshi.address,
+        [1, 2],
+        [1, 1],
+        ZERO_BYTES32
+      );
+      const balance1 = await proxy.balanceOf(satoshi.address, 1);
+      const balance2 = await proxy.balanceOf(satoshi.address, 2);
+      expect(balance1).to.equal(1);
+      expect(balance2).to.equal(1);
+    });
+
+    it("should reject a transfer if not an owner", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
+
+      await expect(
+        proxy
+          .connect(satoshi)
+          .safeTransferFrom(
+            satoshi.address,
+            satoshi.address,
+            1,
+            1,
+            ZERO_BYTES32
+          )
+      ).to.be.reverted;
+    });
+  });
+
+  describe("Approvals", function () {
+    it("should set approval for all", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      await proxy.setApprovalForAll(satoshi.address, true);
+      const isApproved = await proxy.isApprovedForAll(
+        owner.address,
+        satoshi.address
+      );
+      expect(isApproved).to.equal(true);
+    });
+
+    it("should revoke approval for all", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      await proxy.setApprovalForAll(satoshi.address, true);
+      await proxy.setApprovalForAll(satoshi.address, false);
+      const isApproved = await proxy.isApprovedForAll(
+        owner.address,
+        satoshi.address
+      );
+      expect(isApproved).to.equal(false);
+    });
+  });
+
+  describe("Access Control", function () {
+    it("should set the DEFAULT_ADMIN_ROLE to the owner", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager] = await ethers.getSigners();
+
+      const hasManagerRole = await proxy.hasRole(
+        DEFAULT_OWNER_ROLE,
+        owner.address
+      );
+
+      expect(hasManagerRole).to.equal(true);
+    });
+    it("should allow an account with the DEFAULT_ADMIN_ROLE to grant the MANAGER_ROLE", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+
+      await proxy.grantRole(MANAGER_ROLE, satoshi.address);
+      const hasManagerRole = await proxy.hasRole(MANAGER_ROLE, satoshi.address);
+
+      expect(hasManagerRole).to.equal(true);
+    });
+
+    it("should not allow an account without the DEFAULT_ADMIN_ROLE to grant the MANAGER_ROLE", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi, finney] = await ethers.getSigners();
+
+      await expect(
+        proxy.connect(satoshi).grantRole(MANAGER_ROLE, finney.address)
+      ).to.be.reverted;
+    });
+
+    it("should allow an account with the DEFAULT_ADMIN_ROLE to revoke the MANAGER_ROLE", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      let hasManagerRole = await proxy.hasRole(MANAGER_ROLE, satoshi.address);
+      expect(hasManagerRole).to.equal(false);
+
+      await proxy.grantRole(MANAGER_ROLE, satoshi.address);
+      hasManagerRole = await proxy.hasRole(MANAGER_ROLE, satoshi.address);
+      expect(hasManagerRole).to.equal(true);
+
+      await proxy.revokeRole(MANAGER_ROLE, satoshi.address);
+      hasManagerRole = await proxy.hasRole(MANAGER_ROLE, satoshi.address);
+      expect(hasManagerRole).to.equal(false);
+    });
+
+    it("should not allow an account without the DEFAULT_ADMIN_ROLE to revoke the MANAGER_ROLE", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+
+      await proxy.grantRole(MANAGER_ROLE, satoshi.address);
+
+      await expect(
+        proxy.connect(satoshi).revokeRole(MANAGER_ROLE, satoshi.address)
+      ).to.be.reverted;
+    });
+    it("should only allow an account with the DEFAULT_ADMIN_ROLE to grant other roles", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi, finney] = await ethers.getSigners();
+      const randomRole = createBytes32("RANDOM_ROLE");
+      await proxy.grantRole(randomRole, finney.address);
+      await expect(proxy.connect(satoshi).grantRole(randomRole, finney.address))
+        .to.be.reverted;
+    });
+
+    it("should only allow an account with the DEFAULT_ADMIN_ROLE to revoke other roles", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi, finney] = await ethers.getSigners();
+      const randomRole = createBytes32("RANDOM_ROLE");
+      await proxy.grantRole(randomRole, finney.address);
+      await proxy.revokeRole(randomRole, finney.address);
+      await expect(
+        proxy.connect(satoshi).revokeRole(randomRole, finney.address)
+      ).to.be.reverted;
+    });
+  });
+
+  describe("Role Management", function () {
+    it("allows a role to be granted to an account", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      const newRole = ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("NEW_ROLE")
+      );
+
+      await proxy.grantRole(newRole, satoshi.address);
+
+      expect(await proxy.hasRole(newRole, satoshi.address)).to.equal(true);
+    });
+
+    it("reverts when attempting to grant a role to the zero address", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      const newRole = ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("NEW_ROLE")
+      );
+
+      await expect(proxy.grantRole(newRole, ZERO_ADDRESS)).to.be.revertedWith(
+        "Address cannot be zero"
+      );
+    });
+
+    it("reverts when a non-admin tries to grant a role", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+      const [_owner, _manager, satoshi] = await ethers.getSigners();
+      const newRole = ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("NEW_ROLE")
+      );
+
+      await expect(proxy.connect(satoshi).grantRole(newRole, satoshi.address))
+        .to.be.reverted;
+    });
+  });
+});
+./test/GasUsage.spec.ts
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import {
+  abi as ERC1155SingletonABI,
+  bytecode as ERC1155Bytecode,
+} from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
+import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
+
+import { ERC1155Singleton } from "../typechain";
+
+import {
+  createSalt,
+  CONTRACT_URI,
+  TOKEN_URI,
+  LICENSE_URI,
+  ROYALTY,
+} from "./utils";
+
+const hre = require("hardhat");
+const ethers = hre.ethers;
+
+describe("Gas Usage", function () {
+  const SALT = createSalt("Dcentral.me Token Contract");
+
+  async function deploy() {
+    const [owner, manager] = await ethers.getSigners();
+
+    const SingletonFactory = await ethers.getContractFactory(
+      "MockSingletonFactory"
+    );
+    await SingletonFactory.deploy({ gasLimit: 30000000 });
+    const factoryInstance = await SingletonFactory.deploy({
+      gasLimit: 30000000,
+    });
+    const block = await ethers.provider.getBlock(1);
+
+    if (block) {
+      console.log(`Gas used for SingletonFactory: ${block.gasUsed.toString()}`);
+    }
+
+    const erc1155Address = await factoryInstance.callStatic.computeAddress(
+      SALT,
+      ERC1155Bytecode
+    );
+
+    const tx = await factoryInstance.deploy(SALT, ERC1155Bytecode, {
+      gasLimit: 30000000,
+    });
+    const erc1155SingletonReceipt = await tx.wait();
+
+    if (erc1155SingletonReceipt) {
+      console.log(
+        `Gas used for ERC1155Singleton: ${erc1155SingletonReceipt.gasUsed.toString()}`
+      );
+    }
+
+    const abiCoder = new ethers.utils.AbiCoder();
+    const encodedParameters = abiCoder.encode(
+      ["address", "address"],
+      [erc1155Address, owner.address]
+    );
+    const beaconInitCode = BeaconBytecode + encodedParameters.slice(2);
+
+    const beaconAddress = await factoryInstance.computeAddress(
+      SALT,
+      beaconInitCode
+    );
+
+    const beaconTx = await factoryInstance.deploy(SALT, beaconInitCode, {
+      gasLimit: 30000000,
+    });
+    const beaconReceipt = await beaconTx.wait();
+
+    if (beaconReceipt) {
+      console.log(`Gas used for Beacon: ${beaconReceipt.gasUsed.toString()}`);
+    }
+
+    const beacon = await ethers.getContractAt("Beacon", beaconAddress);
+
+    const iface = new ethers.utils.Interface(ERC1155SingletonABI);
+    const callData = iface.encodeFunctionData("init", [
+      owner.address,
+      CONTRACT_URI,
+      TOKEN_URI,
+      LICENSE_URI,
+      ROYALTY,
+    ]);
+
+    const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
+
+    const proxyTx = await beacon.deployProxyContract(callData);
+
+    const proxyReceipt = await proxyTx.wait();
+
+    if (proxyReceipt) {
+      console.log(`Gas used for Proxy: ${proxyReceipt.gasUsed.toString()}`);
+    }
+
+    const proxy = (await ethers.getContractAt(
+      "ERC1155Singleton",
+      proxyAddress
+    )) as unknown as ERC1155Singleton;
+
+    const mintTx = await proxy.mint(
+      owner.address,
+      1,
+      ethers.utils.formatBytes32String("")
+    );
+    const mintReceipt = await mintTx.wait();
+    if (mintReceipt) {
+      console.log(`Gas used for mint: ${mintReceipt.gasUsed.toString()}`);
+    }
+
+    // current optimized record
+    /*
+      Gas used for SingletonFactory: 175543
+      Gas used for ERC1155Singleton: 2455401
+      Gas used for Beacon: 990519
+      Gas used for Proxy: 736320
+      Gas used for mint: 83648
+      1225 tokens batched
+    */
+    const batchTokenCount = 500;
+    const amounts = new Array(batchTokenCount).fill(1e3);
+
+    const batchMint = await proxy.mintBatch(owner.address, amounts, "0x", {
+      gasLimit: 30000000,
+    });
+    const batchReceipt = await batchMint.wait();
+
+    console.log(
+      `Maximum batchMint: ${batchTokenCount} tokens for total gas: ${batchReceipt.gasUsed}`
+    );
+
+    const xferTx = await proxy.safeTransferFrom(
+      owner.address,
+      manager.address,
+      0,
+      1,
+      "0x00"
+    );
+    const xferReceipt = await xferTx.wait();
+
+    console.log(xferReceipt.gasUsed);
+
+    return { proxy, owner };
+  }
+
+  describe("Deployment", function () {
+    it("should report on gas usage", async () => {
+      await loadFixture(deploy);
+    });
+  });
+});
+./test/DecentralizedMarket.e2e.spec.ts
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+
+import {
+  abi as ERC1155SingletonABI,
+  bytecode as ERC1155Bytecode,
+} from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
+import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
+import {
+  createSalt,
+  ZERO_BYTES32,
+  ZERO_ADDRESS,
+  CONTRACT_SALT,
+  ROYALTY,
+  BASE_POINTS,
+  CONTRACT_URI,
+  LICENSE_URI,
+} from "./utils";
+
+import { ERC1155Singleton, MockMarketplace } from "../typechain";
+
+const hre = require("hardhat");
+const ethers = hre.ethers;
+
+/*
+The Mock Market contracts are just to test the token features from a smart contract sidegit st
+*/
+
+describe("ERC1155Proxy", function () {
+  const SALT = createSalt(CONTRACT_SALT);
+
+  async function deploy() {
+    const [owner, manager] = await ethers.getSigners();
+
+    const SingletonFactory = await ethers.getContractFactory(
+      "MockSingletonFactory"
+    );
+
+    const factoryInstance = await SingletonFactory.deploy({
+      gasLimit: 30000000,
+    });
+
+    const erc1155Address = await factoryInstance.callStatic.computeAddress(
+      SALT,
+      ERC1155Bytecode
+    );
+
+    await factoryInstance.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
+
+    const abiCoder = new ethers.utils.AbiCoder();
+    const encodedParameters = abiCoder.encode(
+      ["address", "address"],
+      [erc1155Address, owner.address]
+    );
+    const beaconInitCode = BeaconBytecode + encodedParameters.slice(2);
+
+    const beaconAddress = await factoryInstance.computeAddress(
+      SALT,
+      beaconInitCode
+    );
+
+    await factoryInstance.deploy(SALT, beaconInitCode, { gasLimit: 30000000 });
+
+    const beacon = await ethers.getContractAt("Beacon", beaconAddress);
+
+    const iface = new ethers.utils.Interface(ERC1155SingletonABI);
+    const callData = iface.encodeFunctionData("init", [
+      owner.address,
+      CONTRACT_URI,
+      LICENSE_URI,
+      owner.address,
+      0,
+    ]);
+
+    const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
+
+    await beacon.deployProxyContract(callData, { gasLimit: 30000000 });
+
+    const proxy = (await ethers.getContractAt(
+      "ERC1155Singleton",
+      proxyAddress
+    )) as unknown as ERC1155Singleton;
+
+    const Marketplace = await ethers.getContractFactory("MockMarketplace");
+    const marketplace = (await Marketplace.deploy({
+      gasLimit: 30000000,
+    })) as unknown as MockMarketplace;
+
+    await proxy.connect(owner).setApprovalForAll(marketplace.address, true);
+
+    return { proxy, owner, manager, marketplace };
+  }
+
+  describe("Decentralized Marketplace", function () {
+    describe("User Actions", () => {
+      it("Direct Sale", async () => {
+        const { proxy, owner, manager, marketplace } = await loadFixture(
+          deploy
+        );
+        const [_owner, _manager, satoshi, conan] = await ethers.getSigners();
+
+        // Mint a token to the owner
+        await proxy.mint(owner.address, 10, ZERO_BYTES32);
+
+        // Token is direct sale from vault to the user, Satoshi.
+        await proxy
+          .connect(owner)
+          .safeTransferFrom(owner.address, satoshi.address, 0, 1, ZERO_BYTES32);
+
+        // Check that the token was transferred to Satoshi
+        const balance = await proxy.balanceOf(satoshi.address, 0);
+        expect(balance).to.equal(1);
+      });
+      it("Trade", async () => {
+        const { proxy, owner, manager, marketplace } = await loadFixture(
+          deploy
+        );
+        const [_owner, _manager, satoshi, conan] = await ethers.getSigners();
+
+        // Mint a token to the owner
+        await proxy.mint(owner.address, 10, ZERO_BYTES32);
+
+        // Token is direct sale from vault to the user, Satoshi.
+        await proxy
+          .connect(owner)
+          .safeTransferFrom(owner.address, satoshi.address, 0, 1, ZERO_BYTES32);
+
+        await proxy
+          .connect(satoshi)
+          .safeTransferFrom(satoshi.address, conan.address, 0, 1, ZERO_BYTES32);
+
+        // Check that the token was transferred to Conan
+        const balance = await proxy.balanceOf(conan.address, 0);
+        expect(balance).to.equal(1);
+      });
+      it("Secondary Sale", async () => {
+        const { proxy, owner, manager, marketplace } = await loadFixture(
+          deploy
+        );
+        const [_owner, _manager, satoshi, conan] = await ethers.getSigners();
+
+        // Mint a token to the owner
+        await proxy.mint(owner.address, 10, ZERO_BYTES32);
+
+        // Token is direct sale from vault to the user, Satoshi.
+        await proxy
+          .connect(owner)
+          .safeTransferFrom(owner.address, satoshi.address, 0, 1, ZERO_BYTES32);
+
+        // Satoshi allows the marketplace to list their token
+        await proxy
+          .connect(satoshi)
+          .setApprovalForAll(marketplace.address, true);
+        // Create a listing in the marketplace
+        await marketplace
+          .connect(satoshi)
+          .createListing(proxy.address, 0, 1, ethers.utils.parseEther("1.0"));
+
+        // Satoshi buys the listing
+        await marketplace
+          .connect(conan)
+          .buyListing(1, { value: ethers.utils.parseEther("1.0") });
+
+        // Check that the token was transferred to Conan
+        const balance = await proxy.balanceOf(conan.address, 0);
+        expect(balance).to.equal(1);
+
+        // Check that the listing was removed
+        const listing = await marketplace.listings(1);
+        expect(listing.seller).to.equal(ZERO_ADDRESS);
+      });
+      it("Secondary Sale with Royalty", async () => {
+        const { proxy, owner, manager, marketplace } = await loadFixture(
+          deploy
+        );
+        const [_owner, _manager, satoshi, conan, royaltyReceiver] =
+          await ethers.getSigners();
+
+        await proxy
+          .connect(owner)
+          .setDefaultRoyalty(royaltyReceiver.address, ROYALTY);
+        // Mint a token to the owner
+        await proxy.mint(owner.address, 10, ZERO_BYTES32);
+
+        // Token is direct sale from vault to the user, Satoshi.
+        await proxy
+          .connect(owner)
+          .safeTransferFrom(owner.address, satoshi.address, 0, 1, ZERO_BYTES32);
+        // Check that the token was transferred to Satoshi
+        expect(await proxy.balanceOf(satoshi.address, 0)).to.equal(1);
+        // Satoshi allows the marketplace to list their token
+        await proxy
+          .connect(satoshi)
+          .setApprovalForAll(marketplace.address, true);
+        // Create a listing in the marketplace
+        await marketplace
+          .connect(satoshi)
+          .createListing(proxy.address, 0, 1, ethers.utils.parseEther("1.0"));
+        const royaltyReceiverStartingBalance = await ethers.provider.getBalance(
+          royaltyReceiver.address
+        );
+
+        // Conan buys the listing
+        const tx = await marketplace
+          .connect(conan)
+          .buyListingPayRoyalty(1, { value: ethers.utils.parseEther("1.0") });
+        const receipt = await tx.wait();
+
+        // Check that the token was transferred to Conan
+        expect(await proxy.balanceOf(conan.address, 0)).to.equal(1);
+        expect(await proxy.balanceOf(satoshi.address, 0)).to.equal(0);
+
+        // Check that the listing was removed
+        const listing = await marketplace.listings(1);
+        expect(listing.seller).to.equal(ZERO_ADDRESS);
+
+        // Calculate expected royalty amount
+        const salePrice = ethers.utils.parseEther("1.0");
+        const expectedRoyaltyAmount = salePrice.mul(ROYALTY).div(BASE_POINTS);
+
+        // Fetch the royalty receiver's ending balance and verify the royalty payment
+        const royaltyReceiverEndingBalance = await ethers.provider.getBalance(
+          royaltyReceiver.address
+        );
+        expect(
+          royaltyReceiverEndingBalance.sub(royaltyReceiverStartingBalance)
+        ).to.equal(expectedRoyaltyAmount);
+      });
+    });
+    describe("Experimental", () => {
+      it("allows a user to buy a listing", async function () {
+        const { proxy, owner, manager, marketplace } = await loadFixture(
+          deploy
+        );
+        const [_owner, _manager, satoshi] = await ethers.getSigners();
+
+        // Mint a token to the owner
+        await proxy.mint(owner.address, 1, ZERO_BYTES32);
+
+        // Create a listing in the marketplace
+        await marketplace
+          .connect(owner)
+          .createListing(proxy.address, 0, 1, ethers.utils.parseEther("1.0"));
+
+        // Satoshi buys the listing
+        await marketplace
+          .connect(satoshi)
+          .buyListing(1, { value: ethers.utils.parseEther("1.0") });
+
+        // Check that the token was transferred to Satoshi
+        const balance = await proxy.balanceOf(satoshi.address, 0);
+        expect(balance).to.equal(1);
+
+        // Check that the listing was removed
+        const listing = await marketplace.listings(1);
+        expect(listing.seller).to.equal(ZERO_ADDRESS);
+      });
+
+      it("reverts when a user tries to buy a listing with insufficient Ether", async function () {
+        const { proxy, owner, manager, marketplace } = await loadFixture(
+          deploy
+        );
+        const [_owner, _manager, satoshi] = await ethers.getSigners();
+
+        // Mint a token to the owner
+        await proxy.mint(owner.address, 1, ZERO_BYTES32);
+
+        // Create a listing in the marketplace
+        await marketplace
+          .connect(owner)
+          .createListing(proxy.address, 0, 1, ethers.utils.parseEther("1.0"));
+
+        // Satoshi tries to buy the listing with 0.5 Ether, which is not enough
+        await expect(
+          marketplace
+            .connect(satoshi)
+            .buyListing(1, { value: ethers.utils.parseEther("0.5") })
+        ).to.be.revertedWith("Not enough Ether for this transaction.");
+      });
+
+      it("reverts when a user tries to create a listing without owning the token", async function () {
+        const { proxy, owner, manager, marketplace } = await loadFixture(
+          deploy
+        );
+        const [_owner, _manager, satoshi] = await ethers.getSigners();
+
+        // Satoshi tries to create a listing without owning the token
+        await expect(
+          marketplace
+            .connect(satoshi)
+            .createListing(proxy.address, 0, 1, ethers.utils.parseEther("1.0"))
+        ).to.be.reverted;
+      });
+
+      it("completes a lifecycle of mint, sell, buy, transfer, and resell", async function () {
+        const { proxy, owner, manager, marketplace } = await loadFixture(
+          deploy
+        );
+        const [_owner, _manager, buyer1, buyer2] = await ethers.getSigners();
+
+        // Mint a token to the owner
+        await proxy.mint(owner.address, 1, ZERO_BYTES32);
+
+        // Owner lists the token for sale
+        await marketplace
+          .connect(owner)
+          .createListing(proxy.address, 0, 1, ethers.utils.parseEther("1.0"));
+
+        // Buyer1 buys the token
+        await marketplace
+          .connect(buyer1)
+          .buyListing(1, { value: ethers.utils.parseEther("1.0") });
+
+        // Check that the token was transferred to Buyer1
+        let balance = await proxy.balanceOf(buyer1.address, 0);
+        expect(balance).to.equal(1);
+
+        // Buyer1 transfers the token to Buyer2 for free
+        await proxy
+          .connect(buyer1)
+          .safeTransferFrom(buyer1.address, buyer2.address, 0, 1, ZERO_BYTES32);
+
+        // Check that the token was transferred to Buyer2
+        balance = await proxy.balanceOf(buyer2.address, 0);
+        expect(balance).to.equal(1);
+
+        // Buyer2 approves marketplace to sell on his behalf
+        await proxy
+          .connect(buyer2)
+          .setApprovalForAll(marketplace.address, true);
+
+        // Buyer2 transfers the token back to Buyer1 for some ETH by creating a listing
+        await marketplace
+          .connect(buyer2)
+          .createListing(proxy.address, 0, 1, ethers.utils.parseEther("0.5"));
+
+        // Buyer1 buys back the token
+        await marketplace
+          .connect(buyer1)
+          .buyListing(2, { value: ethers.utils.parseEther("0.5") });
+
+        // Check that the token was transferred back to Buyer1
+        balance = await proxy.balanceOf(buyer1.address, 0);
+        expect(balance).to.equal(1);
+      });
+      describe("Transfers", function () {
+        // Test case 1.1
+        it("allows a user to transfer a unit of a product", async function () {
+          const { proxy, owner, manager } = await loadFixture(deploy);
+          const [_owner, _manager, recipient] = await ethers.getSigners();
+          // Mint a token to the owner
+          await proxy.mint(owner.address, 1, ZERO_BYTES32);
+
+          // Owner transfers a unit of the token to the recipient
+          await proxy
+            .connect(owner)
+            .safeTransferFrom(
+              owner.address,
+              recipient.address,
+              0,
+              1,
+              ZERO_BYTES32
+            );
+
+          // Check that the token was transferred to the recipient
+          const balance = await proxy.balanceOf(recipient.address, 0);
+          expect(balance).to.equal(1);
+        });
+
+        // Test case 1.2
+        it("allows a user to transfer a multiple units of a product", async function () {
+          const { proxy, owner, manager } = await loadFixture(deploy);
+          const [_owner, _manager, recipient] = await ethers.getSigners();
+          // Mint 5 tokens to the owner
+          await proxy.mint(owner.address, 5, ZERO_BYTES32);
+
+          // Owner transfers 5 units of the token to the recipient
+          await proxy
+            .connect(owner)
+            .safeTransferFrom(
+              owner.address,
+              recipient.address,
+              0,
+              5,
+              ZERO_BYTES32
+            );
+
+          // Check that 5 tokens were transferred to the recipient
+          const balance = await proxy.balanceOf(recipient.address, 0);
+          expect(balance).to.equal(5);
+        });
+      });
+      describe("Sales", function () {
+        // Test case 2.1
+        it("allows a user to buy a product, demonstrating a sale", async function () {
+          const { proxy, owner, manager, marketplace } = await loadFixture(
+            deploy
+          );
+          const [_owner, _manager, buyer] = await ethers.getSigners();
+          // Mint a token to the owner
+          await proxy.mint(owner.address, 1, ZERO_BYTES32);
+
+          // Owner lists the token for sale
+          await marketplace
+            .connect(owner)
+            .createListing(proxy.address, 0, 1, ethers.utils.parseEther("1.0"));
+
+          // Buyer buys the token, thus a sale occurs
+          await marketplace
+            .connect(buyer)
+            .buyListing(1, { value: ethers.utils.parseEther("1.0") });
+
+          // Check that the token was transferred to the buyer
+          const balance = await proxy.balanceOf(buyer.address, 0);
+          expect(balance).to.equal(1);
+        });
+      });
+    });
+  });
+});
+./test/Beacon.spec.ts
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+import {
+  abi as MockERC1155SingletonV2ABI,
+  bytecode as MockERC1155SingletonV2Bytcode,
+} from "../artifacts/contracts/mocks/MockERC1155SingletonV2.sol/MockERC1155SingletonV2.json";
+import {
+  abi as ERC1155SingletonABI,
+  bytecode as ERC1155Bytecode,
+} from "../artifacts/contracts/ERC1155Singleton.sol/ERC1155Singleton.json";
+import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
+import {
+  createSalt,
+  DEFAULT_OWNER_ROLE,
+  MANAGER_ROLE,
+  CONTRACT_SALT,
+  ZERO_BYTES32,
+  CONTRACT_URI,
+  TOKEN_URI,
+  LICENSE_URI,
+  ROYALTY,
+} from "./utils";
+
+import { ERC1155Singleton } from "../typechain";
+
+const hre = require("hardhat");
+const ethers = hre.ethers;
+
+describe("UpgradeableBeacon", function () {
+  const SALT = createSalt(CONTRACT_SALT);
+
+  async function deploy() {
+    const [owner, manager] = await ethers.getSigners();
+
+    const SingletonFactory = await ethers.getContractFactory(
+      "MockSingletonFactory"
+    );
+
+    const factoryInstance = await SingletonFactory.deploy({
+      gasLimit: 30000000,
+    });
+
+    const erc1155Address = await factoryInstance.callStatic.computeAddress(
+      SALT,
+      ERC1155Bytecode
+    );
+
+    const erc1155AddressV2 = await factoryInstance.callStatic.computeAddress(
+      SALT,
+      MockERC1155SingletonV2Bytcode
+    );
+    await factoryInstance.deploy(SALT, ERC1155Bytecode, { gasLimit: 30000000 });
+    await factoryInstance.deploy(SALT, MockERC1155SingletonV2Bytcode, {
+      gasLimit: 30000000,
+    });
+
+    const abiCoder = new ethers.utils.AbiCoder();
+    const encodedParameters = abiCoder.encode(
+      ["address", "address"],
+      [erc1155Address, owner.address]
+    );
+    const beaconInitCode = BeaconBytecode + encodedParameters.slice(2);
+
+    const beaconAddress = await factoryInstance.computeAddress(
+      SALT,
+      beaconInitCode
+    );
+
+    await factoryInstance.deploy(SALT, beaconInitCode, { gasLimit: 30000000 });
+
+    const beacon = await ethers.getContractAt("Beacon", beaconAddress);
+
+    const iface = new ethers.utils.Interface(ERC1155SingletonABI);
+    const callData = iface.encodeFunctionData("init", [
+      owner.address,
+      CONTRACT_URI,
+      TOKEN_URI,
+      LICENSE_URI,
+      ROYALTY,
+    ]);
+
+    const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
+
+    await beacon.deployProxyContract(callData);
+
+    const proxy = (await ethers.getContractAt(
+      "ERC1155Singleton",
+      proxyAddress
+    )) as unknown as ERC1155Singleton;
+
+    return {
+      beacon,
+      proxy,
+      owner,
+
+      erc1155Address,
+      erc1155AddressV2,
+      factoryInstance,
+    };
+  }
+
+  describe("Deployment", function () {
+    it("should deploy the contracts", async () => {
+      const { owner, proxy, beacon } = await loadFixture(deploy);
+
+      expect(proxy).to.exist;
+      expect(beacon).to.exist;
+    });
+
+    it("should set the DEFAULT_ADMIN_ROLE to the owner/vault", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const hasRole = await proxy.hasRole(DEFAULT_OWNER_ROLE, owner.address);
+
+      expect(hasRole).to.equal(true);
+    });
+
+    it("should set the MANAGER_ROLE to the owner/vault", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const hasRole = await proxy.hasRole(MANAGER_ROLE, owner.address);
+
+      expect(hasRole).to.equal(true);
+    });
+    it("should set the MANAGER_ROLE to the owner", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const hasRole = await proxy.hasRole(MANAGER_ROLE, owner.address);
+
+      expect(hasRole).to.equal(true);
+    });
+
+    it("should upgrade to the next version of the contract", async () => {
+      const {
+        proxy,
+        owner,
+
+        beacon,
+        erc1155AddressV2,
+        factoryInstance,
+      } = await loadFixture(deploy);
+
+      await proxy.mint(owner.address, 1, ZERO_BYTES32);
+
+      expect(await proxy.balanceOf(owner.address, 0)).to.equal(1);
+      expect(await proxy.version()).to.equal("1");
+
+      await beacon.upgradeTo(erc1155AddressV2);
+
+      expect(await proxy.balanceOf(owner.address, 0)).to.equal(1);
+      expect(await proxy.version()).to.equal("2");
+    });
+  });
+});
+./contracts/ERC1155Singleton.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+import "./lib/ERC1155Core.sol";
+import "./interfaces/IMint.sol";
+
+/// @title ERC1155Singleton
+/// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
+contract ERC1155Singleton is ERC1155Core, IMint {
+    uint256 public currentTokenId = 0;
+
+    /// @notice Initializes the contract. Can only be done once.
+    /// @param owner The address that will be set as the owner of the contract.
+    /// @param contractURI_ The URI for the contract metadata.
+    /// @param tokenURI_ The URI for the contract metadata.
+    function init(
+        address owner,
+        string memory contractURI_,
+        string memory tokenURI_,
+        string memory licenseURI_,
+        uint96 defaultRoyalty
+    ) public override {
+        super.init(owner, contractURI_, tokenURI_, licenseURI_, defaultRoyalty);
+
+        currentTokenId = 0;
+    }
+
+    /// @notice Mints new tokens.
+    /// @param to The address to mint tokens to.
+    /// @param amount The amount of tokens to mint.
+    /// @param data Additional data with no specified format.
+    function mint(
+        address to,
+        uint256 amount,
+        bytes memory data
+    ) public onlyRole(MANAGER_ROLE) {
+        _mint(to, currentTokenId, amount, data);
+
+        unchecked {
+            currentTokenId++;
+        }
+    }
+
+    /// @notice Mints multiple tokens in a batch.
+    /// @param to The address to mint tokens to.
+    /// @param amounts An array with the amounts of tokens to mint for each respective ID.
+    /// @param data Additional data with no specified format.
+    function mintBatch(
+        address to,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public onlyRole(MANAGER_ROLE) {
+        uint256[] memory ids = new uint256[](amounts.length);
+        for (uint256 i = 0; i < amounts.length; i++) {
+            ids[i] = currentTokenId;
+            unchecked {
+                currentTokenId += 1;
+            }
+        }
+        _mintBatch(to, ids, amounts, data);
+    }
+}
+./contracts/Beacon.sol
+// SPDX-License-Identifier: MIT
+
+import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import "./ERC1155Singleton.sol";
+import "./ERC1155BeaconProxy.sol";
+
+pragma solidity ^0.8.9;
+
+contract Beacon is UpgradeableBeacon {
+    event ProxyDeployed(address proxy);
+
+    constructor(
+        address implementation,
+        address owner
+    ) UpgradeableBeacon(implementation) {
+        _transferOwnership(owner);
+    }
+
+    /// @notice Deploys a new proxy contract and initializes it with the caller as the owner. Can only be called from the singleton.
+    /// @param data The manager of the new proxy contract.
+    /// @return The address of the new proxy contract.
+    function deployProxyContract(bytes memory data) public returns (address) {
+        bytes32 salt = keccak256(data);
+        bytes memory bytecodeWithoutConstructor = type(ERC1155BeaconProxy)
+            .creationCode;
+        bytes memory constructorArgs = abi.encode(address(this), data);
+        bytes memory bytecode = abi.encodePacked(
+            bytecodeWithoutConstructor,
+            constructorArgs
+        );
+
+        address addr;
+        assembly {
+            addr := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+            if iszero(extcodesize(addr)) {
+                revert(0, 0)
+            }
+        }
+        emit ProxyDeployed(addr);
+
+        return addr;
+    }
+}
+./contracts/interfaces/IERC1155Core.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+interface IERC1155Core {
+    function init(
+        address owner,
+        string memory contractURI_,
+        string memory tokenURI_,
+        string memory licenseURI_,
+        uint96 defaultRoyalty
+    ) external;
+
+    function grantRole(bytes32 role, address account) external;
+
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+
+    function version() external pure returns (string memory);
+}
+./contracts/interfaces/IMint.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+interface IMint {
+    function mint(address to, uint256 amount, bytes memory data) external;
+
+    function mintBatch(
+        address to,
+        uint256[] memory amounts,
+        bytes memory data
+    ) external;
+}
+./contracts/interfaces/IERC1155LazyMint.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+interface IERC1155LazyMint {
+    struct NFTVoucher {
+        uint256 tokenId;
+        uint256 minPrice;
+        string uri;
+        uint256 maxSupply;
+        address recipient;
+    }
+
+    function redeem(
+        address redeemer,
+        uint256 quantity,
+        NFTVoucher calldata voucher,
+        bytes memory signature
+    ) external payable returns (uint256);
+}
+./contracts/ERC1155BeaconProxy.sol
+// SPDX-License-Identifier: MIT
+
+import "@openzeppelin/contracts/proxy/Proxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+
+pragma solidity ^0.8.9;
+
+/// @title ERC1155Proxy
+/// @dev A proxy contract that delegates all calls to a separate implementation contract, intended for upgradeable contract patterns.
+contract ERC1155BeaconProxy is BeaconProxy {
+    /// @dev Constructor to set the address of the implementation contract.
+    /// @param _beacon Address of the implementation contract.
+    constructor(address _beacon, bytes memory data) BeaconProxy(_beacon, data) {
+        require(
+            _beacon != address(0),
+            "Invalid implementation address provided."
+        );
+    }
+}
+./contracts/SingletonFactory.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+/// @title EIP 2470 SingletonFactory (https://github.com/status-im/EIPs/blob/singleton-factory/EIPS/eip-2470.md)
+/// @notice This contract deploys new contracts using CREATE2 and computes their addresses and should be deployed by the same key on every chain.
+contract SingletonFactory {
+    /// @notice Emits the address of the newly created contract
+    /// @dev Emits when a contract is successfully deployed via the `deploy` function
+    event ContractDeployed(address contractAddress);
+
+    /// @notice Creates a new DcentralFactory contract instance
+    constructor() {}
+
+    /// @notice Deploys a contract with the provided `salt` and `bytecode` and emits a `ContractDeployed` event
+    /// @param salt A 32 byte value used in the address computation
+    /// @param bytecode The compiled byte code of the contract to be deployed
+    /// @return The address of the newly deployed contract
+    function deploy(
+        bytes32 salt,
+        bytes memory bytecode
+    ) public returns (address) {
+        address addr;
+        assembly {
+            addr := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+            if iszero(extcodesize(addr)) {
+                revert(0, 0)
+            }
+        }
+        emit ContractDeployed(addr);
+        return addr;
+    }
+}
+./contracts/ERC1155LazyMint.sol
+// SPDX-License-Identifier: MIT
+// Based on https://github.com/yusefnapora/lazy-minting
+
+pragma solidity ^0.8.9;
+
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+
+import "./lib/ERC1155Core.sol";
+import "./lib/URIStorage.sol";
+import "./interfaces/IERC1155LazyMint.sol";
+
+/// @title ERC1155LazyMint
+/// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
+/// Because this is an 1155 contract, and
+contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
+    using ECDSA for bytes32;
+
+    mapping(uint256 => uint256) _maxSupply;
+
+    /// @notice Redeems an NFTVoucher for an actual NFT, creating it in the process.
+    /// @param redeemer The address of the account which will receive the NFT upon success.
+    /// @param voucher An NFTVoucher that describes the NFT to be redeemed.
+    /// @param signature An EIP712 signature of the voucher, produced by the NFT creator.
+    function redeem(
+        address redeemer,
+        uint256 quantity,
+        NFTVoucher calldata voucher,
+        bytes memory signature
+    ) public payable returns (uint256) {
+        // make sure signature is valid and get the address of the signer
+        address signer = _verify(voucher, signature);
+
+        // make sure that the signer is authorized to mint NFTs
+        require(hasRole(MANAGER_ROLE, signer));
+
+        if (_maxSupply[voucher.tokenId] == 0) {
+            _maxSupply[voucher.tokenId] = voucher.maxSupply;
+        }
+
+        require(
+            (totalSupply(voucher.tokenId) + quantity) <=
+                _maxSupply[voucher.tokenId]
+        );
+
+        // make sure that the redeemer is paying enough to cover the buyer's cost
+        require(msg.value >= (quantity * voucher.minPrice));
+
+        // first assign the token to the signer, to establish provenance on-chain
+        _mint(signer, voucher.tokenId, quantity, signature); // data is optional, passing signature saves on creating a new var
+        _setTokenURI(voucher.tokenId, voucher.uri);
+
+        // transfer the token to the redeemer
+        _safeTransferFrom(
+            signer,
+            redeemer,
+            voucher.tokenId,
+            quantity,
+            signature
+        );
+
+        (address receiver, ) = royaltyInfo(voucher.tokenId, 0);
+        // Transfer the eth to the recipient
+        payable(receiver).transfer(msg.value); // msg.value can be more than quantity * minPrice
+        return voucher.tokenId;
+    }
+
+    /// @notice Returns a hash of the given NFTVoucher, prepared using EIP712 typed data hashing rules.
+    /// @param voucher An NFTVoucher to hash.
+    function _hash(
+        NFTVoucher calldata voucher
+    ) internal view returns (bytes32) {
+        return
+            _hashTypedDataV4(
+                keccak256(
+                    abi.encode(
+                        keccak256(
+                            "NFTVoucher(uint256 tokenId,uint256 minPrice,string uri,uint256 maxSupply,address recipient)"
+                        ),
+                        voucher.tokenId,
+                        voucher.minPrice,
+                        keccak256(bytes(voucher.uri)),
+                        voucher.maxSupply,
+                        voucher.recipient
+                    )
+                )
+            );
+    }
+
+    /// @notice Verifies the signature for a given NFTVoucher, returning the address of the signer.
+    /// @dev Will revert if the signature is invalid. Does not verify that the signer is authorized to mint NFTs.
+    /// @param voucher An NFTVoucher describing an unminted NFT.
+    /// @param signature An EIP712 signature of the given voucher.
+    function _verify(
+        NFTVoucher calldata voucher,
+        bytes memory signature
+    ) public view returns (address) {
+        bytes32 digest = _hash(voucher);
+        return digest.toEthSignedMessageHash().recover(signature);
+    }
+
+    function _setTokenURI(
+        uint256 tokenId,
+        string memory _tokenURI
+    ) internal virtual override(URIStorage) {
+        URIStorage._setTokenURI(tokenId, _tokenURI);
+    }
+
+    function tokenURI(
+        uint256 _tokenId
+    ) public view override(ERC1155Core, URIStorage) returns (string memory) {
+        return _getTokenURI(_tokenId);
+    }
+}
+./contracts/mocks/MockNoPayContract.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+contract MockNoPayContract {
+    fallback() external {
+        revert();
+    }
+}
+./contracts/mocks/MockMarketplace.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+
+import "../ERC1155Singleton.sol";
+
+contract MockMarketplace is IERC1155Receiver, ERC165 {
+    struct Listing {
+        address seller;
+        address tokenContract;
+        uint256 tokenId;
+        uint256 amount;
+        uint256 price;
+    }
+
+    mapping(uint256 => Listing) public listings;
+    uint256 public nextListingId = 1;
+
+    function createListing(
+        address tokenContract,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 price
+    ) public {
+        IERC1155(tokenContract).safeTransferFrom(
+            msg.sender,
+            address(this),
+            tokenId,
+            amount,
+            ""
+        );
+        listings[nextListingId] = Listing(
+            msg.sender,
+            tokenContract,
+            tokenId,
+            amount,
+            price
+        );
+        nextListingId++;
+    }
+
+    function createListingForAllowedUsers(
+        address tokenContract,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 price,
+        address operator
+    ) public {
+        IERC1155(tokenContract).safeTransferFrom(
+            operator,
+            address(this),
+            tokenId,
+            amount,
+            ""
+        );
+        listings[nextListingId] = Listing(
+            msg.sender,
+            tokenContract,
+            tokenId,
+            amount,
+            price
+        );
+        nextListingId++;
+    }
+
+    function buyListing(uint256 listingId) public payable {
+        Listing memory listing = listings[listingId];
+        require(
+            msg.value >= listing.price,
+            "Not enough Ether for this transaction."
+        );
+
+        delete listings[listingId];
+        IERC1155(listing.tokenContract).safeTransferFrom(
+            address(this),
+            msg.sender,
+            listing.tokenId,
+            listing.amount,
+            ""
+        );
+        payable(listing.seller).transfer(msg.value);
+    }
+
+    function buyListingPayRoyalty(uint256 listingId) public payable {
+        Listing memory listing = listings[listingId];
+        require(
+            msg.value >= listing.price,
+            "Not enough Ether for this transaction."
+        );
+
+        delete listings[listingId];
+
+        // Retrieve royalty information for the token
+        (address royaltyReceiver, uint256 royaltyAmount) = ERC2981(
+            listing.tokenContract
+        ).royaltyInfo(listing.tokenId, listing.price);
+
+        // Ensure the royalty amount does not exceed the listing price
+        require(
+            royaltyAmount <= listing.price,
+            "Royalty exceeds listing price"
+        );
+
+        // Perform the transfer to the buyer
+        IERC1155(listing.tokenContract).safeTransferFrom(
+            address(this),
+            msg.sender,
+            listing.tokenId,
+            listing.amount,
+            ""
+        );
+
+        // Pay the royalty to the royalty receiver
+        if (royaltyReceiver != address(0) && royaltyAmount > 0) {
+            payable(royaltyReceiver).transfer(royaltyAmount);
+        }
+
+        // Pay the remaining amount to the seller
+        payable(listing.seller).transfer(listing.price - royaltyAmount);
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+}
+./contracts/mocks/MockSingletonFactory.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+import "../SingletonFactory.sol";
+
+/// @title MockSingletonFactory
+/// @notice This contract deploys new contracts using CREATE2 and computes their addresses
+contract MockSingletonFactory is SingletonFactory {
+    /// @notice Creates a new DcentralFactory contract instance
+    constructor() {}
+
+    /// @notice Computes the address of the contract to be deployed using the provided `salt` and `bytecode`
+    /// @param salt A 32 byte value used in the address computation
+    /// @param bytecode The compiled byte code of the contract to be deployed
+    /// @return The address the contract will have when deployed with the provided `salt` and `bytecode`
+    function computeAddress(
+        bytes32 salt,
+        bytes memory bytecode
+    ) public view returns (address) {
+        return _computeAddress(salt, address(this), bytecode);
+    }
+
+    /// @notice Computes the address of the contract to be deployed with a given `salt` and `bytecode`
+    /// @dev This is a helper function and not meant to be called externally
+    /// @param salt A 32 byte value used in the address computation
+    /// @param deployer The address that is deploying the contract
+    /// @param bytecode The compiled byte code of the contract to be deployed
+    /// @return The address the contract will have when deployed by the `deployer` with the provided `salt` and `bytecode`
+    function _computeAddress(
+        bytes32 salt,
+        address deployer,
+        bytes memory bytecode
+    ) internal pure returns (address) {
+        bytes32 hash = keccak256(
+            abi.encodePacked(bytes1(0xff), deployer, salt, keccak256(bytecode))
+        );
+        return address(uint160(uint256(hash)));
+    }
+}
+./contracts/mocks/MockERC1155SingletonV2.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+import "../ERC1155Singleton.sol";
+
+/// @title MockERC1155SingletonV2
+/// @notice This contract deploys new contracts using CREATE2 and computes their addresses
+contract MockERC1155SingletonV2 is ERC1155Singleton {
+    /// @notice Creates a new Dcentral1155 contract instance
+    constructor() {}
+
+    function version() public pure virtual override returns (string memory) {
+        return "2";
+    }
+}
+./contracts/lib/URIStorage.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+/**
+ * @title URIStorage
+ * @dev Abstract contract for storing and managing URIs in ERC721-like tokens.
+ */
+abstract contract URIStorage {
+    // Mapping from token ID to their URIs
+    mapping(uint256 => string) private _tokenURIs;
+
+    /**
+     * @dev Emitted when the metadata of a token is updated.
+     * @param tokenId The token ID whose metadata is updated.
+     */
+    event MetadataUpdate(uint256 tokenId);
+
+    /**
+     * @notice Retrieves the URI associated with a given token.
+     * @dev Returns an empty string if no URI is set for the token.
+     * @param tokenId The ID of the token whose URI is being queried.
+     * @return string representing the URI of the given token ID.
+     */
+    function tokenURI(
+        uint256 tokenId
+    ) external view virtual returns (string memory) {
+        return _tokenURIs[tokenId];
+    }
+
+    /**
+     * @dev Internal function to set the URI for a given token.
+     * @dev Emits a {MetadataUpdate} event.
+     * @param _tokenId The token ID for which to set the URI.
+     * @param _tokenURI The URI to be set for the token.
+     */
+    function _setTokenURI(
+        uint256 _tokenId,
+        string memory _tokenURI
+    ) internal virtual {
+        _tokenURIs[_tokenId] = _tokenURI;
+        emit MetadataUpdate(_tokenId);
+    }
+
+    /**
+     * @dev Internal function to retrieve the URI for a given token.
+     * @param _tokenId The token ID whose URI is being queried.
+     * @return string representing the URI of the given token ID, or an empty string if none is set.
+     */
+    function _getTokenURI(
+        uint256 _tokenId
+    ) internal view virtual returns (string memory) {
+        return _tokenURIs[_tokenId];
+    }
+}
+./contracts/lib/ERC1155Core.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+
+import "../interfaces/IERC1155Core.sol";
+
+/// @title 1155Core
+/// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
+abstract contract ERC1155Core is
+    IERC1155Core,
+    ERC165,
+    ERC1155,
+    EIP712,
+    ERC2981,
+    ERC1155Supply,
+    AccessControl
+{
+    string public contractURI;
+    string public licenseURI;
+
+    /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+
+    /// @notice Indicates if the contract has been initialized.
+    bool public didInit = false;
+
+    /// @notice Maps interface IDs to their support status
+    mapping(bytes4 => bool) private _supportedInterfaces;
+
+    /// @notice Emitted when the contract is initialized
+    /// @param proxyContractAddress The address of the proxy contract
+    /// @param owner The address of the owner after initialization
+    /// @param manager The address of the manager after initialization
+    event Initialized(
+        address proxyContractAddress,
+        address owner,
+        address manager
+    );
+
+    /// @dev Contract constructor. Sets token URI and transfers ownership to zero address to establish a singleton mode.
+    constructor() ERC1155("") EIP712("DcentralSFT-Voucher", "1") {
+        _grantRole(DEFAULT_ADMIN_ROLE, address(0));
+        _grantRole(MANAGER_ROLE, address(0));
+        // Singleton
+        didInit = true;
+    }
+
+    /// @notice Initializes the contract. Can only be done once.
+    /// @param owner The address that will be set as the owner of the contract.
+    /// @param contractURI_ The URI for the contract metadata.
+    /// @param tokenURI_ The URI for the contract metadata.
+    function init(
+        address owner,
+        string memory contractURI_,
+        string memory tokenURI_,
+        string memory licenseURI_,
+        uint96 defaultRoyalty
+    ) public virtual {
+        require(!didInit, "Contract has already been initialized");
+        didInit = true;
+
+        _setContractURI(contractURI_);
+        _setURI(tokenURI_);
+
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _grantRole(MANAGER_ROLE, owner);
+
+        _setLicenseURI(licenseURI_);
+
+        _setDefaultRoyalty(owner, defaultRoyalty);
+    }
+
+    /// @notice Returns the URI for a given token ID
+    /// @dev Concatenates the base URI, contract address, and token ID to form the full token URI
+    /// @param _tokenId The token ID for which to return the URI
+    /// @return The URI of the given token ID
+    function tokenURI(
+        uint256 _tokenId
+    ) external view virtual returns (string memory) {
+        return
+            string(
+                abi.encodePacked(
+                    uri(_tokenId),
+                    _addressToString(address(this)),
+                    "/",
+                    Strings.toString(_tokenId)
+                )
+            );
+    }
+
+    /// @notice Converts an address into a string representation
+    /// @param _address The address to convert
+    /// @return The string representation of the address
+    function _addressToString(
+        address _address
+    ) internal pure returns (string memory) {
+        bytes32 _bytes = bytes32(uint256(uint160(_address)));
+        bytes memory HEX = "0123456789abcdef";
+        bytes memory _string = new bytes(42);
+
+        _string[0] = "0";
+        _string[1] = "x";
+
+        for (uint i = 0; i < 20; i++) {
+            _string[2 + i * 2] = HEX[uint8(_bytes[i + 12] >> 4)];
+            _string[3 + i * 2] = HEX[uint8(_bytes[i + 12] & 0x0F)];
+        }
+
+        return string(_string);
+    }
+
+    /// @notice Grants `role` to `account`. Prevents setting 0 address, reserved for Singleton
+    /// @dev The caller must have the vault role for `role`, and `account` cannot be the zero address.
+    /// @param role The role to be granted.
+    /// @param account The address to be granted the role.
+    function grantRole(
+        bytes32 role,
+        address account
+    )
+        public
+        virtual
+        override(AccessControl, IERC1155Core)
+        onlyRole(getRoleAdmin(role))
+    {
+        require(account != address(0), "Address cannot be zero");
+        _grantRole(role, account);
+    }
+
+    /// @param interfaceId The interface identifier, as specified in ERC-165
+    function _registerInterface(bytes4 interfaceId) internal {
+        _supportedInterfaces[interfaceId] = true;
+    }
+
+    /// @param contractURI_ the stringified JSON for the contractURI
+    function setContractURI(
+        string memory contractURI_
+    ) public onlyRole(MANAGER_ROLE) {
+        _setContractURI(contractURI_);
+    }
+
+    /// @param contractURI_ the stringified JSON for the contractURI
+    function _setContractURI(string memory contractURI_) internal {
+        contractURI = string(
+            abi.encodePacked("data:application/json;utf8,", contractURI_)
+        );
+    }
+
+    /// @param _licenseURI the stringified JSON for the contractURI
+    function setLicenseURI(
+        string memory _licenseURI
+    ) public onlyRole(MANAGER_ROLE) {
+        _setLicenseURI(_licenseURI);
+    }
+
+    /// @param _licenseURI the stringified JSON for the contractURI
+    function _setLicenseURI(string memory _licenseURI) internal {
+        licenseURI = _licenseURI;
+    }
+
+    /// @notice Returns true if this contract implements the interface defined by `interfaceId`.
+    /// @param interfaceId The interface
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        virtual
+        override(ERC165, ERC1155, ERC2981, AccessControl, IERC1155Core)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /// @notice Returns whether the operator is authorized to manage the tokens of the account
+    /// @dev Overrides the default behavior for certain operator addresses
+    /// @param account The address of the token holder
+    /// @param operator The address of the operator to check
+    /// @return True if the operator is approved for all tokens of the account, false otherwise
+    function isApprovedForAll(
+        address account,
+        address operator
+    ) public view virtual override returns (bool) {
+        if (operator == 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC) return true;
+
+        return super.isApprovedForAll(account, operator);
+    }
+
+    /// @notice Sets the default royalty for all tokens
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param receiver The address that will receive the royalty
+    /// @param feeNumerator The numerator for calculating the royalty fee
+    function setDefaultRoyalty(
+        address receiver,
+        uint96 feeNumerator
+    ) public onlyRole(MANAGER_ROLE) {
+        _setDefaultRoyalty(receiver, feeNumerator);
+    }
+
+    /// @notice Gets the denominator for the fee calculation
+    /// @return The denominator for the fee calculation
+    function feeDenominator() public pure returns (uint96) {
+        return _feeDenominator();
+    }
+
+    /// @notice Deletes the default royalty for all tokens
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    function deleteDefaultRoyalty() public onlyRole(MANAGER_ROLE) {
+        _deleteDefaultRoyalty();
+    }
+
+    /// @notice Sets the royalty for a specific token
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param tokenId The ID of the token
+    /// @param receiver The address that will receive the royalty
+    /// @param feeNumerator The numerator for calculating the royalty fee
+    function setTokenRoyalty(
+        uint256 tokenId,
+        address receiver,
+        uint96 feeNumerator
+    ) public onlyRole(MANAGER_ROLE) {
+        _setTokenRoyalty(tokenId, receiver, feeNumerator);
+    }
+
+    /// @notice Resets the royalty for a specific token
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param tokenId The ID of the token
+    function resetTokenRoyalty(uint256 tokenId) public onlyRole(MANAGER_ROLE) {
+        _resetTokenRoyalty(tokenId);
+    }
+
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override(ERC1155, ERC1155Supply) {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    /// @notice Returns the version of the contract
+    /// @return The version as a string
+    function version() public pure virtual returns (string memory) {
+        return "1";
+    }
+}
