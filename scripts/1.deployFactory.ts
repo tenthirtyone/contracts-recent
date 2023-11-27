@@ -17,7 +17,8 @@ async function main() {
   const [owner, manager] = await hre.ethers.getSigners();
   const Factory = await hre.ethers.getContractFactory("SingletonFactory");
   console.log(`The deployer wallet address is: ${owner.address}`);
-  const factory = await Factory.deploy({ gasLimit: 3_000_000 });
+
+  const factory = await Factory.deploy({ gasLimit: 300_000 });
   await factory.deployed();
 
   console.log(

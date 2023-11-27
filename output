@@ -2719,3 +2719,866 @@ abstract contract ERC1155Core is
         return "1";
     }
 }
+./contracts/ERC1155Singleton.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+import "./lib/ERC1155Core.sol";
+import "./interfaces/IMint.sol";
+
+/// @title ERC1155Singleton
+/// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
+contract ERC1155Singleton is ERC1155Core, IMint {
+    uint256 public currentTokenId = 0;
+
+    /// @notice Initializes the contract. Can only be done once.
+    /// @param owner The address that will be set as the owner of the contract.
+    /// @param contractURI_ The URI for the contract metadata.
+    /// @param tokenURI_ The URI for the contract metadata.
+    function init(
+        address owner,
+        string memory contractURI_,
+        string memory tokenURI_,
+        string memory licenseURI_,
+        uint96 defaultRoyalty
+    ) public override {
+        super.init(owner, contractURI_, tokenURI_, licenseURI_, defaultRoyalty);
+
+        currentTokenId = 0;
+    }
+
+    /// @notice Mints new tokens.
+    /// @param to The address to mint tokens to.
+    /// @param amount The amount of tokens to mint.
+    /// @param data Additional data with no specified format.
+    function mint(
+        address to,
+        uint256 amount,
+        bytes memory data
+    ) public onlyRole(MANAGER_ROLE) {
+        _mint(to, currentTokenId, amount, data);
+
+        unchecked {
+            currentTokenId++;
+        }
+    }
+
+    /// @notice Mints multiple tokens in a batch.
+    /// @param to The address to mint tokens to.
+    /// @param amounts An array with the amounts of tokens to mint for each respective ID.
+    /// @param data Additional data with no specified format.
+    function mintBatch(
+        address to,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public onlyRole(MANAGER_ROLE) {
+        uint256[] memory ids = new uint256[](amounts.length);
+        for (uint256 i = 0; i < amounts.length; i++) {
+            ids[i] = currentTokenId;
+            unchecked {
+                currentTokenId += 1;
+            }
+        }
+        _mintBatch(to, ids, amounts, data);
+    }
+}
+./contracts/Beacon.sol
+// SPDX-License-Identifier: MIT
+
+import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import "./ERC1155Singleton.sol";
+import "./ERC1155BeaconProxy.sol";
+
+pragma solidity ^0.8.9;
+
+contract Beacon is UpgradeableBeacon {
+    event ProxyDeployed(address proxy);
+
+    constructor(
+        address implementation,
+        address owner
+    ) UpgradeableBeacon(implementation) {
+        _transferOwnership(owner);
+    }
+
+    /// @notice Deploys a new proxy contract and initializes it with the caller as the owner. Can only be called from the singleton.
+    /// @param data The manager of the new proxy contract.
+    /// @return The address of the new proxy contract.
+    function deployProxyContract(bytes memory data) public returns (address) {
+        bytes32 salt = keccak256(data);
+        bytes memory bytecodeWithoutConstructor = type(ERC1155BeaconProxy)
+            .creationCode;
+        bytes memory constructorArgs = abi.encode(address(this), data);
+        bytes memory bytecode = abi.encodePacked(
+            bytecodeWithoutConstructor,
+            constructorArgs
+        );
+
+        address addr;
+        assembly {
+            addr := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+            if iszero(extcodesize(addr)) {
+                revert(0, 0)
+            }
+        }
+        emit ProxyDeployed(addr);
+
+        return addr;
+    }
+}
+./contracts/interfaces/IERC1155Core.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+interface IERC1155Core {
+    function init(
+        address owner,
+        string memory contractURI_,
+        string memory tokenURI_,
+        string memory licenseURI_,
+        uint96 defaultRoyalty
+    ) external;
+
+    function grantRole(bytes32 role, address account) external;
+
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+
+    function version() external pure returns (string memory);
+}
+./contracts/interfaces/IMint.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+interface IMint {
+    function mint(address to, uint256 amount, bytes memory data) external;
+
+    function mintBatch(
+        address to,
+        uint256[] memory amounts,
+        bytes memory data
+    ) external;
+}
+./contracts/interfaces/IERC1155LazyMint.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+interface IERC1155LazyMint {
+    struct NFTVoucher {
+        uint256 tokenId;
+        uint256 minPrice;
+        string uri;
+        uint256 maxSupply;
+        address recipient;
+    }
+
+    function redeem(
+        address redeemer,
+        uint256 quantity,
+        NFTVoucher calldata voucher,
+        bytes memory signature
+    ) external payable returns (uint256);
+}
+./contracts/ERC1155BeaconProxy.sol
+// SPDX-License-Identifier: MIT
+
+import "@openzeppelin/contracts/proxy/Proxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+
+pragma solidity ^0.8.9;
+
+/// @title ERC1155Proxy
+/// @dev A proxy contract that delegates all calls to a separate implementation contract, intended for upgradeable contract patterns.
+contract ERC1155BeaconProxy is BeaconProxy {
+    /// @dev Constructor to set the address of the implementation contract.
+    /// @param _beacon Address of the implementation contract.
+    constructor(address _beacon, bytes memory data) BeaconProxy(_beacon, data) {
+        require(
+            _beacon != address(0),
+            "Invalid implementation address provided."
+        );
+    }
+}
+./contracts/SingletonFactory.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+/// @title EIP 2470 SingletonFactory (https://github.com/status-im/EIPs/blob/singleton-factory/EIPS/eip-2470.md)
+/// @notice This contract deploys new contracts using CREATE2 and computes their addresses and should be deployed by the same key on every chain.
+contract SingletonFactory {
+    /// @notice Emits the address of the newly created contract
+    /// @dev Emits when a contract is successfully deployed via the `deploy` function
+    event ContractDeployed(address contractAddress);
+
+    /// @notice Creates a new DcentralFactory contract instance
+    constructor() {}
+
+    /// @notice Deploys a contract with the provided `salt` and `bytecode` and emits a `ContractDeployed` event
+    /// @param salt A 32 byte value used in the address computation
+    /// @param bytecode The compiled byte code of the contract to be deployed
+    /// @return The address of the newly deployed contract
+    function deploy(
+        bytes32 salt,
+        bytes memory bytecode
+    ) public returns (address) {
+        address addr;
+        assembly {
+            addr := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+            if iszero(extcodesize(addr)) {
+                revert(0, 0)
+            }
+        }
+        emit ContractDeployed(addr);
+        return addr;
+    }
+}
+./contracts/ERC1155LazyMint.sol
+// SPDX-License-Identifier: MIT
+// Based on https://github.com/yusefnapora/lazy-minting
+
+pragma solidity ^0.8.9;
+
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+
+import "./lib/ERC1155Core.sol";
+import "./lib/URIStorage.sol";
+import "./interfaces/IERC1155LazyMint.sol";
+
+/// @title ERC1155LazyMint
+/// @dev A contract implementing ERC1155 with an additional initialization logic, lazy minting, and administration functions.
+contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
+    using ECDSA for bytes32;
+
+    mapping(uint256 => uint256) _maxSupply;
+
+    /// @notice Redeems an NFTVoucher for an actual NFT, creating it in the process.
+    /// @param redeemer The address of the account which will receive the NFT upon success.
+    /// @param voucher An NFTVoucher that describes the NFT to be redeemed.
+    /// @param signature An EIP712 signature of the voucher, produced by the NFT creator.
+    function redeem(
+        address redeemer,
+        uint256 quantity,
+        NFTVoucher calldata voucher,
+        bytes memory signature
+    ) public payable returns (uint256) {
+        // make sure signature is valid and get the address of the signer
+        address signer = _verify(voucher, signature);
+
+        // make sure that the signer is authorized to mint NFTs
+        require(hasRole(MANAGER_ROLE, signer));
+
+        if (_maxSupply[voucher.tokenId] == 0) {
+            _maxSupply[voucher.tokenId] = voucher.maxSupply;
+        }
+
+        require(
+            (totalSupply(voucher.tokenId) + quantity) <=
+                _maxSupply[voucher.tokenId]
+        );
+
+        // make sure that the redeemer is paying enough to cover the buyer's cost
+        require(msg.value >= (quantity * voucher.minPrice));
+
+        // first assign the token to the signer, to establish provenance on-chain
+        _mint(signer, voucher.tokenId, quantity, signature); // data is optional, passing signature saves on creating a new var
+        _setTokenURI(voucher.tokenId, voucher.uri);
+
+        // transfer the token to the redeemer
+        _safeTransferFrom(
+            signer,
+            redeemer,
+            voucher.tokenId,
+            quantity,
+            signature
+        );
+
+        (address receiver, ) = royaltyInfo(voucher.tokenId, 0);
+        // Transfer the eth to the recipient
+        payable(receiver).transfer(msg.value); // msg.value can be more than quantity * minPrice
+        return voucher.tokenId;
+    }
+
+    /// @notice Returns a hash of the given NFTVoucher, prepared using EIP712 typed data hashing rules.
+    /// @param voucher An NFTVoucher to hash.
+    function _hash(
+        NFTVoucher calldata voucher
+    ) internal view returns (bytes32) {
+        return
+            _hashTypedDataV4(
+                keccak256(
+                    abi.encode(
+                        keccak256(
+                            "NFTVoucher(uint256 tokenId,uint256 minPrice,string uri,uint256 maxSupply,address recipient)"
+                        ),
+                        voucher.tokenId,
+                        voucher.minPrice,
+                        keccak256(bytes(voucher.uri)),
+                        voucher.maxSupply,
+                        voucher.recipient
+                    )
+                )
+            );
+    }
+
+    /// @notice Verifies the signature for a given NFTVoucher, returning the address of the signer.
+    /// @dev Will revert if the signature is invalid. Does not verify that the signer is authorized to mint NFTs.
+    /// @param voucher An NFTVoucher describing an unminted NFT.
+    /// @param signature An EIP712 signature of the given voucher.
+    function _verify(
+        NFTVoucher calldata voucher,
+        bytes memory signature
+    ) public view returns (address) {
+        bytes32 digest = _hash(voucher);
+        return digest.toEthSignedMessageHash().recover(signature);
+    }
+
+    function _setTokenURI(
+        uint256 tokenId,
+        string memory _tokenURI
+    ) internal virtual override(URIStorage) {
+        URIStorage._setTokenURI(tokenId, _tokenURI);
+    }
+
+    function tokenURI(
+        uint256 _tokenId
+    ) public view override(ERC1155Core, URIStorage) returns (string memory) {
+        return _getTokenURI(_tokenId);
+    }
+}
+./contracts/mocks/MockNoPayContract.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+contract MockNoPayContract {
+    fallback() external {
+        revert();
+    }
+}
+./contracts/mocks/MockMarketplace.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+
+import "../ERC1155Singleton.sol";
+
+contract MockMarketplace is IERC1155Receiver, ERC165 {
+    struct Listing {
+        address seller;
+        address tokenContract;
+        uint256 tokenId;
+        uint256 amount;
+        uint256 price;
+    }
+
+    mapping(uint256 => Listing) public listings;
+    uint256 public nextListingId = 1;
+
+    function createListing(
+        address tokenContract,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 price
+    ) public {
+        IERC1155(tokenContract).safeTransferFrom(
+            msg.sender,
+            address(this),
+            tokenId,
+            amount,
+            ""
+        );
+        listings[nextListingId] = Listing(
+            msg.sender,
+            tokenContract,
+            tokenId,
+            amount,
+            price
+        );
+        nextListingId++;
+    }
+
+    function createListingForAllowedUsers(
+        address tokenContract,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 price,
+        address operator
+    ) public {
+        IERC1155(tokenContract).safeTransferFrom(
+            operator,
+            address(this),
+            tokenId,
+            amount,
+            ""
+        );
+        listings[nextListingId] = Listing(
+            msg.sender,
+            tokenContract,
+            tokenId,
+            amount,
+            price
+        );
+        nextListingId++;
+    }
+
+    function buyListing(uint256 listingId) public payable {
+        Listing memory listing = listings[listingId];
+        require(
+            msg.value >= listing.price,
+            "Not enough Ether for this transaction."
+        );
+
+        delete listings[listingId];
+        IERC1155(listing.tokenContract).safeTransferFrom(
+            address(this),
+            msg.sender,
+            listing.tokenId,
+            listing.amount,
+            ""
+        );
+        payable(listing.seller).transfer(msg.value);
+    }
+
+    function buyListingPayRoyalty(uint256 listingId) public payable {
+        Listing memory listing = listings[listingId];
+        require(
+            msg.value >= listing.price,
+            "Not enough Ether for this transaction."
+        );
+
+        delete listings[listingId];
+
+        // Retrieve royalty information for the token
+        (address royaltyReceiver, uint256 royaltyAmount) = ERC2981(
+            listing.tokenContract
+        ).royaltyInfo(listing.tokenId, listing.price);
+
+        // Ensure the royalty amount does not exceed the listing price
+        require(
+            royaltyAmount <= listing.price,
+            "Royalty exceeds listing price"
+        );
+
+        // Perform the transfer to the buyer
+        IERC1155(listing.tokenContract).safeTransferFrom(
+            address(this),
+            msg.sender,
+            listing.tokenId,
+            listing.amount,
+            ""
+        );
+
+        // Pay the royalty to the royalty receiver
+        if (royaltyReceiver != address(0) && royaltyAmount > 0) {
+            payable(royaltyReceiver).transfer(royaltyAmount);
+        }
+
+        // Pay the remaining amount to the seller
+        payable(listing.seller).transfer(listing.price - royaltyAmount);
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+}
+./contracts/mocks/MockSingletonFactory.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+import "../SingletonFactory.sol";
+
+/// @title MockSingletonFactory
+/// @notice This contract deploys new contracts using CREATE2 and computes their addresses
+contract MockSingletonFactory is SingletonFactory {
+    /// @notice Creates a new DcentralFactory contract instance
+    constructor() {}
+
+    /// @notice Computes the address of the contract to be deployed using the provided `salt` and `bytecode`
+    /// @param salt A 32 byte value used in the address computation
+    /// @param bytecode The compiled byte code of the contract to be deployed
+    /// @return The address the contract will have when deployed with the provided `salt` and `bytecode`
+    function computeAddress(
+        bytes32 salt,
+        bytes memory bytecode
+    ) public view returns (address) {
+        return _computeAddress(salt, address(this), bytecode);
+    }
+
+    /// @notice Computes the address of the contract to be deployed with a given `salt` and `bytecode`
+    /// @dev This is a helper function and not meant to be called externally
+    /// @param salt A 32 byte value used in the address computation
+    /// @param deployer The address that is deploying the contract
+    /// @param bytecode The compiled byte code of the contract to be deployed
+    /// @return The address the contract will have when deployed by the `deployer` with the provided `salt` and `bytecode`
+    function _computeAddress(
+        bytes32 salt,
+        address deployer,
+        bytes memory bytecode
+    ) internal pure returns (address) {
+        bytes32 hash = keccak256(
+            abi.encodePacked(bytes1(0xff), deployer, salt, keccak256(bytecode))
+        );
+        return address(uint160(uint256(hash)));
+    }
+}
+./contracts/mocks/MockERC1155SingletonV2.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+import "../ERC1155Singleton.sol";
+
+/// @title MockERC1155SingletonV2
+/// @notice This contract deploys new contracts using CREATE2 and computes their addresses
+contract MockERC1155SingletonV2 is ERC1155Singleton {
+    /// @notice Creates a new Dcentral1155 contract instance
+    constructor() {}
+
+    function version() public pure virtual override returns (string memory) {
+        return "2";
+    }
+}
+./contracts/lib/URIStorage.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+/**
+ * @title URIStorage
+ * @dev Abstract contract for storing and managing URIs in ERC721-like tokens.
+ */
+abstract contract URIStorage {
+    // Mapping from token ID to their URIs
+    mapping(uint256 => string) private _tokenURIs;
+
+    /**
+     * @dev Emitted when the metadata of a token is updated.
+     * @param tokenId The token ID whose metadata is updated.
+     */
+    event MetadataUpdate(uint256 tokenId);
+
+    /**
+     * @notice Retrieves the URI associated with a given token.
+     * @dev Returns an empty string if no URI is set for the token.
+     * @param tokenId The ID of the token whose URI is being queried.
+     * @return string representing the URI of the given token ID.
+     */
+    function tokenURI(
+        uint256 tokenId
+    ) external view virtual returns (string memory) {
+        return _tokenURIs[tokenId];
+    }
+
+    /**
+     * @dev Internal function to set the URI for a given token.
+     * @dev Emits a {MetadataUpdate} event.
+     * @param _tokenId The token ID for which to set the URI.
+     * @param _tokenURI The URI to be set for the token.
+     */
+    function _setTokenURI(
+        uint256 _tokenId,
+        string memory _tokenURI
+    ) internal virtual {
+        _tokenURIs[_tokenId] = _tokenURI;
+        emit MetadataUpdate(_tokenId);
+    }
+
+    /**
+     * @dev Internal function to retrieve the URI for a given token.
+     * @param _tokenId The token ID whose URI is being queried.
+     * @return string representing the URI of the given token ID, or an empty string if none is set.
+     */
+    function _getTokenURI(
+        uint256 _tokenId
+    ) internal view virtual returns (string memory) {
+        return _tokenURIs[_tokenId];
+    }
+}
+./contracts/lib/ERC1155Core.sol
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
+
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+
+import "../interfaces/IERC1155Core.sol";
+
+/// @title 1155Core
+/// @dev A contract implementing ERC1155 with an additional initialization logic and administration functions.
+abstract contract ERC1155Core is
+    IERC1155Core,
+    ERC165,
+    ERC1155,
+    EIP712,
+    ERC2981,
+    ERC1155Supply,
+    AccessControl
+{
+    string public contractURI;
+    string public licenseURI;
+
+    /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+
+    /// @notice Indicates if the contract has been initialized.
+    bool public didInit = false;
+
+    /// @notice Maps interface IDs to their support status
+    mapping(bytes4 => bool) private _supportedInterfaces;
+
+    /// @notice Emitted when the contract is initialized
+    /// @param proxyContractAddress The address of the proxy contract
+    /// @param owner The address of the owner after initialization
+    /// @param manager The address of the manager after initialization
+    event Initialized(
+        address proxyContractAddress,
+        address owner,
+        address manager
+    );
+
+    /// @dev Contract constructor. Sets token URI and transfers ownership to zero address to establish a singleton mode.
+    constructor() ERC1155("") EIP712("DcentralSFT-Voucher", "1") {
+        _grantRole(DEFAULT_ADMIN_ROLE, address(0));
+        _grantRole(MANAGER_ROLE, address(0));
+        // Singleton
+        didInit = true;
+    }
+
+    /// @notice Initializes the contract. Can only be done once.
+    /// @param owner The address that will be set as the owner of the contract.
+    /// @param contractURI_ The URI for the contract metadata.
+    /// @param tokenURI_ The URI for the contract metadata.
+    function init(
+        address owner,
+        string memory contractURI_,
+        string memory tokenURI_,
+        string memory licenseURI_,
+        uint96 defaultRoyalty
+    ) public virtual {
+        require(!didInit, "Contract has already been initialized");
+        didInit = true;
+
+        _setContractURI(contractURI_);
+        _setURI(tokenURI_);
+
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _grantRole(MANAGER_ROLE, owner);
+
+        _setLicenseURI(licenseURI_);
+
+        _setDefaultRoyalty(owner, defaultRoyalty);
+    }
+
+    /// @notice Returns the URI for a given token ID
+    /// @dev Concatenates the base URI, contract address, and token ID to form the full token URI
+    /// @param _tokenId The token ID for which to return the URI
+    /// @return The URI of the given token ID
+    function tokenURI(
+        uint256 _tokenId
+    ) external view virtual returns (string memory) {
+        return
+            string(
+                abi.encodePacked(
+                    uri(_tokenId),
+                    _addressToString(address(this)),
+                    "/",
+                    Strings.toString(_tokenId)
+                )
+            );
+    }
+
+    /// @notice Converts an address into a string representation
+    /// @param _address The address to convert
+    /// @return The string representation of the address
+    function _addressToString(
+        address _address
+    ) internal pure returns (string memory) {
+        bytes32 _bytes = bytes32(uint256(uint160(_address)));
+        bytes memory HEX = "0123456789abcdef";
+        bytes memory _string = new bytes(42);
+
+        _string[0] = "0";
+        _string[1] = "x";
+
+        for (uint i = 0; i < 20; i++) {
+            _string[2 + i * 2] = HEX[uint8(_bytes[i + 12] >> 4)];
+            _string[3 + i * 2] = HEX[uint8(_bytes[i + 12] & 0x0F)];
+        }
+
+        return string(_string);
+    }
+
+    /// @notice Grants `role` to `account`. Prevents setting 0 address, reserved for Singleton
+    /// @dev The caller must have the vault role for `role`, and `account` cannot be the zero address.
+    /// @param role The role to be granted.
+    /// @param account The address to be granted the role.
+    function grantRole(
+        bytes32 role,
+        address account
+    )
+        public
+        virtual
+        override(AccessControl, IERC1155Core)
+        onlyRole(getRoleAdmin(role))
+    {
+        require(account != address(0), "Address cannot be zero");
+        _grantRole(role, account);
+    }
+
+    /// @param interfaceId The interface identifier, as specified in ERC-165
+    function _registerInterface(bytes4 interfaceId) internal {
+        _supportedInterfaces[interfaceId] = true;
+    }
+
+    /// @param contractURI_ the stringified JSON for the contractURI
+    function setContractURI(
+        string memory contractURI_
+    ) public onlyRole(MANAGER_ROLE) {
+        _setContractURI(contractURI_);
+    }
+
+    /// @param contractURI_ the stringified JSON for the contractURI
+    function _setContractURI(string memory contractURI_) internal {
+        contractURI = string(
+            abi.encodePacked("data:application/json;utf8,", contractURI_)
+        );
+    }
+
+    /// @param _licenseURI the stringified JSON for the contractURI
+    function setLicenseURI(
+        string memory _licenseURI
+    ) public onlyRole(MANAGER_ROLE) {
+        _setLicenseURI(_licenseURI);
+    }
+
+    /// @param _licenseURI the stringified JSON for the contractURI
+    function _setLicenseURI(string memory _licenseURI) internal {
+        licenseURI = _licenseURI;
+    }
+
+    /// @notice Returns true if this contract implements the interface defined by `interfaceId`.
+    /// @param interfaceId The interface
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        virtual
+        override(ERC165, ERC1155, ERC2981, AccessControl, IERC1155Core)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /// @notice Returns whether the operator is authorized to manage the tokens of the account
+    /// @dev Overrides the default behavior for certain operator addresses
+    /// @param account The address of the token holder
+    /// @param operator The address of the operator to check
+    /// @return True if the operator is approved for all tokens of the account, false otherwise
+    function isApprovedForAll(
+        address account,
+        address operator
+    ) public view virtual override returns (bool) {
+        if (operator == 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC) return true;
+
+        return super.isApprovedForAll(account, operator);
+    }
+
+    /// @notice Sets the default royalty for all tokens
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param receiver The address that will receive the royalty
+    /// @param feeNumerator The numerator for calculating the royalty fee
+    function setDefaultRoyalty(
+        address receiver,
+        uint96 feeNumerator
+    ) public onlyRole(MANAGER_ROLE) {
+        _setDefaultRoyalty(receiver, feeNumerator);
+    }
+
+    /// @notice Gets the denominator for the fee calculation
+    /// @return The denominator for the fee calculation
+    function feeDenominator() public pure returns (uint96) {
+        return _feeDenominator();
+    }
+
+    /// @notice Deletes the default royalty for all tokens
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    function deleteDefaultRoyalty() public onlyRole(MANAGER_ROLE) {
+        _deleteDefaultRoyalty();
+    }
+
+    /// @notice Sets the royalty for a specific token
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param tokenId The ID of the token
+    /// @param receiver The address that will receive the royalty
+    /// @param feeNumerator The numerator for calculating the royalty fee
+    function setTokenRoyalty(
+        uint256 tokenId,
+        address receiver,
+        uint96 feeNumerator
+    ) public onlyRole(MANAGER_ROLE) {
+        _setTokenRoyalty(tokenId, receiver, feeNumerator);
+    }
+
+    /// @notice Resets the royalty for a specific token
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param tokenId The ID of the token
+    function resetTokenRoyalty(uint256 tokenId) public onlyRole(MANAGER_ROLE) {
+        _resetTokenRoyalty(tokenId);
+    }
+
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override(ERC1155, ERC1155Supply) {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    /// @notice Returns the version of the contract
+    /// @return The version as a string
+    function version() public pure virtual returns (string memory) {
+        return "1";
+    }
+}

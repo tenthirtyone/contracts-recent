@@ -16,12 +16,12 @@ export const CONTRACT_SALT = "Dcentral.me Token Contract";
 
 const encodedString = hre.ethers.utils.formatBytes32String(CONTRACT_SALT);
 const FACTORY_ADDRESS = "0x7eCcF14E9671eEA813d42cB42C5BE58f46980666";
-const SINGLETON_ADDRESS = "0x041D87c0D6AFDdEa4f5C3afeaCfcD14F5580E94B";
+const SINGLETON_ADDRESS = "0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87";
 const SALT = encodedString;
 
 async function main() {
   const [owner, manager] = await hre.ethers.getSigners();
-  console.log(owner);
+  console.log(owner.address);
   const factory = new hre.ethers.Contract(FACTORY_ADDRESS, FactoryABI, owner);
   const abiCoder = new hre.ethers.utils.AbiCoder();
   const encodedParameters = abiCoder.encode(

@@ -27,16 +27,34 @@ module.exports = {
       url: `https://eth-sepolia.g.alchemy.com/v2/l5r4TH0qpjY-OeNvsEE4jGe3Sbluf53O`,
       accounts: [process.env.ACCOUNT_PRIVATE_KEY],
     },
+    mainnet: {
+      url: `https://eth-mainnet.g.alchemy.com/v2/HUzW6mMyyQQi0XnQXbaz_lRMbkEAeF9n`,
+      accounts: [process.env.ACCOUNT_PRIVATE_KEY],
+    },
+    zkEVMMainnet: {
+      url: "https://polygonzkevm-mainnet.g.alchemy.com/v2/RwLthW3tZQNvM8HBLZd3zhbKy90S9oTd",
+      accounts: [process.env.ACCOUNT_PRIVATE_KEY],
+    },
   },
   etherscan: {
     apiKey: {
       sepolia: "TRZG89K55S9UWJC9PD2FHWTV3AWNV1CYU7",
+      mainnet: "TRZG89K55S9UWJC9PD2FHWTV3AWNV1CYU7",
       zkEVMtestnet: "6TDA4H3KU36XVSUYI481162XTZG9ZYF7WR",
+      zkEVMMainnet: "VEZ1D87WT6EMK11GEANXB4SKKREKYQV1HK",
     },
     customChains: [
       {
         network: "zkEVMtestnet",
         chainId: 1442,
+        urls: {
+          apiURL: "https://api-testnet-zkevm.polygonscan.com/api",
+          browserURL: "https://testnet-zkevm.polygonscan.com/",
+        },
+      },
+      {
+        network: "zkEVMMainnet",
+        chainId: 1101,
         urls: {
           apiURL: "https://api-testnet-zkevm.polygonscan.com/api",
           browserURL: "https://testnet-zkevm.polygonscan.com/",

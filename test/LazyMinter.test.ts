@@ -111,6 +111,34 @@ describe("Lazy Mint", function () {
         10,
         owner.address
       );
+
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+      const redeemReceipt = await redeemTx.wait();
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
+    });
+    it("should correctly update the balance on redemption", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        10,
+        owner.address
+      );
       const beginBalance = await ethers.provider.getBalance(owner.address);
 
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
@@ -292,7 +320,7 @@ describe("Lazy Mint", function () {
         }) // @ts-ignore
       ).to.be.reverted;
     });
-    it("Should redeem if payment is > minPrice * quantity", async function () {
+    it("should handle overpayment scenarios correctly", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
       const tokenPriceX2 = ethers.utils.parseEther("2.0");
@@ -331,7 +359,7 @@ describe("Lazy Mint", function () {
       expect(totalSupply).to.equal(supply);
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
     });
-    it("Should fail to redeem if payment is < minPrice", async function () {
+    it("should fail to redeem if payment is < minPrice", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const zeroEth = ethers.utils.parseEther("0");
       const tokenPrice = ethers.utils.parseEther("1");
@@ -361,7 +389,7 @@ describe("Lazy Mint", function () {
         }) // @ts-ignore
       ).to.be.reverted;
     });
-    it("Should fail to redeem if the payment receiver cannot receive eth", async function () {
+    it("should fail to redeem if the payment receiver cannot receive eth", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const NoPayContract = await ethers.getContractFactory(
         "MockNoPayContract"
@@ -395,11 +423,8 @@ describe("Lazy Mint", function () {
         })
       );
     });
-  });
-
-  describe("Payment Handling", function () {
-    it("should correctly transfer funds to the owner on redemption", async function () {});
-
-    it("should handle overpayment scenarios correctly", async function () {});
+    it(
+      "should fail to honor new vouchers for an existing tokenId after the first voucher has been redeemed"
+    );
   });
 });
