@@ -3,8 +3,6 @@
 
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-
 import "./lib/ERC1155Core.sol";
 import "./lib/URIStorage.sol";
 import "./interfaces/IERC1155LazyMint.sol";
