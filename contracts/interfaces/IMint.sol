@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.22;
 
 interface IMint {
     function mint(address to, uint256 amount, bytes memory data) external;

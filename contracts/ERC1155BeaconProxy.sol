@@ -3,7 +3,7 @@
 import "@openzeppelin/contracts/proxy/Proxy.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.22;
 
 /// @title ERC1155Proxy
 /// @dev A proxy contract that delegates all calls to a separate implementation contract, intended for upgradeable contract patterns.

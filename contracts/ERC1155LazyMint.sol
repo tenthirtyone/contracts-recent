@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Based on https://github.com/yusefnapora/lazy-minting
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.22;
 
 import "./lib/ERC1155Core.sol";
 import "./lib/URIStorage.sol";

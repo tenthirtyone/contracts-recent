@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -132,11 +132,6 @@ abstract contract ERC1155Core is
     {
         require(account != address(0), "Address cannot be zero");
         _grantRole(role, account);
-    }
-
-    /// @param interfaceId The interface identifier, as specified in ERC-165
-    function _registerInterface(bytes4 interfaceId) internal {
-        _supportedInterfaces[interfaceId] = true;
     }
 
     /// @param contractURI_ the stringified JSON for the contractURI

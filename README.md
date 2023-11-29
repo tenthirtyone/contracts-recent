@@ -117,12 +117,14 @@ This repository contains the code for a set of smart contracts adhering to the E
 ```
 9.1 The ERC1155Proxy contract should delegate all calls to a separate implementation contract.
 9.2 The address of the implementation contract should be set at the time of the proxy's construction and remain immutable afterwards.
+9.3 The Beacon.sol and ERC1155BeaconProxy.sol should adhere to the ERC 1967 proxy pattern, enabling the upgrade of contract logic while maintaining state.
 ```
 
 ### Event Emission
 
 ```
 10.1 The system should emit an Initialized event when a proxy contract is deployed.
+10.2 Events for token minting and burning should accurately reflect the on-demand creation and destruction of tokens.
 ```
 
 ### Gas Usage Analysis
