@@ -27,6 +27,8 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher, signature);
 
+        require(voucher.maxSupply > 0);
+        require(quantity > 0);
         // make sure that the signer is authorized to mint NFTs
         require(hasRole(MANAGER_ROLE, signer));
 

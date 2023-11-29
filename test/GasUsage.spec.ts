@@ -140,7 +140,9 @@ describe("Gas Usage", function () {
     );
     const xferReceipt = await xferTx.wait();
 
-    console.log(xferReceipt.gasUsed);
+    console.log(
+      `Gas used to transfer a token: ${xferReceipt.gasUsed.toString()}`
+    );
 
     return { proxy, owner };
   }

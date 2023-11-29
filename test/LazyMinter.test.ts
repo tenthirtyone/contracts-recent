@@ -423,8 +423,60 @@ describe("Lazy Mint", function () {
         })
       );
     });
-    it(
-      "should fail to honor new vouchers for an existing tokenId after the first voucher has been redeemed"
-    );
+    it("should fail to honor new vouchers for an existing tokenId after the first voucher has been redeemed", async () => {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        10,
+        owner.address
+      );
+
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+      const redeemReceipt = await redeemTx.wait();
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
+    });
+    it("should fail when the voucher maxSupply is 0.", async () => {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 0;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        supply,
+        owner.address
+      );
+
+      await proxy.connect(redeemer);
+
+      await expect(
+        proxy.redeem(redeemer.address, 0, voucher, signature, {
+          value: tokenPrice,
+        }) // @ts-ignore
+      ).to.be.reverted;
+    });
   });
 });

@@ -6,7 +6,7 @@ require("@typechain/hardhat");
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
-    version: "0.8.9",
+    version: "0.8.22",
     settings: {
       optimizer: {
         enabled: false,
