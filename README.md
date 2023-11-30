@@ -4,16 +4,46 @@ This repository contains the code for a set of smart contracts adhering to the E
 
 `npx hardhat test`
 
-## Proxy Pattern
+## Overview
 
-![Proxy Diagram](diagrams/Proxy.png)
+- A Dcentral account launches a CREATE2 Factory contract on supported chains.
 
-- `delegatecall()` - Function in contract A which allows an external contract B (delegating) to modify A’s storage (see diagram below, Solidity docs)
-- Proxy Contract - The contract A which stores data, but uses the logic of external contract B by way of `delegatecall()`.
-- Logic Contract - The contract B which contains the logic used by Proxy Contract A
-- Proxiable Contract - Inherited in Logic Contract B to provide the upgrade functionality
+![Proxy Diagram](diagrams/step1.png)
 
-## Function Requirements
+- The following contracts are launched, relying on the CREATE2 Factory for multichain address support.
+
+* ERC1155 Standard Token Logic contract
+* ERC1967 Beacon Proxy for Standard Token contract
+* ERC1155 Lazy Mint Token Logic contract
+* ERC1967 Beacon Proxy for Lazy Mint Token contract
+
+![Proxy Diagram](diagrams/step2.png)
+
+- Users launch new token contracts through the respective Beacons for each token contract type. The Beacon will deploy an ERC1967 Proxy that relies on `delegatecall` to reference the Beacon implementation address for it's logic.
+
+![Proxy Diagram](diagrams/step3.png)
+
+![Proxy Diagram](diagrams/step4.png)
+
+## Contract Inheritance Graph
+
+![Inheritance Graph](diagrams/inheritance.png)
+
+Found inside the diagrams folder.
+
+The purple outlines designate the original code written for this project.
+
+# Callouts and Assumptions
+
+1. A Dcentral controlled account that owns the beacon contracts could upgrade the token implementations with malicious code.
+
+Mitigation: Accepted risk. Ownership will transfer to an organizational multisig wallet. ERC1967 also offers us `_setBeacon` that would allow users to deploy/designate their own beacons. This has not been implemented and is not currently roadmapped.
+
+2. Lazy Mint does not use a withdrawal pattern.
+
+Mitigation: The standard/accepted Lazy Mint contract implements the withdrawal pattern. This was changed to match the behavior of a Seaport order because Dcentral relies on Seaport Protocol to manage sale/escrow of tokens after their initial purchase and this avoids the user education hurdle where some transactions would land in their wallet, and others would require them to withdraw for each collection, or require additional development, etc.
+
+# Function Requirements
 
 ### System Initialization
 

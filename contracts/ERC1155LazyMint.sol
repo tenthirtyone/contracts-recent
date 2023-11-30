@@ -57,7 +57,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
             signature
         );
 
-        (address receiver, ) = royaltyInfo(voucher.tokenId, 0);
+        (address receiver, ) = royaltyInfo(voucher.tokenId, voucher.tokenId);
         // Transfer the eth to the recipient
         payable(receiver).transfer(msg.value); // msg.value can be more than quantity * minPrice
         return voucher.tokenId;

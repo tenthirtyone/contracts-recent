@@ -92,7 +92,7 @@ describe("UpgradeableBeacon", function () {
       beacon,
       proxy,
       owner,
-
+      manager,
       erc1155Address,
       erc1155AddressV2,
       factoryInstance,
@@ -149,6 +149,19 @@ describe("UpgradeableBeacon", function () {
 
       expect(await proxy.balanceOf(owner.address, 0)).to.equal(1);
       expect(await proxy.version()).to.equal("2");
+    });
+    it("should fail upgrade from non-owners", async () => {
+      const {
+        proxy,
+        owner,
+        manager,
+        beacon,
+        erc1155AddressV2,
+        factoryInstance,
+      } = await loadFixture(deploy);
+
+      await expect(beacon.connect(manager).upgradeTo(erc1155AddressV2)).to.be
+        .reverted;
     });
   });
 });
