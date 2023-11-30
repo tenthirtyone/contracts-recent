@@ -25,6 +25,19 @@ This repository contains the code for a set of smart contracts adhering to the E
 
 ![Proxy Diagram](diagrams/step4.png)
 
+## Contract Addresses
+
+ERC1155 Standard Beacon: 0x9FBf72cF4825642ce904F00d3B52D643aC202045
+ERC1155 Lazy Mint Beacon: 0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87
+
+https://etherscan.io/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87#code
+https://sepolia.etherscan.io/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87
+
+https://zkevm.polygonscan.com/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87#code
+https://testnet-zkevm.polygonscan.com/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87#code
+
+https://blockscan.com/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87
+
 ## Contract Inheritance Graph
 
 ![Inheritance Graph](diagrams/inheritance.png)
@@ -37,11 +50,27 @@ The purple outlines designate the original code written for this project.
 
 1. A Dcentral controlled account that owns the beacon contracts could upgrade the token implementations with malicious code.
 
-Mitigation: Accepted risk. Ownership will transfer to an organizational multisig wallet. ERC1967 also offers us `_setBeacon` that would allow users to deploy/designate their own beacons. This has not been implemented and is not currently roadmapped.
+Mitigation: Accepted risk. Ownership will eventually transfer to an organizational multisig wallet. ERC1967 also offers us `_setBeacon` that would allow users to deploy/designate their own beacons. This has not been implemented and is not currently roadmapped.
 
 2. Lazy Mint does not use a withdrawal pattern.
 
 Mitigation: The standard/accepted Lazy Mint contract implements the withdrawal pattern. This was changed to match the behavior of a Seaport order because Dcentral relies on Seaport Protocol to manage sale/escrow of tokens after their initial purchase and this avoids the user education hurdle where some transactions would land in their wallet, and others would require them to withdraw for each collection, or require additional development, etc.
+
+3. Although ERC2981 Royalty Standard designs for royalties to be granular to the individual token we only intend to support royalties at the collection level, setting the default royalty is enough. The logic exists for token-level granularity for consistency to avoid bespoke or unnecessary code.
+
+# Gas Usage
+
+Gas Usage reports are included in the unit tests:
+
+```
+Gas used for SingletonFactory: 320267
+Gas used for ERC1155Singleton: 5116860
+Gas used for Beacon: 1449876
+Gas used for Proxy: 699330
+Gas used for mint: 108109
+Maximum batchMint: 500 tokens for total gas: 23594774
+Gas used to transfer a token: 65171
+```
 
 # Function Requirements
 
