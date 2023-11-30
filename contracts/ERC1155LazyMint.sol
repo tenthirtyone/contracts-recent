@@ -3,13 +3,20 @@
 
 pragma solidity ^0.8.22;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import "./lib/ERC1155Core.sol";
 import "./lib/URIStorage.sol";
 import "./interfaces/IERC1155LazyMint.sol";
 
 /// @title ERC1155LazyMint
 /// @dev A contract implementing ERC1155 with an additional initialization logic, lazy minting, and administration functions.
-contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
+contract ERC1155LazyMint is
+    IERC1155LazyMint,
+    ERC1155Core,
+    URIStorage,
+    ReentrancyGuard
+{
     using ECDSA for bytes32;
 
     mapping(uint256 => uint256) _maxSupply;
@@ -23,7 +30,7 @@ contract ERC1155LazyMint is IERC1155LazyMint, ERC1155Core, URIStorage {
         uint256 quantity,
         NFTVoucher calldata voucher,
         bytes memory signature
-    ) public payable returns (uint256) {
+    ) public payable nonReentrant returns (uint256) {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher, signature);
 
