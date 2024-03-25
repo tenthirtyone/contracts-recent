@@ -71,6 +71,12 @@ Mitigation: The standard/accepted Lazy Mint contract implements the withdrawal p
 
 3. Although ERC2981 Royalty Standard designs for royalties to be granular to the individual token we only intend to support royalties at the collection level, setting the default royalty is enough. The logic exists for token-level granularity for consistency to avoid bespoke or unnecessary code.
 
+4. Use of `unchecked` for incrementing token ids.
+
+Mitigation: The practical limits token minting, block gas, and the human lifespan. E.g. (2^256 -1) / 500 (500 is the approx max tokens minted in batchMint) = 2 x 10^74 blocks or ~ 8 x 10^67 years.
+
+5. Lazy Mint `redeem` forwards overpayments to the royalty receiver, reverts on underpayment.
+
 ## Slither callouts
 
 OpenZeppelin reports omitted.
