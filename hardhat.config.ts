@@ -19,6 +19,14 @@ module.exports = {
     target: "ethers-v5",
   },
   networks: {
+    polygon: {
+      url: `https://polygon-mainnet.g.alchemy.com/v2/rl4UL7m6pq63hsJvt7BgCDfQh3u0yPxl`,
+      accounts: [process.env.ACCOUNT_PRIVATE_KEY],
+    },
+    polygonMumbai: {
+      url: `https://polygon-mumbai.g.alchemy.com/v2/5TPftgAAIT8BO-IXSUAFYyLvbKcaifmy`,
+      accounts: [process.env.ACCOUNT_PRIVATE_KEY],
+    },
     zkEVMtestnet: {
       url: `https://rpc.public.zkevm-test.net`,
       accounts: [process.env.ACCOUNT_PRIVATE_KEY],
@@ -42,6 +50,8 @@ module.exports = {
       mainnet: "TRZG89K55S9UWJC9PD2FHWTV3AWNV1CYU7",
       zkEVMtestnet: "6TDA4H3KU36XVSUYI481162XTZG9ZYF7WR",
       zkEVMMainnet: "VEZ1D87WT6EMK11GEANXB4SKKREKYQV1HK",
+      polygon: "6TDA4H3KU36XVSUYI481162XTZG9ZYF7WR",
+      polygonMumbai: "6TDA4H3KU36XVSUYI481162XTZG9ZYF7WR",
     },
     customChains: [
       {

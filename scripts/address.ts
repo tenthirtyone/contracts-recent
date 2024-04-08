@@ -2,7 +2,7 @@ require("dotenv").config();
 import { ethers } from "ethers";
 
 const wallet = ethers.Wallet.fromMnemonic(
-  "diesel east flat guess wrist example dial news market decide hip fortune"
+  process.env.DEPLOYMENT_KEY_MNEMONIC as string
 );
 
 console.log("Address:", wallet.address);
