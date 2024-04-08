@@ -64,9 +64,8 @@ contract ERC1155LazyMint is
             signature
         );
 
-        (address receiver, ) = royaltyInfo(voucher.tokenId, voucher.tokenId);
         // Transfer the eth to the recipient
-        payable(receiver).transfer(msg.value); // msg.value can be more than quantity * minPrice
+        payable(voucher.recipient).transfer(msg.value); // msg.value can be more than quantity * minPrice
         return voucher.tokenId;
     }
 

@@ -37,7 +37,7 @@ describe("Lazy Mint", function () {
   const SALT = createSalt(CONTRACT_SALT);
 
   async function deploy() {
-    const [owner, redeemer] = await ethers.getSigners();
+    const [owner, redeemer, satoshi] = await ethers.getSigners();
 
     const SingletonFactory = await ethers.getContractFactory(
       "MockSingletonFactory"
@@ -84,7 +84,7 @@ describe("Lazy Mint", function () {
       proxyAddress
     )) as unknown as ERC1155LazyMint;
 
-    return { proxy, owner, redeemer };
+    return { proxy, owner, redeemer, satoshi };
   }
 
   describe("Deployment", function () {
@@ -93,6 +93,7 @@ describe("Lazy Mint", function () {
       expect(proxy).to.exist;
       expect(owner).to.exist;
     });
+
     it("should redeem an NFT from a signed voucher", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
@@ -158,6 +159,39 @@ describe("Lazy Mint", function () {
       expect(balanceDelta).to.equal(tokenPrice);
       expect(totalSupply).to.equal(supply);
       expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(1);
+    });
+    it("should send payment to the voucher recipient.", async function () {
+      const { proxy, owner, redeemer, satoshi } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new LazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        10,
+        satoshi.address
+      );
+      const beginBalance = await ethers.provider.getBalance(satoshi.address);
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, 1, voucher, signature, {
+          value: tokenPrice,
+        });
+      await redeemTx.wait();
+
+      const endBalance = await ethers.provider.getBalance(satoshi.address);
+
+      const balanceDelta = endBalance.sub(beginBalance);
+
+      expect(balanceDelta).to.equal(tokenPrice);
     });
     it("should correctly update token URI on voucher redemption", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
