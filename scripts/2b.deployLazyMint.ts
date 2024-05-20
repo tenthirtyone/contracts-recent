@@ -30,7 +30,9 @@ async function main() {
 
   console.log(`Using factory at ${factory.address}`);
 
-  const tx = await factory.deploy(SALT, ERC1155LazyMintBytecode);
+  const tx = await factory.deploy(SALT, ERC1155LazyMintBytecode, {
+    gasLimit: 8_000_000,
+  });
 
   console.log(tx);
 }

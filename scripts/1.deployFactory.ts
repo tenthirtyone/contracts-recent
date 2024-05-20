@@ -21,11 +21,7 @@ async function main() {
   const factory = await Factory.deploy({ gasLimit: 300_000 });
   await factory.deployed();
 
-  console.log(
-    `Factory deployed to https://explorer.public.zkevm-test.net/address/${factory.address}`
-  );
-
-  console.log();
+  console.log(`Factory deployed to ${factory.address}`);
 }
 
 main().catch((error) => {
