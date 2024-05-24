@@ -18,6 +18,7 @@ export function toUtf8Bytes(data: any): Uint8Array {
 }
 
 export const INTERFACE_ID_ERC165 = "0x01ffc9a7";
+export const INTERFACE_ID_ERC721 = "0x80ac58cd";
 export const INTERFACE_ID_ERC1155 = "0xd9b67a26";
 export const INTERFACE_ID_ERC2981 = "0x2a55205a";
 export const INTERFACE_ID_ACCESS_CONTROL = "0x01ffc9a7";
