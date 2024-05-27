@@ -71,7 +71,7 @@ describe("ERC721Proxy", function () {
       CONTRACT_URI,
       TOKEN_URI,
       LICENSE_URI,
-      //ROYALTY,
+      ROYALTY,
     ]);
 
     const proxyAddress = await beacon.callStatic.deployProxyContract(callData);

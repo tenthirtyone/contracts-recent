@@ -51,14 +51,14 @@ contract ERC721Core is
     /// @notice Initializes the contract. Can only be done once.
     /// @param name_ The token name
     /// @param symbol_ The token symbol.
-    //uint96 defaultRoyalty
     function init(
         address owner,
         string memory name_,
         string memory symbol_,
         string memory contractURI_,
         string memory tokenURI_,
-        string memory licenseURI_
+        string memory licenseURI_,
+        uint96 defaultRoyalty
     ) public {
         require(!didInit, "Contract has already been initialized");
         didInit = true;
@@ -68,6 +68,7 @@ contract ERC721Core is
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _setContractURI(contractURI_);
         _setLicenseURI(licenseURI_);
+        _setDefaultRoyalty(owner, defaultRoyalty);
     }
 
     function name() public view override returns (string memory) {
