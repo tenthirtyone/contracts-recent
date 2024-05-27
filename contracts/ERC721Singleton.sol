@@ -1,16 +1,25 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 import "./interfaces/IERC721Singleton.sol";
 
 /// @title ERC721Singleton
 /// @dev A contract implementing ERC721 with an additional initialization logic and administration functions.
-contract ERC721Singleton is ERC165, IERC721Singleton, ERC721, AccessControl {
+contract ERC721Singleton is
+    ERC165,
+    IERC721Singleton,
+    ERC721,
+    EIP712,
+    ERC2981,
+    AccessControl
+{
     uint256 public currentTokenId = 0;
     string private _name;
     string private _symbol;
@@ -27,7 +36,7 @@ contract ERC721Singleton is ERC165, IERC721Singleton, ERC721, AccessControl {
     );
 
     /// @dev Contract constructor. Sets token URI and transfers ownership to zero address to establish a singleton mode.
-    constructor() ERC721("", "") {
+    constructor() ERC721("", "") EIP712("DcentralSFT-Voucher", "1") {
         _grantRole(DEFAULT_ADMIN_ROLE, address(0));
 
         // Singleton
@@ -89,7 +98,7 @@ contract ERC721Singleton is ERC165, IERC721Singleton, ERC721, AccessControl {
         public
         view
         virtual
-        override(ERC165, ERC721, AccessControl, IERC721Singleton)
+        override(ERC165, ERC721, ERC2981, AccessControl, IERC721Singleton)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

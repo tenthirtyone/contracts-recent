@@ -3,7 +3,10 @@ import {
   abi as FactoryABI,
   bytecode as FactoryBytecode,
 } from "../artifacts/contracts/SingletonFactory.sol/SingletonFactory.json";
-import { bytecode as ERC1155LazyMintBytecode } from "../artifacts/contracts/ERC1155LazyMint.sol/ERC1155LazyMint.json";
+import {
+  abi as ERC721SingletonABI,
+  bytecode as ERC721Bytecode,
+} from "../artifacts/contracts/ERC721Singleton.sol/ERC721Singleton.json";
 
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
@@ -27,8 +30,8 @@ async function main() {
 
   console.log(`Using factory at ${factory.address}`);
 
-  const tx = await factory.deploy(SALT, ERC1155LazyMintBytecode, {
-    gasLimit: 8_000_000,
+  const tx = await factory.deploy(SALT, ERC721Bytecode, {
+    gasLimit: 6_000_000,
   });
 
   console.log(tx);

@@ -16,7 +16,7 @@ export const CONTRACT_SALT = "Dcentral.me Token Contract";
 
 const encodedString = hre.ethers.utils.formatBytes32String(CONTRACT_SALT);
 const FACTORY_ADDRESS = "0x7eCcF14E9671eEA813d42cB42C5BE58f46980666";
-const SINGLETON_ADDRESS = "0xea6f9016f970021cC87262Fc425E223cc8952925";
+const SINGLETON_ADDRESS = "0x32c9aa9968b3a0c2c4d301febb11b2872cf7980a";
 const SALT = encodedString;
 
 async function main() {
@@ -34,7 +34,7 @@ async function main() {
   // This gasLimit must be manually set. This is approximately twice the amount necessary
   // TODO set all the other gasLimits.
   const beaconTx = await factory.deploy(SALT, beaconInitCode, {
-    gasLimit: 8_000_000,
+    gasLimit: 2_000_000,
   });
 
   const beaconReceipt = await beaconTx.wait();
