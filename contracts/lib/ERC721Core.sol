@@ -53,9 +53,9 @@ contract ERC721Core is
     function init(
         address owner,
         string memory name,
-        string memory symbol
-    ) public //string memory contractURI_,
-    //string memory tokenURI_,
+        string memory symbol,
+        string memory contractURI_
+    ) public //string memory tokenURI_,
     //string memory licenseURI_,
     //uint96 defaultRoyalty
     {
@@ -64,6 +64,7 @@ contract ERC721Core is
         _name = name;
         _symbol = symbol;
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _setContractURI(contractURI_);
     }
 
     /// @notice Grants `role` to `account`. Prevents setting 0 address, reserved for Singleton
@@ -157,6 +158,20 @@ contract ERC721Core is
     /// @param tokenId The ID of the token
     function resetTokenRoyalty(uint256 tokenId) public onlyRole(MANAGER_ROLE) {
         _resetTokenRoyalty(tokenId);
+    }
+
+    /// @param contractURI_ the stringified JSON for the contractURI
+    function setContractURI(
+        string memory contractURI_
+    ) public onlyRole(MANAGER_ROLE) {
+        _setContractURI(contractURI_);
+    }
+
+    /// @param contractURI_ the stringified JSON for the contractURI
+    function _setContractURI(string memory contractURI_) internal {
+        contractURI = string(
+            abi.encodePacked("data:application/json;utf8,", contractURI_)
+        );
     }
 
     function version() public pure virtual returns (uint256) {

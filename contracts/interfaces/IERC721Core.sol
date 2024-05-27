@@ -12,8 +12,8 @@ interface IERC721Core is IERC721 {
     function init(
         address owner,
         string memory name,
-        string memory symbol
-        //string memory contractURI_,
+        string memory symbol,
+        string memory contractURI_
         //string memory tokenURI_,
         //string memory licenseURI_,
         //uint96 defaultRoyalty

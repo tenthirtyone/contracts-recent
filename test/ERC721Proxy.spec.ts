@@ -68,7 +68,7 @@ describe("ERC721Proxy", function () {
       owner.address,
       "Test TKN",
       "TKN",
-      //CONTRACT_URI,
+      CONTRACT_URI,
       //TOKEN_URI,
       //LICENSE_URI,
       //ROYALTY,
