@@ -22,6 +22,7 @@ contract ERC721Core is
 {
     string private _name;
     string private _symbol;
+    string private _tokenURI;
     string public contractURI;
     string public licenseURI;
 
@@ -48,23 +49,71 @@ contract ERC721Core is
     }
 
     /// @notice Initializes the contract. Can only be done once.
-    /// @param name The token name
-    /// @param symbol The token symbol.
-    function init(
-        address owner,
-        string memory name,
-        string memory symbol,
-        string memory contractURI_
-    ) public //string memory tokenURI_,
+    /// @param name_ The token name
+    /// @param symbol_ The token symbol.
     //string memory licenseURI_,
     //uint96 defaultRoyalty
-    {
+    function init(
+        address owner,
+        string memory name_,
+        string memory symbol_,
+        string memory contractURI_,
+        string memory tokenURI_
+    ) public {
         require(!didInit, "Contract has already been initialized");
         didInit = true;
-        _name = name;
-        _symbol = symbol;
+        _name = name_;
+        _symbol = symbol_;
+        _tokenURI = tokenURI_;
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _setContractURI(contractURI_);
+    }
+
+    function name() public view override returns (string memory) {
+        return _name;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return _symbol;
+    }
+
+    /// @notice Returns the URI for a given token ID
+    /// @dev Concatenates the base URI, contract address, and token ID to form the full token URI
+    /// @param _tokenId The token ID for which to return the URI
+    /// @return The URI of the given token ID
+    function tokenURI(
+        uint256 _tokenId
+    ) public view virtual override(ERC721) returns (string memory) {
+        return
+            string(
+                abi.encodePacked(
+                    _tokenURI,
+                    _addressToString(address(this)),
+                    "/",
+                    Strings.toString(_tokenId)
+                )
+            );
+    }
+
+    /// @notice Converts an address into a string representation
+    /// @param _address The address to convert
+    /// @return The string representation of the address
+    function _addressToString(
+        address _address
+    ) internal pure returns (string memory) {
+        bytes32 _bytes = bytes32(uint256(uint160(_address)));
+        bytes memory HEX = "0123456789abcdef";
+        bytes memory _string = new bytes(42);
+
+        _string[0] = "0";
+        _string[1] = "x";
+
+        for (uint i = 0; i < 20; i++) {
+            _string[2 + i * 2] = HEX[uint8(_bytes[i + 12] >> 4)];
+            _string[3 + i * 2] = HEX[uint8(_bytes[i + 12] & 0x0F)];
+        }
+
+        return string(_string);
     }
 
     /// @notice Grants `role` to `account`. Prevents setting 0 address, reserved for Singleton

@@ -202,6 +202,7 @@ describe("Gas Usage", function () {
       "Token",
       "SYM",
       CONTRACT_URI,
+      TOKEN_URI,
     ]);
 
     const proxyAddress721 = await beacon721.callStatic.deployProxyContract(
