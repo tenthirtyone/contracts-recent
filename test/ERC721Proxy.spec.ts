@@ -19,6 +19,9 @@ import {
   ZERO_ADDRESS,
   CONTRACT_SALT,
   ROYALTY,
+  CONTRACT_URI,
+  TOKEN_URI,
+  LICENSE_URI,
 } from "./utils";
 
 import { ERC721Singleton } from "../typechain";
@@ -65,6 +68,10 @@ describe("ERC721Proxy", function () {
       owner.address,
       "Test TKN",
       "TKN",
+      //CONTRACT_URI,
+      //TOKEN_URI,
+      //LICENSE_URI,
+      //ROYALTY,
     ]);
 
     const proxyAddress = await beacon.callStatic.deployProxyContract(callData);
@@ -97,6 +104,13 @@ describe("ERC721Proxy", function () {
       const { proxy } = await loadFixture(deploy);
 
       expect(await proxy.supportsInterface(INTERFACE_ID_ERC721)).to.equal(true);
+    });
+    it("should support ERC2981 interface", async () => {
+      const { proxy } = await loadFixture(deploy);
+
+      expect(await proxy.supportsInterface(INTERFACE_ID_ERC2981)).to.equal(
+        true
+      );
     });
 
     it("should support Access Control interface", async () => {

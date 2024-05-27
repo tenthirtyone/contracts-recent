@@ -140,6 +140,13 @@ describe("ERC1155Proxy", function () {
         true
       );
     });
+    it("should support ERC2981 interface", async () => {
+      const { proxy } = await loadFixture(deploy);
+
+      expect(await proxy.supportsInterface(INTERFACE_ID_ERC2981)).to.equal(
+        true
+      );
+    });
 
     it("should support Access Control interface", async () => {
       const { proxy } = await loadFixture(deploy);

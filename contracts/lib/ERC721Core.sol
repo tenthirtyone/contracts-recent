@@ -54,7 +54,11 @@ contract ERC721Core is
         address owner,
         string memory name,
         string memory symbol
-    ) public {
+    ) public //string memory contractURI_,
+    //string memory tokenURI_,
+    //string memory licenseURI_,
+    //uint96 defaultRoyalty
+    {
         require(!didInit, "Contract has already been initialized");
         didInit = true;
         _name = name;
