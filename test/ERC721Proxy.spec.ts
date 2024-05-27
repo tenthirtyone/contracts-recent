@@ -70,7 +70,7 @@ describe("ERC721Proxy", function () {
       "TKN",
       CONTRACT_URI,
       TOKEN_URI,
-      //LICENSE_URI,
+      LICENSE_URI,
       //ROYALTY,
     ]);
 

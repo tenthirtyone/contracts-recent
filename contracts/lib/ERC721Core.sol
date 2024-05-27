@@ -51,14 +51,14 @@ contract ERC721Core is
     /// @notice Initializes the contract. Can only be done once.
     /// @param name_ The token name
     /// @param symbol_ The token symbol.
-    //string memory licenseURI_,
     //uint96 defaultRoyalty
     function init(
         address owner,
         string memory name_,
         string memory symbol_,
         string memory contractURI_,
-        string memory tokenURI_
+        string memory tokenURI_,
+        string memory licenseURI_
     ) public {
         require(!didInit, "Contract has already been initialized");
         didInit = true;
@@ -67,6 +67,7 @@ contract ERC721Core is
         _tokenURI = tokenURI_;
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _setContractURI(contractURI_);
+        _setLicenseURI(licenseURI_);
     }
 
     function name() public view override returns (string memory) {
@@ -221,6 +222,18 @@ contract ERC721Core is
         contractURI = string(
             abi.encodePacked("data:application/json;utf8,", contractURI_)
         );
+    }
+
+    /// @param _licenseURI the stringified JSON for the contractURI
+    function setLicenseURI(
+        string memory _licenseURI
+    ) public onlyRole(MANAGER_ROLE) {
+        _setLicenseURI(_licenseURI);
+    }
+
+    /// @param _licenseURI the stringified JSON for the contractURI
+    function _setLicenseURI(string memory _licenseURI) internal {
+        licenseURI = _licenseURI;
     }
 
     function version() public pure virtual returns (uint256) {
