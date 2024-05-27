@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: MIT
+/*
+LazyMinter:
+createVoucher - maxSupply is only for ERC1155
+Update Init params
+
+*/
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 pragma solidity ^0.8.22;
 

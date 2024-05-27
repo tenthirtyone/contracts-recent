@@ -14,6 +14,8 @@ import "./interfaces/IERC721Singleton.sol";
 /// @title ERC721Singleton
 /// @dev A contract implementing ERC721 with an additional initialization logic and administration functions.
 contract ERC721Singleton is ERC721Core, IERC721Singleton {
+    uint256 public currentTokenId = 0;
+
     /// @notice Mints new tokens to the sender
     /// @param to The address that will receive the token
     function mint(address to) public onlyRole(DEFAULT_ADMIN_ROLE) {

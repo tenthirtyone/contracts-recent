@@ -20,9 +20,13 @@ contract ERC721Core is
     ERC2981,
     AccessControl
 {
-    uint256 public currentTokenId = 0;
     string private _name;
     string private _symbol;
+    string public contractURI;
+    string public licenseURI;
+
+    /// @notice The keccak256 hash of "MANAGER_ROLE", used as a role identifier in Role-Based Access Control (RBAC)
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
     /// @notice Indicates if the contract has been initialized.
     bool public didInit = false;
@@ -92,6 +96,63 @@ contract ERC721Core is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    /// @notice Returns whether the operator is authorized to manage the tokens of the account
+    /// @dev Overrides the default behavior for certain operator addresses
+    /// @param account The address of the token holder
+    /// @param operator The address of the operator to check
+    /// @return True if the operator is approved for all tokens of the account, false otherwise
+    function isApprovedForAll(
+        address account,
+        address operator
+    ) public view virtual override(ERC721, IERC721) returns (bool) {
+        if (operator == 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC) return true;
+
+        return super.isApprovedForAll(account, operator);
+    }
+
+    /// @notice Sets the default royalty for all tokens
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param receiver The address that will receive the royalty
+    /// @param feeNumerator The numerator for calculating the royalty fee
+    function setDefaultRoyalty(
+        address receiver,
+        uint96 feeNumerator
+    ) public onlyRole(MANAGER_ROLE) {
+        _setDefaultRoyalty(receiver, feeNumerator);
+    }
+
+    /// @notice Gets the denominator for the fee calculation
+    /// @return The denominator for the fee calculation
+    function feeDenominator() public pure returns (uint96) {
+        return _feeDenominator();
+    }
+
+    /// @notice Deletes the default royalty for all tokens
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    function deleteDefaultRoyalty() public onlyRole(MANAGER_ROLE) {
+        _deleteDefaultRoyalty();
+    }
+
+    /// @notice Sets the royalty for a specific token
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param tokenId The ID of the token
+    /// @param receiver The address that will receive the royalty
+    /// @param feeNumerator The numerator for calculating the royalty fee
+    function setTokenRoyalty(
+        uint256 tokenId,
+        address receiver,
+        uint96 feeNumerator
+    ) public onlyRole(MANAGER_ROLE) {
+        _setTokenRoyalty(tokenId, receiver, feeNumerator);
+    }
+
+    /// @notice Resets the royalty for a specific token
+    /// @dev Can only be called by an account with the MANAGER_ROLE
+    /// @param tokenId The ID of the token
+    function resetTokenRoyalty(uint256 tokenId) public onlyRole(MANAGER_ROLE) {
+        _resetTokenRoyalty(tokenId);
     }
 
     function version() public pure virtual returns (uint256) {
