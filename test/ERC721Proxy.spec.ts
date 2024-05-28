@@ -16,9 +16,12 @@ import {
   INTERFACE_ID_ACCESS_CONTROL,
   ZERO_BYTES32,
   BASE_POINTS,
+  CONTRACT_NAME,
+  CONTRACT_SYMBOL,
   ZERO_ADDRESS,
   CONTRACT_SALT,
   ROYALTY,
+  CONTRACT_URI_MIMETYPE,
   CONTRACT_URI,
   TOKEN_URI,
   LICENSE_URI,
@@ -66,8 +69,8 @@ describe("ERC721Proxy", function () {
     const iface = new ethers.utils.Interface(ERC721SingletonABI);
     const callData = iface.encodeFunctionData("init", [
       owner.address,
-      "Test TKN",
-      "TKN",
+      CONTRACT_NAME,
+      CONTRACT_SYMBOL,
       CONTRACT_URI,
       TOKEN_URI,
       LICENSE_URI,
@@ -91,6 +94,96 @@ describe("ERC721Proxy", function () {
       const { proxy, owner } = await loadFixture(deploy);
       expect(proxy).to.exist;
       expect(owner).to.exist;
+    });
+    it("sets the contract name", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const name = await proxy.name();
+
+      expect(name).to.equal(CONTRACT_NAME);
+    });
+    it("sets the contract uri", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const symbol = await proxy.symbol();
+
+      expect(symbol).to.equal(CONTRACT_SYMBOL);
+    });
+    it("sets the token uri", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const tokenId = 0;
+      const uri = await proxy.tokenURI(tokenId);
+
+      expect(uri.toLowerCase()).to.equal(
+        TOKEN_URI.concat(proxy.address)
+          .concat("/")
+          .concat(tokenId.toString())
+          .toLowerCase()
+      );
+    });
+  });
+
+  describe("License", function () {
+    it("should create a license for the collection", async () => {
+      const { proxy } = await loadFixture(deploy);
+
+      expect(await proxy.licenseURI()).to.equal(LICENSE_URI);
+    });
+  });
+
+  describe("ERC2981 Compliance", function () {
+    it("feeDenominator returns BASE_POINTS", async function () {
+      const { proxy } = await loadFixture(deploy);
+      const feeDenominator = await proxy.feeDenominator();
+      expect(feeDenominator).to.equal(BASE_POINTS);
+    });
+    it("sets the default royalty at init", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(royaltyFraction).to.equal(ROYALTY);
+    });
+    it("setDefaultRoyalty correctly sets a new default royalty", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+
+      const TEN_PERCENT = 1000;
+
+      await proxy.setDefaultRoyalty(owner.address, TEN_PERCENT, {
+        from: owner.address,
+      });
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(royaltyFraction).to.equal(TEN_PERCENT);
+    });
+    it("setDefaultRoyalty correctly overrides a previous royalty", async function () {
+      const { proxy, owner } = await loadFixture(deploy);
+      const TEN_PERCENT = 1000;
+
+      const [receiver, royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+
+      await proxy.setDefaultRoyalty(owner.address, ROYALTY, {
+        from: owner.address,
+      });
+
+      expect(royaltyFraction).to.equal(ROYALTY);
+
+      await proxy.setDefaultRoyalty(owner.address, TEN_PERCENT, {
+        from: owner.address,
+      });
+      const [_receiver, _royaltyFraction] = await proxy.royaltyInfo(
+        0,
+        BASE_POINTS
+      );
+      expect(receiver).to.equal(owner.address);
+      expect(_royaltyFraction).to.equal(TEN_PERCENT);
     });
   });
 

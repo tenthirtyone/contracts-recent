@@ -17,6 +17,8 @@ export function toUtf8Bytes(data: any): Uint8Array {
   return ethers.utils.toUtf8Bytes(data);
 }
 
+export const CONTRACT_NAME = "Dcentral Tokens";
+export const CONTRACT_SYMBOL = "DCNFT";
 export const INTERFACE_ID_ERC165 = "0x01ffc9a7";
 export const INTERFACE_ID_ERC721 = "0x80ac58cd";
 export const INTERFACE_ID_ERC1155 = "0xd9b67a26";

@@ -65,7 +65,10 @@ contract ERC721Core is
         _name = name_;
         _symbol = symbol_;
         _tokenURI = tokenURI_;
+
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _grantRole(MANAGER_ROLE, owner);
+
         _setContractURI(contractURI_);
         _setLicenseURI(licenseURI_);
         _setDefaultRoyalty(owner, defaultRoyalty);
