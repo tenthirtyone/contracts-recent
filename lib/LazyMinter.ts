@@ -7,7 +7,7 @@ const SIGNING_DOMAIN_VERSION = "1";
 /**
  * Class representing a LazyMinter for NFT vouchers.
  */
-export class LazyMinter {
+export class SFTLazyMinter {
   public contractAddress: string;
   public signer: any;
   public types: any;
@@ -95,4 +95,4 @@ export class LazyMinter {
   }
 }
 
-export default LazyMinter;
+export default SFTLazyMinter;

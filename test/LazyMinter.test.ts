@@ -26,7 +26,7 @@ import {
   SEAPORT_1_5_ADDRESS,
 } from "./utils";
 
-import { LazyMinter } from "../lib/LazyMinter";
+import { SFTLazyMinter } from "../lib/LazyMinter";
 
 import { ERC1155LazyMint, MockNoPayContract } from "../typechain";
 
@@ -97,7 +97,7 @@ describe("Lazy Mint", function () {
     it("should redeem an NFT from a signed voucher", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -125,7 +125,7 @@ describe("Lazy Mint", function () {
     it("should correctly update the balance on redemption", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -163,7 +163,7 @@ describe("Lazy Mint", function () {
     it("should send payment to the voucher recipient.", async function () {
       const { proxy, owner, redeemer, satoshi } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -196,7 +196,7 @@ describe("Lazy Mint", function () {
     it("should correctly update token URI on voucher redemption", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -224,7 +224,7 @@ describe("Lazy Mint", function () {
     it("should mint up to the maxSupply of the voucher", async () => {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -264,7 +264,7 @@ describe("Lazy Mint", function () {
     it("should fail to redeem an NFT when totalSupply will be > maxSupply", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -297,7 +297,7 @@ describe("Lazy Mint", function () {
     it("should fail to redeem an NFT voucher that's signed by an unauthorized account", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: redeemer,
       });
@@ -326,7 +326,7 @@ describe("Lazy Mint", function () {
     it("should fail to redeem an NFT voucher that's been modified", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -358,7 +358,7 @@ describe("Lazy Mint", function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
       const tokenPriceX2 = ethers.utils.parseEther("2.0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -397,7 +397,7 @@ describe("Lazy Mint", function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const zeroEth = ethers.utils.parseEther("0");
       const tokenPrice = ethers.utils.parseEther("1");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -433,7 +433,7 @@ describe("Lazy Mint", function () {
       })) as unknown as MockNoPayContract;
 
       const tokenPrice = ethers.utils.parseEther("1");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -460,7 +460,7 @@ describe("Lazy Mint", function () {
     it("should fail to honor new vouchers for an existing tokenId after the first voucher has been redeemed", async () => {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -488,7 +488,7 @@ describe("Lazy Mint", function () {
     it("should fail when the voucher maxSupply is 0.", async () => {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
-      const lazyMinter = new LazyMinter({
+      const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });

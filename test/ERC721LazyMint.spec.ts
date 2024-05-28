@@ -88,7 +88,7 @@ describe("ERC721Proxy", function () {
   }
 
   describe("Deployment", function () {
-    it.only("should deploy contract", async () => {
+    it("should deploy contract", async () => {
       const { proxy, owner } = await loadFixture(deploy);
 
       expect(proxy).to.exist;
