@@ -17,6 +17,7 @@ import {
   TOKEN_URI,
   LICENSE_URI,
   ROYALTY,
+  MAX_BLOCK_GAS,
 } from "./utils";
 
 const hre = require("hardhat");
@@ -31,9 +32,9 @@ describe("Gas Usage", function () {
     const SingletonFactory = await ethers.getContractFactory(
       "MockSingletonFactory"
     );
-    await SingletonFactory.deploy({ gasLimit: 30000000 });
+    await SingletonFactory.deploy({ gasLimit: MAX_BLOCK_GAS });
     const factoryInstance = await SingletonFactory.deploy({
-      gasLimit: 30000000,
+      gasLimit: MAX_BLOCK_GAS,
     });
     const block = await ethers.provider.getBlock(1);
 
@@ -47,7 +48,7 @@ describe("Gas Usage", function () {
     );
 
     const tx = await factoryInstance.deploy(SALT, ERC1155Bytecode, {
-      gasLimit: 30000000,
+      gasLimit: MAX_BLOCK_GAS,
     });
     const erc1155SingletonReceipt = await tx.wait();
 
@@ -70,7 +71,7 @@ describe("Gas Usage", function () {
     );
 
     const beaconTx = await factoryInstance.deploy(SALT, beaconInitCode, {
-      gasLimit: 30000000,
+      gasLimit: MAX_BLOCK_GAS,
     });
     const beaconReceipt = await beaconTx.wait();
 
@@ -127,7 +128,7 @@ describe("Gas Usage", function () {
     const amounts = new Array(batchTokenCount).fill(1e3);
 
     const batchMint = await proxy.mintBatch(owner.address, amounts, "0x", {
-      gasLimit: 30000000,
+      gasLimit: MAX_BLOCK_GAS,
     });
     const batchReceipt = await batchMint.wait();
 
@@ -160,7 +161,7 @@ describe("Gas Usage", function () {
       ERC721Bytecode
     );
     const tx721 = await factoryInstance.deploy(SALT, ERC721Bytecode, {
-      gasLimit: 30000000,
+      gasLimit: MAX_BLOCK_GAS,
     });
     const erc721SingletonReceipt = await tx721.wait();
 
@@ -183,7 +184,7 @@ describe("Gas Usage", function () {
     );
 
     const beaconTx721 = await factoryInstance.deploy(SALT, beaconInitCode721, {
-      gasLimit: 30000000,
+      gasLimit: MAX_BLOCK_GAS,
     });
 
     const beaconReceipt721 = await beaconTx721.wait();
@@ -229,6 +230,21 @@ describe("Gas Usage", function () {
     if (mintReceipt721) {
       console.log(`Gas used for mint: ${mintReceipt721.gasUsed.toString()}`);
     }
+
+    const batch721TokenCount = 1100;
+
+    const batch721Mint = await proxy721.mintBatch(
+      owner.address,
+      batch721TokenCount,
+      {
+        gasLimit: MAX_BLOCK_GAS,
+      }
+    );
+    const batch721Receipt = await batch721Mint.wait();
+
+    console.log(
+      `Maximum batchMint: ${batch721TokenCount} tokens for total gas: ${batch721Receipt.gasUsed}`
+    );
 
     const xfer721 = await proxy721.transferFrom(
       owner.address,

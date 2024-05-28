@@ -59,7 +59,7 @@ contract ERC721Core is
         string memory tokenURI_,
         string memory licenseURI_,
         uint96 defaultRoyalty
-    ) public {
+    ) public virtual {
         require(!didInit, "Contract has already been initialized");
         didInit = true;
         _name = name_;

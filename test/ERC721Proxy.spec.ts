@@ -101,11 +101,17 @@ describe("ERC721Proxy", function () {
 
       expect(name).to.equal(CONTRACT_NAME);
     });
-    it("sets the contract uri", async () => {
+    it("sets the token symbol", async () => {
       const { proxy, owner } = await loadFixture(deploy);
       const symbol = await proxy.symbol();
 
       expect(symbol).to.equal(CONTRACT_SYMBOL);
+    });
+    it("sets the contract uri", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      const uri = await proxy.contractURI();
+
+      expect(uri).to.equal(CONTRACT_URI_MIMETYPE.concat(CONTRACT_URI));
     });
     it("sets the token uri", async () => {
       const { proxy, owner } = await loadFixture(deploy);
@@ -227,6 +233,13 @@ describe("ERC721Proxy", function () {
       const { proxy, owner } = await loadFixture(deploy);
       const [_, _manager, satoshi] = await ethers.getSigners();
       await expect(proxy.connect(satoshi).mint(satoshi.address)).to.be.reverted;
+    });
+
+    it("batch mints to the owner", async () => {
+      const { proxy, owner } = await loadFixture(deploy);
+      await proxy.mintBatch(owner.address, 10);
+      const balance = await proxy.balanceOf(owner.address);
+      expect(balance).to.equal(10);
     });
   });
 
