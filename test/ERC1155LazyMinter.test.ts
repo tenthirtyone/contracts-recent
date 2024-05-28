@@ -26,7 +26,7 @@ import {
   SEAPORT_1_5_ADDRESS,
 } from "./utils";
 
-import { SFTLazyMinter } from "../lib/LazyMinter";
+import { SFTLazyMinter } from "../lib/SFTLazyMinter";
 
 import { ERC1155LazyMint, MockNoPayContract } from "../typechain";
 

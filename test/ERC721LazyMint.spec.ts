@@ -2,8 +2,8 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import {
   abi as ERC721SingletonABI,
-  bytecode as ERC721Bytecode,
-} from "../artifacts/contracts/ERC721Singleton.sol/ERC721Singleton.json";
+  bytecode as ERC721LazyMintBytecode,
+} from "../artifacts/contracts/ERC721LazyMint.sol/ERC721LazyMint.json";
 import { bytecode as BeaconBytecode } from "../artifacts/contracts/Beacon.sol/Beacon.json";
 import {
   createSalt,
@@ -44,9 +44,14 @@ describe("ERC721Proxy", function () {
     const factoryInstance = await SingletonFactory.deploy();
 
     const erc721LazyMintAddress =
-      await factoryInstance.callStatic.computeAddress(SALT, ERC721Bytecode);
+      await factoryInstance.callStatic.computeAddress(
+        SALT,
+        ERC721LazyMintBytecode
+      );
 
-    await factoryInstance.deploy(SALT, ERC721Bytecode, { gasLimit: 30000000 });
+    await factoryInstance.deploy(SALT, ERC721LazyMintBytecode, {
+      gasLimit: 30000000,
+    });
 
     const abiCoder = new ethers.utils.AbiCoder();
     const encodedParameters = abiCoder.encode(
