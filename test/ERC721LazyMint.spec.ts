@@ -28,12 +28,12 @@ import {
 } from "./utils";
 
 import { ERC721LazyMint } from "../typechain";
-import { SFTLazyMinter } from "../lib/SFTLazyMinter";
+import { NFTLazyMinter } from "../lib/NFTLazyMinter";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
 
-describe("ERC721Proxy", function () {
+describe("ERC721LazyMint", function () {
   const SALT = createSalt(CONTRACT_SALT);
 
   async function deploy() {
@@ -103,7 +103,7 @@ describe("ERC721Proxy", function () {
     it("should redeem an NFT from a signed voucher", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
-      const lazyMinter = new SFTLazyMinter({
+      const lazyMinter = new NFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -112,9 +112,7 @@ describe("ERC721Proxy", function () {
 
       const { voucher, signature } = await lazyMinter.createVoucher(
         tokenId,
-        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
         tokenPrice,
-        10,
         redeemer.address
       );
 
@@ -130,7 +128,7 @@ describe("ERC721Proxy", function () {
     it("should send payment to the voucher recipient.", async function () {
       const { proxy, owner, redeemer, satoshi } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
-      const lazyMinter = new SFTLazyMinter({
+      const lazyMinter = new NFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
       });
@@ -139,9 +137,7 @@ describe("ERC721Proxy", function () {
 
       const { voucher, signature } = await lazyMinter.createVoucher(
         tokenId,
-        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
         tokenPrice,
-        10,
         satoshi.address
       );
       const beginBalance = await ethers.provider.getBalance(satoshi.address);

@@ -41,7 +41,8 @@ contract ERC721Core is
     );
 
     /// @dev Contract constructor. Sets token URI and transfers ownership to zero address to establish a singleton mode.
-    constructor() ERC721("", "") EIP712("DcentralSFT-Voucher", "1") {
+    /// @dev EIP712 is initialized for ethereum mainnet across all chains to ensure bytecode lines up for multichain addresses.
+    constructor() ERC721("", "") EIP712("DcentralNFT-Voucher", "1") {
         _grantRole(DEFAULT_ADMIN_ROLE, address(0));
 
         // Singleton

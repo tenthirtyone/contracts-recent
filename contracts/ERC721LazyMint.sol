@@ -54,12 +54,10 @@ contract ERC721LazyMint is IERC721LazyMint, ERC721Core, ReentrancyGuard {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "NFTVoucher(uint256 tokenId,uint256 minPrice,string uri,uint256 maxSupply,address recipient)"
+                            "NFTVoucher(uint256 tokenId,uint256 minPrice,address recipient)"
                         ),
                         voucher.tokenId,
                         voucher.minPrice,
-                        keccak256(bytes(voucher.uri)),
-                        voucher.maxSupply,
                         voucher.recipient
                     )
                 )
