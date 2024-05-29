@@ -454,8 +454,8 @@ describe("Lazy Mint", function () {
       await expect(
         proxy.redeem(redeemer.address, 1, voucher, signature, {
           value: tokenPrice,
-        })
-      );
+        }) // @ts-ignore
+      ).to.be.reverted;
     });
     it("should fail to honor new vouchers for an existing tokenId after the first voucher has been redeemed", async () => {
       const { proxy, owner, redeemer } = await loadFixture(deploy);

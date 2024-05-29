@@ -27,7 +27,7 @@ import {
   LICENSE_URI,
 } from "./utils";
 
-import { ERC721LazyMint } from "../typechain";
+import { ERC721LazyMint, MockNoPayContract } from "../typechain";
 import { NFTLazyMinter } from "../lib/NFTLazyMinter";
 
 const hre = require("hardhat");
@@ -156,6 +156,183 @@ describe("ERC721LazyMint", function () {
 
       expect(balanceDelta).to.equal(tokenPrice);
     });
+    it("should fail to redeem an NFT voucher that's signed by an unauthorized account", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("0");
+      const lazyMinter = new NFTLazyMinter({
+        contractAddress: proxy.address,
+        signer: redeemer,
+      });
+
+      const tokenId = 1;
+      const supply = 2;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        tokenPrice,
+        owner.address
+      );
+
+      expect(await proxy.balanceOf(redeemer.address)).to.equal(0);
+
+      await proxy.connect(redeemer);
+
+      await expect(
+        proxy.redeem(redeemer.address, voucher, signature, {
+          value: tokenPrice,
+        }) // @ts-ignore
+      ).to.be.reverted;
+    });
+  });
+  it("should fail to redeem an NFT voucher that's been modified", async function () {
+    const { proxy, owner, redeemer } = await loadFixture(deploy);
+    const tokenPrice = ethers.utils.parseEther("0");
+    const lazyMinter = new NFTLazyMinter({
+      contractAddress: proxy.address,
+      signer: owner,
+    });
+
+    const tokenId = 1;
+    const supply = 2;
+
+    const { voucher, signature } = await lazyMinter.createVoucher(
+      tokenId,
+      tokenPrice,
+      owner.address
+    );
+
+    voucher.recipient = redeemer.address;
+
+    expect(await proxy.balanceOf(redeemer.address)).to.equal(0);
+
+    await proxy.connect(redeemer);
+
+    await expect(
+      proxy.redeem(redeemer.address, voucher, signature, {
+        value: tokenPrice,
+      }) // @ts-ignore
+    ).to.be.reverted;
+  });
+  it("should handle overpayment scenarios correctly", async function () {
+    const { proxy, owner, redeemer } = await loadFixture(deploy);
+    const tokenPrice = ethers.utils.parseEther("1.0");
+    const tokenPriceX2 = ethers.utils.parseEther("2.0");
+    const lazyMinter = new NFTLazyMinter({
+      contractAddress: proxy.address,
+      signer: owner,
+    });
+
+    const tokenId = 1;
+    const supply = 1;
+
+    const { voucher, signature } = await lazyMinter.createVoucher(
+      tokenId,
+      tokenPrice,
+      owner.address
+    );
+    const beginBalance = await ethers.provider.getBalance(owner.address);
+
+    expect(await proxy.balanceOf(redeemer.address)).to.equal(0);
+    const redeemTx = await proxy
+      .connect(redeemer)
+      .redeem(redeemer.address, voucher, signature, {
+        value: tokenPriceX2,
+      });
+    const redeemReceipt = await redeemTx.wait();
+
+    const endBalance = await ethers.provider.getBalance(owner.address);
+
+    const balanceDelta = endBalance.sub(beginBalance);
+
+    expect(balanceDelta).to.equal(tokenPriceX2);
+    expect(await proxy.balanceOf(redeemer.address)).to.equal(1);
+  });
+  it("should fail to redeem if payment is < minPrice", async function () {
+    const { proxy, owner, redeemer } = await loadFixture(deploy);
+    const zeroEth = ethers.utils.parseEther("0");
+    const tokenPrice = ethers.utils.parseEther("1");
+    const lazyMinter = new NFTLazyMinter({
+      contractAddress: proxy.address,
+      signer: owner,
+    });
+
+    const tokenId = 1;
+    const supply = 2;
+
+    const { voucher, signature } = await lazyMinter.createVoucher(
+      tokenId,
+      tokenPrice,
+      owner.address
+    );
+
+    expect(await proxy.balanceOf(redeemer.address)).to.equal(0);
+
+    await proxy.connect(redeemer);
+
+    await expect(
+      proxy.redeem(redeemer.address, voucher, signature, {
+        value: zeroEth,
+      }) // @ts-ignore
+    ).to.be.reverted;
+  });
+  it("should fail to redeem if the payment receiver cannot receive eth", async function () {
+    const { proxy, owner, redeemer } = await loadFixture(deploy);
+    const NoPayContract = await ethers.getContractFactory("MockNoPayContract");
+    const noPayContract = (await NoPayContract.deploy({
+      gasLimit: 30000000,
+    })) as unknown as MockNoPayContract;
+
+    const tokenPrice = ethers.utils.parseEther("1");
+    const lazyMinter = new NFTLazyMinter({
+      contractAddress: proxy.address,
+      signer: owner,
+    });
+
+    const tokenId = 1;
+    const supply = 2;
+
+    const { voucher, signature } = await lazyMinter.createVoucher(
+      tokenId,
+      tokenPrice,
+      noPayContract.address
+    );
+
+    await proxy.connect(redeemer);
+
+    await expect(
+      proxy.redeem(redeemer.address, voucher, signature, {
+        value: tokenPrice,
+      }) // @ts-ignore
+    ).to.be.reverted;
+  });
+  it("should fail to honor new vouchers for an existing tokenId after the first voucher has been redeemed", async () => {
+    const { proxy, owner, redeemer } = await loadFixture(deploy);
+    const tokenPrice = ethers.utils.parseEther("1.0");
+    const lazyMinter = new NFTLazyMinter({
+      contractAddress: proxy.address,
+      signer: owner,
+    });
+
+    const tokenId = 1;
+
+    const { voucher, signature } = await lazyMinter.createVoucher(
+      tokenId,
+      tokenPrice,
+      owner.address
+    );
+
+    const redeemTx = await proxy
+      .connect(redeemer)
+      .redeem(redeemer.address, voucher, signature, {
+        value: tokenPrice,
+      });
+    const redeemReceipt = await redeemTx.wait();
+
+    expect(await proxy.balanceOf(redeemer.address)).to.equal(1);
+    await expect(
+      proxy.redeem(redeemer.address, voucher, signature, {
+        value: tokenPrice,
+      }) // @ts-ignore
+    ).to.be.reverted;
   });
 });
-``;
