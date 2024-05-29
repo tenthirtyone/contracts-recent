@@ -37,7 +37,7 @@ describe("ERC721Proxy", function () {
   const SALT = createSalt(CONTRACT_SALT);
 
   async function deploy() {
-    const [owner, redeemer] = await ethers.getSigners();
+    const [owner, manager, redeemer, satoshi] = await ethers.getSigners();
 
     const SingletonFactory = await ethers.getContractFactory(
       "MockSingletonFactory"
@@ -90,7 +90,7 @@ describe("ERC721Proxy", function () {
       proxyAddress
     )) as unknown as ERC721LazyMint;
 
-    return { proxy, owner, redeemer };
+    return { proxy, owner, manager, redeemer, satoshi };
   }
 
   describe("Deployment", function () {
@@ -100,7 +100,7 @@ describe("ERC721Proxy", function () {
       expect(proxy).to.exist;
       expect(owner).to.exist;
     });
-    it.only("should redeem an NFT from a signed voucher", async function () {
+    it("should redeem an NFT from a signed voucher", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("1.0");
       const lazyMinter = new SFTLazyMinter({
@@ -109,7 +109,6 @@ describe("ERC721Proxy", function () {
       });
 
       const tokenId = 1;
-      const supply = 1;
 
       const { voucher, signature } = await lazyMinter.createVoucher(
         tokenId,
@@ -127,6 +126,39 @@ describe("ERC721Proxy", function () {
       const redeemReceipt = await redeemTx.wait();
 
       expect(await proxy.balanceOf(redeemer.address)).to.equal(1);
+    });
+    it("should send payment to the voucher recipient.", async function () {
+      const { proxy, owner, redeemer, satoshi } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new SFTLazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        10,
+        satoshi.address
+      );
+      const beginBalance = await ethers.provider.getBalance(satoshi.address);
+
+      expect(await proxy.balanceOf(redeemer.address)).to.equal(0);
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, voucher, signature, {
+          value: tokenPrice,
+        });
+      await redeemTx.wait();
+
+      const endBalance = await ethers.provider.getBalance(satoshi.address);
+
+      const balanceDelta = endBalance.sub(beginBalance);
+
+      expect(balanceDelta).to.equal(tokenPrice);
     });
   });
 });

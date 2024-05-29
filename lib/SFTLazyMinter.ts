@@ -35,7 +35,7 @@ export class SFTLazyMinter {
         { name: "minPrice", type: "uint256" },
         { name: "uri", type: "string" },
         { name: "maxSupply", type: "uint256" },
-        { name: "recipient", type: "address" },
+        { name: "recipient", type: "address" }, // Payment Recipient, NOT token recipient
       ],
     };
   }

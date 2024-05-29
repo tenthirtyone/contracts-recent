@@ -34,10 +34,10 @@ contract ERC721LazyMint is IERC721LazyMint, ERC721Core, ReentrancyGuard {
         require(msg.value >= voucher.minPrice);
 
         // first assign the token to the signer, to establish provenance on-chain
-        _mint(signer, voucher.tokenId); // data is optional, passing signature saves on creating a new var
+        _mint(signer, voucher.tokenId);
 
         // transfer the token to the redeemer
-        _safeTransfer(signer, redeemer, voucher.tokenId, signature);
+        _safeTransfer(signer, redeemer, voucher.tokenId, signature); // data is optional, passing signature saves on creating a new var
 
         // Transfer the eth to the recipient
         payable(voucher.recipient).transfer(msg.value); // msg.value can be more than quantity * minPrice
