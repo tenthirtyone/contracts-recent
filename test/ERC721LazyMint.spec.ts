@@ -27,7 +27,8 @@ import {
   LICENSE_URI,
 } from "./utils";
 
-import { ERC721Singleton } from "../typechain";
+import { ERC721LazyMint } from "../typechain";
+import { SFTLazyMinter } from "../lib/SFTLazyMinter";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
@@ -36,7 +37,7 @@ describe("ERC721Proxy", function () {
   const SALT = createSalt(CONTRACT_SALT);
 
   async function deploy() {
-    const [owner, manager] = await ethers.getSigners();
+    const [owner, redeemer] = await ethers.getSigners();
 
     const SingletonFactory = await ethers.getContractFactory(
       "MockSingletonFactory"
@@ -87,9 +88,9 @@ describe("ERC721Proxy", function () {
     const proxy = (await ethers.getContractAt(
       "ERC721LazyMint",
       proxyAddress
-    )) as unknown as ERC721Singleton;
+    )) as unknown as ERC721LazyMint;
 
-    return { proxy, owner, manager };
+    return { proxy, owner, redeemer };
   }
 
   describe("Deployment", function () {
@@ -98,6 +99,34 @@ describe("ERC721Proxy", function () {
 
       expect(proxy).to.exist;
       expect(owner).to.exist;
+    });
+    it.only("should redeem an NFT from a signed voucher", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new SFTLazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+      });
+
+      const tokenId = 1;
+      const supply = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        10,
+        redeemer.address
+      );
+
+      const redeemTx = await proxy
+        .connect(redeemer)
+        .redeem(redeemer.address, voucher, signature, {
+          value: tokenPrice,
+        });
+      const redeemReceipt = await redeemTx.wait();
+
+      expect(await proxy.balanceOf(redeemer.address)).to.equal(1);
     });
   });
 });

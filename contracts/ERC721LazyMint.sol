@@ -27,8 +27,6 @@ contract ERC721LazyMint is IERC721LazyMint, ERC721Core, ReentrancyGuard {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher, signature);
 
-        require(voucher.maxSupply == 1);
-
         // make sure that the signer is authorized to mint NFTs
         require(hasRole(MANAGER_ROLE, signer));
 
@@ -39,7 +37,7 @@ contract ERC721LazyMint is IERC721LazyMint, ERC721Core, ReentrancyGuard {
         _mint(signer, voucher.tokenId); // data is optional, passing signature saves on creating a new var
 
         // transfer the token to the redeemer
-        safeTransferFrom(signer, redeemer, voucher.tokenId);
+        _safeTransfer(signer, redeemer, voucher.tokenId, signature);
 
         // Transfer the eth to the recipient
         payable(voucher.recipient).transfer(msg.value); // msg.value can be more than quantity * minPrice
