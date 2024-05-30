@@ -3,7 +3,7 @@
 pragma solidity ^0.8.22;
 
 interface IERC1155LazyMint {
-    struct NFTVoucher {
+    struct SFTVoucher {
         uint256 tokenId;
         uint256 minPrice;
         string uri;
@@ -15,7 +15,7 @@ interface IERC1155LazyMint {
     function redeem(
         address redeemer,
         uint256 quantity,
-        NFTVoucher calldata voucher,
+        SFTVoucher calldata voucher,
         bytes memory signature
     ) external payable returns (uint256);
 }

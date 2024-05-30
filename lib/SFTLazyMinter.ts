@@ -32,7 +32,7 @@ export class SFTLazyMinter {
         { name: "chainId", type: "uint256" },
         { name: "verifyingContract", type: "address" },
       ],
-      NFTVoucher: [
+      SFTVoucher: [
         { name: "tokenId", type: "uint256" },
         { name: "minPrice", type: "uint256" },
         { name: "uri", type: "string" },
@@ -71,7 +71,7 @@ export class SFTLazyMinter {
     return {
       domain,
       types: this.types,
-      primaryType: "NFTVoucher",
+      primaryType: "SFTVoucher",
       message: voucher,
     };
   }
