@@ -4,7 +4,7 @@
 pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
+import "hardhat/console.sol";
 import "./lib/ERC721Core.sol";
 import "./interfaces/IERC721LazyMint.sol";
 
@@ -26,6 +26,9 @@ contract ERC721LazyMint is IERC721LazyMint, ERC721Core, ReentrancyGuard {
     ) public payable nonReentrant returns (uint256) {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher, signature);
+
+        // require the voucher chain id is the same as the current network chain id
+        require(voucher.chainId == block.chainid);
 
         // make sure that the signer is authorized to mint NFTs
         require(hasRole(MANAGER_ROLE, signer));
@@ -54,10 +57,11 @@ contract ERC721LazyMint is IERC721LazyMint, ERC721Core, ReentrancyGuard {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "NFTVoucher(uint256 tokenId,uint256 minPrice,address recipient)"
+                            "NFTVoucher(uint256 tokenId,uint256 minPrice,uint256 chainId,address recipient)"
                         ),
                         voucher.tokenId,
                         voucher.minPrice,
+                        voucher.chainId,
                         voucher.recipient
                     )
                 )

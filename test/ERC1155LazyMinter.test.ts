@@ -32,6 +32,7 @@ import { ERC1155LazyMint, MockNoPayContract } from "../typechain";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
+const CHAINID = 1;
 
 describe("Lazy Mint", function () {
   const SALT = createSalt(CONTRACT_SALT);
@@ -100,6 +101,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -128,6 +130,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -166,6 +169,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -199,6 +203,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -227,6 +232,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -267,6 +273,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -300,6 +307,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: redeemer,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -329,6 +337,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -361,6 +370,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -400,6 +410,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -436,6 +447,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -463,6 +475,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -491,6 +504,7 @@ describe("Lazy Mint", function () {
       const lazyMinter = new SFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;

@@ -6,6 +6,7 @@ interface IERC721LazyMint {
     struct NFTVoucher {
         uint256 tokenId;
         uint256 minPrice;
+        uint256 chainId;
         address recipient;
     }
 

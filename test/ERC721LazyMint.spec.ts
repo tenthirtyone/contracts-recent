@@ -32,6 +32,7 @@ import { NFTLazyMinter } from "../lib/NFTLazyMinter";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
+const CHAINID = 31337;
 
 describe("ERC721LazyMint", function () {
   const SALT = createSalt(CONTRACT_SALT);
@@ -106,6 +107,7 @@ describe("ERC721LazyMint", function () {
       const lazyMinter = new NFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -131,6 +133,7 @@ describe("ERC721LazyMint", function () {
       const lazyMinter = new NFTLazyMinter({
         contractAddress: proxy.address,
         signer: owner,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -162,6 +165,7 @@ describe("ERC721LazyMint", function () {
       const lazyMinter = new NFTLazyMinter({
         contractAddress: proxy.address,
         signer: redeemer,
+        chainId: CHAINID,
       });
 
       const tokenId = 1;
@@ -190,6 +194,7 @@ describe("ERC721LazyMint", function () {
     const lazyMinter = new NFTLazyMinter({
       contractAddress: proxy.address,
       signer: owner,
+      chainId: CHAINID,
     });
 
     const tokenId = 1;
@@ -220,6 +225,7 @@ describe("ERC721LazyMint", function () {
     const lazyMinter = new NFTLazyMinter({
       contractAddress: proxy.address,
       signer: owner,
+      chainId: CHAINID,
     });
 
     const tokenId = 1;
@@ -254,6 +260,7 @@ describe("ERC721LazyMint", function () {
     const lazyMinter = new NFTLazyMinter({
       contractAddress: proxy.address,
       signer: owner,
+      chainId: CHAINID,
     });
 
     const tokenId = 1;
@@ -286,6 +293,7 @@ describe("ERC721LazyMint", function () {
     const lazyMinter = new NFTLazyMinter({
       contractAddress: proxy.address,
       signer: owner,
+      chainId: CHAINID,
     });
 
     const tokenId = 1;
@@ -311,6 +319,7 @@ describe("ERC721LazyMint", function () {
     const lazyMinter = new NFTLazyMinter({
       contractAddress: proxy.address,
       signer: owner,
+      chainId: CHAINID,
     });
 
     const tokenId = 1;

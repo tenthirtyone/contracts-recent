@@ -10,6 +10,7 @@ const SIGNING_DOMAIN_VERSION = "1";
 export class SFTLazyMinter {
   public contractAddress: string;
   public signer: any;
+  public chainId: any;
   public types: any;
   private _domain: any;
 
@@ -19,9 +20,10 @@ export class SFTLazyMinter {
    * @param {string} param.contractAddress - The contract address.
    * @param {any} param.signer - Signer for transactions.
    */
-  constructor({ contractAddress, signer }) {
+  constructor({ contractAddress, signer, chainId }) {
     this.contractAddress = contractAddress;
     this.signer = signer;
+    this.chainId = chainId;
 
     this.types = {
       EIP712Domain: [
@@ -33,6 +35,7 @@ export class SFTLazyMinter {
       NFTVoucher: [
         { name: "tokenId", type: "uint256" },
         { name: "minPrice", type: "uint256" },
+        //{ name: "chainId", type: "uint256" }, // We verify chainId in the voucher to prevent replay, but allow the same address on each chain
         { name: "uri", type: "string" },
         { name: "maxSupply", type: "uint256" },
         { name: "recipient", type: "address" }, // Payment Recipient, NOT token recipient
@@ -83,7 +86,13 @@ export class SFTLazyMinter {
    * @returns {Promise<object>} An object containing the voucher, signature, and digest.
    */
   async createVoucher(tokenId, uri, minPrice = 0, maxSupply, recipient) {
-    const voucher = { tokenId, uri, minPrice, maxSupply, recipient };
+    const voucher = {
+      tokenId,
+      uri,
+      minPrice,
+      maxSupply,
+      recipient,
+    };
     const typedData = await this._formatVoucher(voucher);
     const digest = TypedDataUtils.encodeDigest(typedData);
     const signature = await this.signer.signMessage(digest);
