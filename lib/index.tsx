@@ -1,1 +1,2 @@
-export * from "./LazyMinter";
+export * from "./NFTLazyMinter";
+export * from "./SFTLazyMinter";
