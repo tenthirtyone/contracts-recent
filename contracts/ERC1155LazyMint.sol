@@ -34,6 +34,9 @@ contract ERC1155LazyMint is
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher, signature);
 
+        // require the voucher chain id is the same as the current network chain id
+        require(voucher.chainId == block.chainid);
+
         require(voucher.maxSupply > 0);
         require(quantity > 0);
         // make sure that the signer is authorized to mint NFTs
@@ -79,12 +82,13 @@ contract ERC1155LazyMint is
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "NFTVoucher(uint256 tokenId,uint256 minPrice,string uri,uint256 maxSupply,address recipient)"
+                            "NFTVoucher(uint256 tokenId,uint256 minPrice,string uri,uint256 maxSupply,uint256 chainId,address recipient)"
                         ),
                         voucher.tokenId,
                         voucher.minPrice,
                         keccak256(bytes(voucher.uri)),
                         voucher.maxSupply,
+                        voucher.chainId,
                         voucher.recipient
                     )
                 )

@@ -4,7 +4,6 @@
 pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "hardhat/console.sol";
 import "./lib/ERC721Core.sol";
 import "./interfaces/IERC721LazyMint.sol";
 

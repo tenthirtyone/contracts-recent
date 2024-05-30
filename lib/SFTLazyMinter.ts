@@ -35,9 +35,9 @@ export class SFTLazyMinter {
       NFTVoucher: [
         { name: "tokenId", type: "uint256" },
         { name: "minPrice", type: "uint256" },
-        //{ name: "chainId", type: "uint256" }, // We verify chainId in the voucher to prevent replay, but allow the same address on each chain
         { name: "uri", type: "string" },
         { name: "maxSupply", type: "uint256" },
+        { name: "chainId", type: "uint256" }, // We verify chainId in the voucher to prevent replay, but allow the same address on each chain
         { name: "recipient", type: "address" }, // Payment Recipient, NOT token recipient
       ],
     };
@@ -51,7 +51,7 @@ export class SFTLazyMinter {
     if (this._domain != null) {
       return this._domain;
     }
-    const chainId = await this.signer.getChainId();
+    const chainId = await this.signer.getChainId(); // This is intentional even though chain id is a constructor arg.
     this._domain = {
       name: SIGNING_DOMAIN_NAME,
       version: SIGNING_DOMAIN_VERSION,
@@ -91,6 +91,7 @@ export class SFTLazyMinter {
       uri,
       minPrice,
       maxSupply,
+      chainId: this.chainId,
       recipient,
     };
     const typedData = await this._formatVoucher(voucher);

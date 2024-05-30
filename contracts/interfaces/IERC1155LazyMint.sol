@@ -8,6 +8,7 @@ interface IERC1155LazyMint {
         uint256 minPrice;
         string uri;
         uint256 maxSupply;
+        uint256 chainId;
         address recipient;
     }
 

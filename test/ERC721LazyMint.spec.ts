@@ -34,7 +34,7 @@ const hre = require("hardhat");
 const ethers = hre.ethers;
 const CHAINID = 31337;
 
-describe("ERC721LazyMint", function () {
+describe("ERC721 LazyMint", function () {
   const SALT = createSalt(CONTRACT_SALT);
 
   async function deploy() {

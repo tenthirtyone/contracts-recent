@@ -32,9 +32,9 @@ import { ERC1155LazyMint, MockNoPayContract } from "../typechain";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
-const CHAINID = 1;
+const CHAINID = 31337;
 
-describe("Lazy Mint", function () {
+describe("ERC1155 Lazy Mint", function () {
   const SALT = createSalt(CONTRACT_SALT);
 
   async function deploy() {
