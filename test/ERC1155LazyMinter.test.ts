@@ -24,6 +24,8 @@ import {
   LICENSE_URI,
   CONTRACT_URI_MIMETYPE,
   SEAPORT_1_5_ADDRESS,
+  CHAINID,
+  INVALID_CHAINID,
 } from "./utils";
 
 import { SFTLazyMinter } from "../lib/SFTLazyMinter";
@@ -32,7 +34,6 @@ import { ERC1155LazyMint, MockNoPayContract } from "../typechain";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
-const CHAINID = 31337;
 
 describe("ERC1155 Lazy Mint", function () {
   const SALT = createSalt(CONTRACT_SALT);
@@ -294,6 +295,35 @@ describe("ERC1155 Lazy Mint", function () {
         .redeem(redeemer.address, 1, voucher, signature, {
           value: tokenPrice,
         });
+
+      await expect(
+        proxy.redeem(redeemer.address, supply + 1, voucher, signature, {
+          value: tokenPrice,
+        }) // @ts-ignore
+      ).to.be.reverted;
+    });
+
+    it("should fail to redeem an NFT when chain id does not match the network chain id", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("0");
+      const lazyMinter = new SFTLazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+        chainId: INVALID_CHAINID,
+      });
+
+      const tokenId = 1;
+      const supply = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        tokenPrice,
+        supply,
+        owner.address
+      );
+
+      expect(await proxy.balanceOf(redeemer.address, tokenId)).to.equal(0);
 
       await expect(
         proxy.redeem(redeemer.address, supply + 1, voucher, signature, {

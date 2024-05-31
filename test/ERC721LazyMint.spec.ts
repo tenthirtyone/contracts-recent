@@ -25,6 +25,8 @@ import {
   CONTRACT_URI,
   TOKEN_URI,
   LICENSE_URI,
+  CHAINID,
+  INVALID_CHAINID,
 } from "./utils";
 
 import { ERC721LazyMint, MockNoPayContract } from "../typechain";
@@ -32,7 +34,6 @@ import { NFTLazyMinter } from "../lib/NFTLazyMinter";
 
 const hre = require("hardhat");
 const ethers = hre.ethers;
-const CHAINID = 31337;
 
 describe("ERC721 LazyMint", function () {
   const SALT = createSalt(CONTRACT_SALT);
@@ -161,15 +162,37 @@ describe("ERC721 LazyMint", function () {
     });
     it("should fail to redeem an NFT voucher that's signed by an unauthorized account", async function () {
       const { proxy, owner, redeemer } = await loadFixture(deploy);
+      const tokenPrice = ethers.utils.parseEther("1.0");
+      const lazyMinter = new NFTLazyMinter({
+        contractAddress: proxy.address,
+        signer: owner,
+        chainId: INVALID_CHAINID,
+      });
+
+      const tokenId = 1;
+
+      const { voucher, signature } = await lazyMinter.createVoucher(
+        tokenId,
+        tokenPrice,
+        redeemer.address
+      );
+
+      await expect(
+        proxy.redeem(redeemer.address, voucher, signature, {
+          value: tokenPrice,
+        }) // @ts-ignore
+      ).to.be.reverted;
+    });
+    it("should fail to redeem an NFT voucher when the chain id does not match the network chain id", async function () {
+      const { proxy, owner, redeemer } = await loadFixture(deploy);
       const tokenPrice = ethers.utils.parseEther("0");
       const lazyMinter = new NFTLazyMinter({
         contractAddress: proxy.address,
         signer: redeemer,
-        chainId: CHAINID,
+        chainId: INVALID_CHAINID,
       });
 
       const tokenId = 1;
-      const supply = 2;
 
       const { voucher, signature } = await lazyMinter.createVoucher(
         tokenId,
