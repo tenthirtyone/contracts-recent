@@ -52,7 +52,7 @@ module.exports = {
       accounts: [process.env.ACCOUNT_PRIVATE_KEY],
     },
     arbitrum: {
-      url: "https://arb-mainnet.g.alchemy.com/v2/j1Bxmby48eaIeX6duUjEaVQLIlDjbVYC",
+      url: "https://arb-mainnet.g.alchemy.com/v2/Z3vcyBCUhEl3DFLYXCWPbBpKsziy3B0w",
       accounts: [process.env.ACCOUNT_PRIVATE_KEY],
     },
     amoy: {

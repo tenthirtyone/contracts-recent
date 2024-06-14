@@ -1,6 +1,6 @@
 ## Table of Contents
 
-1. [Gem Contract Infrastructure](#gem-contract-infrastructure)
+1. [Contract Infrastructure](#contract-infrastructure)
 2. [Overview](#overview)
 3. [Contract Addresses](#contract-addresses)
 4. [Contract Inheritance Graph](#contract-inheritance-graph)
@@ -9,7 +9,7 @@
 7. [Gas Usage](#gas-usage)
 8. [Function Requirements](#function-requirements)
 
-# Gem Contract Infrastructure
+# Contract Infrastructure
 
 This repository contains the code for a set of smart contracts adhering to the ERC1155 Multi-Token Standard. They're developed to provide robust functionality for token management, role management, royalty management, as well as support for ERC165, ERC1155, ERC2981 interfaces, and a range of compliance, proxy deployment, proxy pattern adherence, event emission, and gas usage considerations.
 
@@ -17,7 +17,7 @@ This repository contains the code for a set of smart contracts adhering to the E
 
 ## Overview
 
-- A Dcentral account launches a CREATE2 Factory contract on supported chains.
+- A account launches a CREATE2 Factory contract on supported chains.
 
 ![Proxy Diagram](diagrams/step1.png)
 
@@ -61,13 +61,13 @@ The purple outlines designate the original code written for this project.
 
 # Callouts and Assumptions
 
-1. A Dcentral controlled account that owns the beacon contracts could upgrade the token implementations with malicious code.
+1. A controlled account that owns the beacon contracts could upgrade the token implementations with malicious code.
 
 Mitigation: Accepted risk. Ownership will eventually transfer to an organizational multisig wallet. ERC1967 also offers us `_setBeacon` that would allow users to deploy/designate their own beacons. This has not been implemented and is not currently roadmapped.
 
 2. Lazy Mint does not use a withdrawal pattern.
 
-Mitigation: The standard/accepted Lazy Mint contract implements the withdrawal pattern. This was changed to match the behavior of a Seaport order because Dcentral relies on Seaport Protocol to manage sale/escrow of tokens after their initial purchase and this avoids the user education hurdle where some transactions would land in their wallet, and others would require them to withdraw for each collection, or require additional development, etc.
+Mitigation: The standard/accepted Lazy Mint contract implements the withdrawal pattern. This was changed to match the behavior of a Seaport order because relies on Seaport Protocol to manage sale/escrow of tokens after their initial purchase and this avoids the user education hurdle where some transactions would land in their wallet, and others would require them to withdraw for each collection, or require additional development, etc.
 
 3. Although ERC2981 Royalty Standard designs for royalties to be granular to the individual token we only intend to support royalties at the collection level, setting the default royalty is enough. The logic exists for token-level granularity for consistency to avoid bespoke or unnecessary code.
 

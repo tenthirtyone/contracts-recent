@@ -81,7 +81,7 @@ export class NFTLazyMinter {
    * @param {string} recipient - Recipient address.
    * @returns {Promise<object>} An object containing the voucher, signature, and digest.
    */
-  async createVoucher(tokenId, minPrice = 0, recipient) {
+  async createVoucher(tokenId, minPrice, recipient) {
     const voucher = { tokenId, minPrice, recipient, chainId: this.chainId };
     const typedData = await this._formatVoucher(voucher);
     const digest = TypedDataUtils.encodeDigest(typedData);

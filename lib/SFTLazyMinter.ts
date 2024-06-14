@@ -85,7 +85,7 @@ export class SFTLazyMinter {
    * @param {string} recipient - Recipient address.
    * @returns {Promise<object>} An object containing the voucher, signature, and digest.
    */
-  async createVoucher(tokenId, uri, minPrice = 0, maxSupply, recipient) {
+  async createVoucher(tokenId, uri, minPrice, maxSupply, recipient) {
     const voucher = {
       tokenId,
       uri,
