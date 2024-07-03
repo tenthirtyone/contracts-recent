@@ -1,4 +1,3 @@
-require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-ethers");
 require("@typechain/hardhat");
@@ -62,15 +61,15 @@ module.exports = {
   },
   etherscan: {
     apiKey: {
-      sepolia: "TRZG89K55S9UWJC9PD2FHWTV3AWNV1CYU7",
-      mainnet: "TRZG89K55S9UWJC9PD2FHWTV3AWNV1CYU7",
-      zkEVMtestnet: "6TDA4H3KU36XVSUYI481162XTZG9ZYF7WR",
-      zkEVMMainnet: "VEZ1D87WT6EMK11GEANXB4SKKREKYQV1HK",
-      polygon: "6TDA4H3KU36XVSUYI481162XTZG9ZYF7WR",
-      amoy: "6TDA4H3KU36XVSUYI481162XTZG9ZYF7WR",
-      polygonMumbai: "6TDA4H3KU36XVSUYI481162XTZG9ZYF7WR",
-      arbitrumOne: "W6DHZTKTAXM11GIM81XM9N3XYVUGWY4JPV",
-      optimisticEthereum: "P7A5U7JAXYAZVBNDU5U5CQYARWQ14BXA4Z",
+      sepolia: "",
+      mainnet: "",
+      zkEVMtestnet: "",
+      zkEVMMainnet: "",
+      polygon: "",
+      amoy: "",
+      polygonMumbai: "",
+      arbitrumOne: "",
+      optimisticEthereum: "",
     },
     customChains: [
       {
