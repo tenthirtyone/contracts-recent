@@ -40,16 +40,18 @@ This repository contains the code for a set of smart contracts adhering to the E
 
 Note: The contract versions deployed at these addresses are from git commit: 41c2f64ba4cbb174b1597c1c8404804f4fbdc930. Changes include mostly documentation and minor bugfix. The major change involves explicitly adding Re-entrancy guard to minting functions.
 
-ERC1155 Standard Beacon: 0x9FBf72cF4825642ce904F00d3B52D643aC202045
-ERC1155 Lazy Mint Beacon: 0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87
+ERC1155 Standard Beacon: 0xb04a755a13d22Eda328460EA67622e630b680320
+ERC1155 Lazy Mint Beacon: 0xD723f5B785b7922D60E4835fffd67f51aEC4f2cC
+ERC721 Standard Beacon: 0xD49A798EA53e9Ad4A3D37879e44061D5aB11dF06
+ERC721 Lazy Mint Beacon: 0xA3ce97aef057cbd00FDc1cA9BED8b6c5A457AA2B
 
-https://etherscan.io/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87#code
-https://sepolia.etherscan.io/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87
+https://etherscan.io/address/0xA3ce97aef057cbd00FDc1cA9BED8b6c5A457AA2B#code
+https://sepolia.etherscan.io/address/0xA3ce97aef057cbd00FDc1cA9BED8b6c5A457AA2B
 
-https://zkevm.polygonscan.com/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87#code
-https://testnet-zkevm.polygonscan.com/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87#code
+https://zkevm.polygonscan.com/address/0xA3ce97aef057cbd00FDc1cA9BED8b6c5A457AA2B#code
+https://testnet-zkevm.polygonscan.com/address/0xA3ce97aef057cbd00FDc1cA9BED8b6c5A457AA2B#code
 
-https://blockscan.com/address/0x31e0296bC5bc6F3D36705721E630A8aE9Ff7FF87
+https://blockscan.com/address/0xA3ce97aef057cbd00FDc1cA9BED8b6c5A457AA2B
 
 ## Contract Inheritance Graph
 
