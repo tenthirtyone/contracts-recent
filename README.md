@@ -40,6 +40,8 @@ This repository contains the code for a set of smart contracts adhering to the E
 
 Note: The contract versions deployed at these addresses are from git commit: 41c2f64ba4cbb174b1597c1c8404804f4fbdc930. Changes include mostly documentation and minor bugfix. The major change involves explicitly adding Re-entrancy guard to minting functions.
 
+CREATE2: https://sepolia.etherscan.io/address/0x7eccf14e9671eea813d42cb42c5be58f46980666#code
+
 ERC1155 Standard Beacon: 0xb04a755a13d22Eda328460EA67622e630b680320
 ERC1155 Lazy Mint Beacon: 0xD723f5B785b7922D60E4835fffd67f51aEC4f2cC
 ERC721 Standard Beacon: 0xD49A798EA53e9Ad4A3D37879e44061D5aB11dF06
