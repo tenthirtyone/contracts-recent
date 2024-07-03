@@ -1,3 +1,4 @@
+require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-ethers");
 require("@typechain/hardhat");
@@ -61,15 +62,15 @@ module.exports = {
   },
   etherscan: {
     apiKey: {
-      sepolia: "",
-      mainnet: "",
-      zkEVMtestnet: "",
-      zkEVMMainnet: "",
-      polygon: "",
-      amoy: "",
-      polygonMumbai: "",
-      arbitrumOne: "",
-      optimisticEthereum: "",
+      sepolia: process.env.ALCHEMY_TEST_KEY1,
+      mainnet: process.env.ALCHEMY_TEST_KEY1,
+      zkEVMtestnet: process.env.ALCHEMY_TEST_KEY2,
+      zkEVMMainnet: process.env.ALCHEMY_TEST_KEY3,
+      polygon: process.env.ALCHEMY_TEST_KEY2,
+      amoy: process.env.ALCHEMY_TEST_KEY2,
+      polygonMumbai: process.env.ALCHEMY_TEST_KEY2,
+      arbitrumOne: process.env.ALCHEMY_TEST_KEY4,
+      optimisticEthereum: process.env.ALCHEMY_TEST_KEY5,
     },
     customChains: [
       {
