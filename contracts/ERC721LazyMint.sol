@@ -76,6 +76,6 @@ contract ERC721LazyMint is IERC721LazyMint, ERC721Core, ReentrancyGuard {
         bytes memory signature
     ) public view returns (address) {
         bytes32 digest = _hash(voucher);
-        return digest.toEthSignedMessageHash().recover(signature);
+        return ECDSA.recover(digest, signature);
     }
 }

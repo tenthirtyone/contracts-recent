@@ -104,7 +104,7 @@ contract ERC1155LazyMint is
         bytes memory signature
     ) public view returns (address) {
         bytes32 digest = _hash(voucher);
-        return digest.toEthSignedMessageHash().recover(signature);
+        return ECDSA.recover(digest, signature);
     }
 
     function _setTokenURI(

@@ -94,9 +94,31 @@ export class SFTLazyMinter {
       chainId: this.chainId,
       recipient,
     };
+    // ######
+    const domain = await this._signingDomain();
+
+    // Remove EIP712Domain from types when passing to _signTypedData
+    const types = {
+      SFTVoucher: [
+        { name: "tokenId", type: "uint256" },
+        { name: "minPrice", type: "uint256" },
+        { name: "uri", type: "string" },
+        { name: "maxSupply", type: "uint256" },
+        { name: "chainId", type: "uint256" },
+        { name: "recipient", type: "address" },
+      ],
+    };
+
+    const signature = await this.signer._signTypedData(
+      domain, // domain object directly
+      types, // types without EIP712Domain
+      voucher // message object directly
+    );
+
+    // If you still need the digest for something:
     const typedData = await this._formatVoucher(voucher);
     const digest = TypedDataUtils.encodeDigest(typedData);
-    const signature = await this.signer.signMessage(digest);
+
     return {
       voucher,
       signature,
